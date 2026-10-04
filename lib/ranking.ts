@@ -8,3 +8,9 @@ export function rankCandidates(candidates: Candidate[], started: boolean): Candi
     return { ...candidate, rank: started ? rank : null };
   });
 }
+
+// A nominal ranking window, not a prediction of proportional seats.
+export function leadingPositions(candidates:Candidate[],seats:number|null|undefined):Candidate[] {
+  if(!seats||!Number.isSafeInteger(seats)||seats<1)return [];
+  return candidates.filter(c=>c.rank!==null&&c.rank<=seats).sort((a,b)=>a.rank!-b.rank!||b.votes-a.votes||a.name.localeCompare(b.name,'pt-BR'));
+}

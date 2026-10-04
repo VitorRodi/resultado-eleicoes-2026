@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import { verifyOfficialJws, fetchOfficial } from '../services/tse/client';
 import { parseResult, parseNationalPresident, parseNumber, officialTimestamp } from '../services/tse/parser';
 import { normalizeResult } from '../services/tse/normalize';
-import { rankCandidates } from '../lib/ranking';
+import { rankCandidates, leadingPositions } from '../lib/ranking';
 import { confirmedElected, electedByTse } from '../lib/elected';
 import { findCandidate, track, sumRegional } from '../lib/tracking';
 import { SnapshotCache } from '../lib/cache';
@@ -77,6 +77,19 @@ test('empates compartilham posição',() => {
 test('primeiro por votos não vira eleito automaticamente',() => {
   const n=normalizeResult(voting(),'federalDeputy','https://resultados.tse.jus.br/oficial/ele2026/6259/fotos/sc');
   assert.equal(n.candidates[0].officialElected,false); assert.equal(n.candidates[0].officialStatus,null);
+});
+test('quadro por posição mantém os empatados no limite de vagas e ordena a lista',()=>{
+  const sample=normalized().candidates.slice(0,4).map((c,i)=>({...c,rank:[3,1,2,2][i],votes:[80,100,90,90][i]}));
+  assert.deepEqual(leadingPositions(sample,2).map(c=>c.rank),[1,2,2]);
+});
+test('quadro por posição não mostra nomes antes da contagem nem inventa quantidade de vagas',()=>{
+  assert.deepEqual(leadingPositions(normalized().candidates,16),[]);
+  for(const seats of [null,undefined,0,-1,1.5])assert.deepEqual(leadingPositions([{...normalized().candidates[0],rank:1}],seats),[]);
+});
+test('eleito fora das primeiras posições aparece na visualização de confirmação',()=>{
+  const sample=[{...normalized().candidates[0],rank:1,officialElected:false},{...normalized().candidates[1],rank:25,officialElected:true}];
+  assert.equal(leadingPositions(sample,16)[0].officialElected,false);
+  assert.deepEqual(confirmedElected(sample).map(c=>c.rank),[25]);
 });
 test('quadro de eleitos inclui confirmação por QP e média, mesmo fora do top 20',()=>{
   const raw=voting();const candidates=raw.carg[0].agr.flatMap(a=>a.par.flatMap(p=>p.cand));

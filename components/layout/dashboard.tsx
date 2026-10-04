@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { ArrowUpRight, CheckCheck, CirclePause, Clock3, ExternalLink, Radio, RefreshCw, ShieldCheck, TriangleAlert, Vote } from 'lucide-react';
 import Avatar from '@/components/cards/avatar';
 import NationalPresident from '@/components/cards/national-president';
+import PositionPanel from '@/components/cards/position-panel';
 import Watchlist from '@/components/tracking/watchlist';
 import { emptyPreferences, municipalRequests, municipalKey, parsePreferences, selectionKey, STORAGE_KEY } from '@/lib/preferences';
 import Ranking from '@/components/rankings/ranking';
@@ -112,6 +113,7 @@ export default function Dashboard() {
       </section>
       {warnings.length > 0 && <aside className="warning" role="status"><TriangleAlert size={18} aria-hidden="true" /><div><strong>Atualização com aviso</strong>{warnings.map((w,i) => <p key={`${w}-${i}`}>{w}</p>)}</div></aside>}
       <NationalPresident data={snapshot?.nationalPresident} />
+      {(['senator','federalDeputy','stateDeputy'] as const).map(office=><PositionPanel key={office} office={office} candidates={snapshot?.[office]} meta={snapshot?.offices[office]} />)}
       <div className="section-heading"><div><span className="section-tag">PANORAMA ESTADUAL</span><h2>Quem está na frente em SC?</h2></div><span className="muted small">Liderança parcial não significa eleição.</span></div>
       <section className="leaders-grid" aria-label="Lideranças em Santa Catarina"><Leader office="president" candidates={snapshot?.leaders.president ? [snapshot.leaders.president] : []} state={snapshot || undefined} /><Leader office="governor" candidates={snapshot?.leaders.governor ? [snapshot.leaders.governor] : []} state={snapshot || undefined} /><Leader office="senator" candidates={snapshot?.leaders.senator || []} state={snapshot || undefined} /></section>
       <Watchlist snapshot={snapshot} preferences={preferences} tracking={tracking} onChange={updatePreferences} />

@@ -8,7 +8,8 @@ Painel independente com dados oficiais do TSE. Reúne os cinco cargos do primeir
 
 - Presidência nacional: dois mais votados, votos, percentuais, totalização e horário oficial. Usa o arquivo BR, incluindo o exterior, sem somar arquivos estaduais.
 - Panorama estadual, rankings por votos e busca por nome ou número.
-- Quadro “Eleitos até o momento” nos rankings de deputados, Senado e governador: quantidade, nomes, situação oficial e botão para ver só eleitos. O quadro considera a lista completa, mesmo fora do top exibido e independente da busca.
+- Três quadros largos abaixo da presidência para Senado, deputados federais e estaduais, no mesmo estilo visual: posições, fotos, votos, percentuais, vagas e andamento oficial. “Por posição” usa as primeiras posições nominais até o número de vagas publicado pelo TSE (2, 16 e 40 na consulta de SC), incluindo empates na última posição.
+- Cada quadro permite alternar para “Eleitos confirmados”, que considera a lista completa, inclusive candidaturas fora das primeiras posições nominais. Governador mantém o resumo de eleitos no ranking.
 - Acompanhamento especial de qualquer candidatura dos cinco cargos em SC, com votos, posição, situação oficial e variação entre atualizações.
 - Votação municipal personalizada: cada candidato pode ter suas próprias cidades entre os 295 municípios de SC. É possível editar e remover acompanhamentos. Cunhataí está disponível no catálogo oficial.
 - A primeira visita começa sem candidatos ou região predefinidos. Preferências ficam no `localStorage` deste navegador, sem conta ou sincronização entre dispositivos.
@@ -70,6 +71,7 @@ A consulta inicial usa oito arquivos: configuração eleitoral, catálogo munici
 
 - Cabeçalho mostra seções totalizadas para governador em SC. Presidência nacional e cada ranking têm o andamento de sua própria abrangência e cargo.
 - Posições são nominais, com empates. Liderança parcial não implica eleição. Deputados seguem o sistema proporcional; situação oficial é separada da posição por votos.
+- Os quadros de deputados por posição não são uma projeção de vagas proporcionais. Estar entre os primeiros por votos não garante eleição. O selo de eleito exige confirmação do TSE.
 - O quadro usa a indicação oficial de eleito (`e`), respeita `st` e aguarda a totalização. Para presidente e governador, `e=s` também pode indicar segundo turno; nesses cargos, a confirmação de eleição exige `st=Eleito` ou definição matemática `md=e`. Segundo turno, suplentes e não eleitos não entram no quadro.
 - Presidência nacional mostra até dois nomes. Empatados compartilham posição e são ordenados por nome. Antes da totalização, nenhum nome é apresentado como mais votado.
 - Antes da totalização, votos aparecem como “—”. Produção não importa fixtures.
@@ -114,7 +116,7 @@ Não incluir credenciais, `.env`, cookies, `.vercel`, `node_modules` ou `.next` 
 
 ## Validação
 
-40 testes cobrem assinaturas, parser dos cinco cargos e nacional, seleção dos dois mais votados, ranking e empates, confirmação de eleitos, segundo turno, suplentes, eleição por QP/média fora do top 20, suspensão de divulgação, variações, soma parcial, preferências vazias ou inválidas, deduplicação, isolamento de cidades por candidato, consultas, catálogo de 295 municípios, carregamento sob demanda, cache, preservação em falhas e concorrência global. Fixtures oficiais são usadas exclusivamente em testes.
+43 testes cobrem assinaturas, parser dos cinco cargos e nacional, seleção dos dois mais votados, ranking, empates no limite de vagas, ausência de posições antes da contagem, confirmação de eleitos fora das primeiras posições, segundo turno, suplentes, eleição por QP/média fora do top 20, suspensão de divulgação, variações, soma parcial, preferências vazias ou inválidas, deduplicação, isolamento de cidades por candidato, consultas, catálogo de 295 municípios, carregamento sob demanda, cache, preservação em falhas e concorrência global. Fixtures oficiais são usadas exclusivamente em testes.
 
 TypeScript, lint, build e fluxos de personalização são verificados em desktop e celular.
 

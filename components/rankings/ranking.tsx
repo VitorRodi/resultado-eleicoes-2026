@@ -17,7 +17,7 @@ export default function Ranking({ office, candidates = [], meta, highlightedIds 
   const active = meta?.status === 'counting' || meta?.status === 'finished';
   return <article className={`ranking panel ${deputy ? 'deputy-ranking' : ''}`} id={office}>
     <div className="ranking-title"><div><span className="eyebrow">SANTA CATARINA</span><h3>{OFFICE_CONFIG[office].label}</h3></div><span className="small muted">{meta?.percentage != null ? `${percentage(meta.percentage)} totalizado` : 'Aguardando dados'}</span></div>
-    {office!=='president' && <ElectedSummary office={office} elected={elected} meta={meta} filtered={electedOnly} onToggle={()=>setElectedOnly(v=>!v)} />}
+    {office==='governor' && <ElectedSummary office={office} elected={elected} meta={meta} filtered={electedOnly} onToggle={()=>setElectedOnly(v=>!v)} />}
     {deputy && <label className="search"><Search size={17} aria-hidden="true" /><input aria-label={`Buscar ${OFFICE_CONFIG[office].label} por nome ou número`} placeholder="Buscar por nome ou número" value={query} onChange={e => setQuery(e.target.value)} /></label>}
     {!active && <div className="ranking-notice">{meta?.status === 'unavailable' ? 'Dados oficiais temporariamente indisponíveis.' : 'Aguardando início da totalização.'}{candidates.length > 0 && <span> Candidaturas confirmadas pelo TSE.</span>}</div>}
     {active && <div className="ranking-columns" aria-hidden="true"><span>CANDIDATO</span><span>VOTOS / %</span></div>}
