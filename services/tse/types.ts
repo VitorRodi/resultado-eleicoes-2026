@@ -14,7 +14,12 @@ export const resultSchema = z.object({
   md: z.enum(['e','s','n']).optional(),
   carg: z.array(z.object({
     cd: scalar, nv: scalar,
-    agr: z.array(z.object({ par: z.array(z.object({ sg: z.string(), cand: z.array(cand) })) })),
+    agr: z.array(z.object({
+      n:scalar.optional(), nm:z.string().optional(), tp:z.string().optional(),
+      par: z.array(z.object({
+        sg: z.string(), nm:z.string().optional(), tvtn:scalar.optional(), tvtl:scalar.optional(), cand: z.array(cand),
+      })),
+    })),
   })),
   s: z.object({ ts: scalar, st: scalar, pst: scalar, pstn: scalar.optional() }),
 });

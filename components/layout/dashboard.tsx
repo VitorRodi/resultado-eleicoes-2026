@@ -17,6 +17,9 @@ import Ranking from '@/components/rankings/ranking';
 import { number, percentage, clock } from '@/lib/formatting';
 import { OFFICE_CONFIG } from '@/lib/config';
 import { track } from '@/lib/tracking';
+import {DisplaySettingsProvider} from './display-settings';
+import PartyPanel from '@/components/rankings/party-panel';
+import {useCandidateHistory} from '@/hooks/use-candidate-history';
 import { OFFICES, type Office, type Candidate, type ElectionSnapshot, type TrackedCandidate, type WatchPreferences } from '@/types/election';
 
 function Leader({ office, candidates, state,uf='sc' }: { uf?:string; office:'president'|'governor'|'senator'; candidates:Candidate[]; state?:ElectionSnapshot }) {
@@ -27,8 +30,20 @@ function Leader({ office, candidates, state,uf='sc' }: { uf?:string; office:'pre
     <div className="leader-footer"><span>{waiting ? 'Totalização não iniciada' : meta?.status === 'finished' ? 'Totalização final' : 'Liderança no resultado atual'}</span><ArrowUpRight size={14} aria-hidden="true" /></div>
   </article>;
 }
-export default function Dashboard(){const [uf,setUf]=useState('sc');return <div className="country-shell"><StateNavigation uf={uf} onSelect={value=>{setUf(value);window.scrollTo({top:0,behavior:'instant'});}}/><div className="country-content">{uf==='br'?<PresidentDashboard/>:<StateDashboard key={uf} uf={uf}/>}</div></div>;}
-function StateDashboard({uf}:{uf:string}) {
+export default function Dashboard(){
+  const [uf,setUf]=useState('sc');
+  const [navigation,setNavigation]=useState(0);
+  const selectState=useCallback((value:string)=>{
+    const next=value.toLowerCase();if(next!=='br'&&!BRAZIL_STATES.some(s=>s.uf.toLowerCase()===next))return;
+    setUf(next);setNavigation(value=>value+1);const url=new URL(window.location.href);url.searchParams.set('uf',next);if(url.href!==window.location.href)window.history.pushState(null,'',url);window.scrollTo({top:0,behavior:'instant'});
+  },[]);
+  useEffect(()=>{
+    const read=()=>{const value=new URLSearchParams(window.location.search).get('uf')?.toLowerCase();if(value&&(value==='br'||BRAZIL_STATES.some(s=>s.uf.toLowerCase()===value)))setUf(value);else setUf('sc');};
+    void Promise.resolve().then(read);window.addEventListener('popstate',read);return()=>window.removeEventListener('popstate',read);
+  },[]);
+  return <DisplaySettingsProvider><div className="country-shell"><StateNavigation uf={uf} onSelect={selectState}/><div className="country-content">{uf==='br'?<PresidentDashboard onSelectState={selectState}/>:<><div className="state-return"><button className="text-link" onClick={()=>selectState('br')}>← Voltar à visão nacional</button></div><StateDashboard key={`${uf}:${navigation}`} uf={uf} onSelectState={selectState}/></>}</div></div></DisplaySettingsProvider>;
+}
+function StateDashboard({uf,onSelectState}:{uf:string;onSelectState:(uf:string)=>void}) {
   const stateDefinition=BRAZIL_STATES.find(s=>s.uf.toLowerCase()===uf)!;
   const storageKey=uf==='sc'?STORAGE_KEY:`eleicoes-${uf}-2026:preferences:v1`;
   const [snapshot,setSnapshot] = useState<ElectionSnapshot | null>(null);
@@ -38,6 +53,7 @@ function StateDashboard({uf}:{uf:string}) {
   const [ready,setReady]=useState(false),[storageWarning,setStorageWarning]=useState<string|null>(null);
   const [tracking,setTracking]=useState<Record<string,TrackedCandidate>>({});
   const [view,setView]=useState<PanelView>('all'),[officeFilter,setOfficeFilter]=useState<OfficeFilter>('all');
+  const {history,warning:historyWarning}=useCandidateHistory(uf,snapshot,preferences);
   const snapshotRef=useRef<ElectionSnapshot|null>(null),trackingRef=useRef<Record<string,TrackedCandidate>>({});
   const busy=useRef(false),controller=useRef<AbortController|null>(null),nextUpdate=useRef(0),requestId=useRef(0);
   const seedNeeded=useRef(false);
@@ -77,6 +93,7 @@ function StateDashboard({uf}:{uf:string}) {
         const updatedAt=data.offices[office].updatedAt;
         if(prior?.generation&&((updatedAt&&prior.updatedAt&&updatedAt<prior.updatedAt)||!data.offices[office].generation)){
           data[office]=previous![office];data.offices[office]=prior;data.stale=true;
+          data.partyResults={...data.partyResults,[office]:previous!.partyResults?.[office]||[]};
           if(office==='governor')data.progress=previous!.progress;
           if(office==='president'||office==='governor')data.leaders[office]=previous!.leaders[office];
           if(office==='senator')data.leaders.senator=previous!.leaders.senator;
@@ -137,11 +154,12 @@ function StateDashboard({uf}:{uf:string}) {
       {showResults&&(['senator','federalDeputy','stateDeputy'] as const).filter(selectedOffice).map(office=><PositionPanel key={office} office={office} candidates={snapshot?.[office]} meta={snapshot?.offices[office]} uf={uf} stateName={stateDefinition.name} />)}
       {showResults&&majorOffices.length>0&&<><div className="section-heading"><div><span className="section-tag">PANORAMA ESTADUAL</span><h2>Quem está na frente em {uf.toUpperCase()}?</h2></div><span className="muted small">Liderança parcial não significa eleição.</span></div>
       <section className={`leaders-grid ${majorOffices.length===1?'single-result-grid':''}`} aria-label={`Lideranças em ${stateDefinition.name}`}>{majorOffices.map(office=><Leader key={office} uf={uf} office={office} candidates={office==='senator'?snapshot?.leaders.senator||[]:snapshot?.leaders[office]?[snapshot.leaders[office]!]:[]} state={snapshot||undefined}/>)}</section></>}
-      {['all','candidates','municipal'].includes(view)&&<Watchlist uf={uf} snapshot={snapshot} preferences={preferences} tracking={tracking} onChange={updatePreferences} view={view==='municipal'?'municipal':view==='candidates'?'candidates':'all'} officeFilter={officeFilter}/>}
+      {['all','candidates','municipal','comparison','history'].includes(view)&&<Watchlist uf={uf} snapshot={snapshot} preferences={preferences} tracking={tracking} history={history} historyWarning={historyWarning} onChange={updatePreferences} view={view==='all'?'all':view as 'candidates'|'municipal'|'comparison'|'history'} officeFilter={officeFilter}/>}
+      {(view==='all'||view==='parties')&&<>{(['federalDeputy','stateDeputy'] as const).filter(selectedOffice).map(office=><PartyPanel key={office} office={office} uf={uf} parties={snapshot?.partyResults?.[office]} candidates={snapshot?.[office]} meta={snapshot?.offices[office]}/>)}{view==='parties'&&officeFilter!=='all'&&!deputyOffices.length&&<p className="watch-empty panel">Selecione Deputado federal ou {uf==='df'?'Deputado distrital':'Deputado estadual'} para consultar a votação proporcional por partido.</p>}</>}
       {showResults&&<><div className="section-heading"><div><span className="section-tag">RESULTADOS POR CARGO</span><h2>Os rankings de {stateDefinition.name}</h2></div>{deputyOffices.length>0&&<a className="text-link small" href={`#${deputyOffices[0]}`}>Ir para deputados <ArrowUpRight size={14} /></a>}</div>
       {majorOffices.length>0&&<section className={`major-rankings ${majorOffices.length===1?'single-result-grid':''}`} aria-label="Rankings majoritários">{majorOffices.map(office => <Ranking key={office} uf={uf} stateName={stateDefinition.name} office={office} candidates={snapshot?.[office]} meta={snapshot?.offices[office]} highlightedIds={preferences.candidates.filter(s=>s.office===office).map(s=>s.candidateId)} />)}</section>}
       {deputyOffices.length>0&&<section className={`two-columns deputy-section ${deputyOffices.length===1?'single-result-grid':''}`} aria-label="Rankings de deputados">{deputyOffices.map(office => <Ranking key={office} uf={uf} stateName={stateDefinition.name} office={office} candidates={snapshot?.[office]} meta={snapshot?.offices[office]} highlightedIds={preferences.candidates.filter(s=>s.office===office).map(s=>s.candidateId)} />)}</section>}</>}
-      {(view==='map'||view==='all'&&selectedOffice('president'))&&<BrazilProgressMap />}
+      {(view==='map'||view==='all'&&selectedOffice('president'))&&<BrazilProgressMap onSelectState={onSelectState} />}
       {(view==='all'||view==='sources')&&<section className="source-section" id="fontes"><ShieldCheck size={22} className="accent" /><div><h2>Direto da fonte oficial</h2><p className="muted small">{snapshot?.source.verifiedSignatures ? 'Arquivos oficiais do TSE com assinatura digital verificada.' : 'Os resultados são exibidos somente após a validação da fonte oficial.'} Cada cargo e município pode ter um horário de totalização diferente.</p><details><summary>Consultar arquivos e metodologia</summary><p className="small muted">O progresso do cabeçalho usa as seções totalizadas para governador. Cada ranking mostra o progresso do próprio cargo. Percentuais e situações são os publicados pelo TSE; posições são calculadas por votos nominais, com empates. A primeira comparação aparece após duas atualizações de votação. Ausência de resultado municipal não entra na soma regional.</p><ul>{snapshot?.source.files.map(url => <li key={url}><a href={url} target="_blank" rel="noreferrer">{url}</a></li>)}</ul><a className="text-link small" href="https://www.tse.jus.br/eleicoes/informacoes-tecnicas-sobre-a-divulgacao-de-resultados" target="_blank" rel="noreferrer">Documentação técnica TSE 2026 <ExternalLink size={12} /></a></details></div></section>}
     </main>
     <ProjectFooter />

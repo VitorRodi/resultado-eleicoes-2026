@@ -1,0 +1,16 @@
+'use client';
+import {useState} from 'react';
+import {Users,Search} from 'lucide-react';
+import {canonical,officeLabel} from '@/lib/config';
+import {number,clock,percentage} from '@/lib/formatting';
+import {groupParties} from '@/lib/panel-tools';
+import type {Candidate,Office,OfficeMeta,PartyResult} from '@/types/election';
+export default function PartyPanel({office,uf,parties=[],candidates=[],meta}:{office:Office;uf:string;parties?:PartyResult[];candidates?:Candidate[];meta?:OfficeMeta}){
+  const [federations,setFederations]=useState(true),[query,setQuery]=useState('');
+  const groups=groupParties(parties,federations).filter(p=>canonical(`${p.label} ${p.name} ${p.federation||''}`).includes(canonical(query)));
+  return <section className="analysis-panel panel" aria-label={`Partidos e federações: ${officeLabel(office,uf)}`}><header className="analysis-heading"><div><span className="section-tag"><Users size={15}/> VOTAÇÃO VÁLIDA · {uf.toUpperCase()}</span><h2>{officeLabel(office,uf)} por partido</h2><p className="small muted">Votos válidos nominais e de legenda publicados pelo TSE.</p></div></header>
+    <div className="analysis-filters"><div className="position-switch" role="group" aria-label={`Agrupar partidos de ${officeLabel(office,uf)}`}><button aria-pressed={!federations} onClick={()=>setFederations(false)}>Partidos</button><button aria-pressed={federations} onClick={()=>setFederations(true)}>Partidos e federações</button></div><label className="search"><Search size={16}/><input value={query} onChange={e=>setQuery(e.target.value)} aria-label={`Buscar partido de ${officeLabel(office,uf)}`} placeholder="Partido ou federação"/></label></div>
+    {!groups.length?<p className="analysis-empty muted">{query?'Nenhum partido encontrado.':'Aguardando informações oficiais de partidos.'}</p>:<div className="table-scroll" tabIndex={0} role="region" aria-label={`Votação dos partidos de ${officeLabel(office,uf)}`}><table className="party-table"><thead><tr><th scope="col">Partido / federação</th><th scope="col">Válidos nominais</th><th scope="col">Válidos de legenda</th><th scope="col">Total válido</th><th scope="col">Eleitos confirmados</th></tr></thead><tbody>{groups.map(p=><tr key={p.id}><th scope="row"><strong>{federations&&p.federation?p.federation:p.label}</strong>{p.federation&&<small>{parties.filter(s=>s.federation===p.federation).map(s=>s.label).join(' / ')}</small>}</th><td>{number(p.nominalVotes)}</td><td>{number(p.legendVotes)}</td><td>{number(p.nominalVotes===null||p.legendVotes===null?null:p.nominalVotes+p.legendVotes)}</td><td>{p.electedIds.length?<details><summary>{p.electedIds.length} {p.electedIds.length===1?'eleito':'eleitos'}</summary><ul>{candidates.filter(c=>p.electedIds.includes(c.id)).map(c=><li key={c.id}>{c.name} · {c.officialStatus}</li>)}</ul></details>:<span className="muted">Nenhum confirmado</span>}</td></tr>)}</tbody></table></div>}
+    <p className="small muted analysis-note">“—” indica dado ainda não divulgado. A votação agregada não é uma previsão de vagas: eleitos aparecem somente com confirmação oficial. {meta?.updatedAt?`Dados TSE: ${clock(meta.updatedAt)} · ${percentage(meta.percentage)} totalizado.`:''}</p>
+  </section>;
+}

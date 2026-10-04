@@ -1,10 +1,11 @@
 'use client';
 import { ArrowDownRight, ArrowUpRight, Minus, ShieldCheck, Clock3, X } from 'lucide-react';
 import Avatar from '@/components/cards/avatar';
+import ShareCandidate from './share-candidate';
 import { number, percentage } from '@/lib/formatting';
 import { officeLabel } from '@/lib/config';
 import type { TrackedCandidate, Candidate, Office, OfficeMeta } from '@/types/election';
-export default function TrackedCard({ candidate, office, data, meta, onRemove, factualOnly=false,uf='sc',stateName='Santa Catarina' }: { candidate:Candidate|null; office:Office; data?: TrackedCandidate; meta?: OfficeMeta; onRemove:()=>void; factualOnly?:boolean;uf?:string;stateName?:string }) {
+export default function TrackedCard({ candidate, office, data, meta, onRemove, factualOnly=false,uf='sc',stateName='Santa Catarina',stale=false }: { candidate:Candidate|null; office:Office; data?: TrackedCandidate; meta?: OfficeMeta; onRemove:()=>void; factualOnly?:boolean;uf?:string;stateName?:string;stale?:boolean }) {
   const c = candidate, active = c?.rank != null;
   const delta = data?.voteDelta, movement = data?.rankDelta;
   return <article className="tracked-card panel">
@@ -26,5 +27,6 @@ export default function TrackedCard({ candidate, office, data, meta, onRemove, f
       {!factualOnly&&movement != null && <span className={movement > 0 ? 'positive' : movement < 0 ? 'negative' : 'muted'}>{data!.previousRank}º → {c!.rank}º {movement > 0 ? `↑ ${movement}` : movement < 0 ? `↓ ${Math.abs(movement)}` : '· estável'}</span>}
     </div>
     {!factualOnly&&data?.gapAbove != null && <p className="gap small muted">Diferença para a posição acima: {number(data.gapAbove)} votos.</p>}
+    {c&&<ShareCandidate candidate={c} meta={meta} uf={uf} stateName={stateName} stale={stale}/>}
   </article>;
 }

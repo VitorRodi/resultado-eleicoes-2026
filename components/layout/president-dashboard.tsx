@@ -9,7 +9,7 @@ import { clock, number, percentage } from '@/lib/formatting';
 import type { NationalPresidentSnapshot } from '@/types/election';
 import ProjectFooter from './project-footer';
 
-export default function PresidentDashboard(){
+export default function PresidentDashboard({onSelectState}:{onSelectState:(uf:string)=>void}){
   const [data,setData]=useState<NationalPresidentSnapshot|null>(null);
   const [loading,setLoading]=useState(true),[error,setError]=useState(false);
   const busy=useRef(false),controller=useRef<AbortController|null>(null),requestId=useRef(0);
@@ -53,7 +53,7 @@ export default function PresidentDashboard(){
       <div className="section-heading"><div><span className="section-tag">RESULTADO NACIONAL</span><h2>Todos os candidatos à Presidência</h2><p className="section-description muted">Votos em todo o Brasil e no exterior, ordenados por posição atual.</p></div></div>
       <section className="president-national-ranking" aria-label="Ranking nacional de presidente"><Ranking uf="br" stateName="Brasil e exterior" office="president" candidates={data?.candidates} meta={meta}/></section>
       <PresidentsByState/>
-      <BrazilProgressMap/>
+      <BrazilProgressMap onSelectState={onSelectState}/>
       <section className="source-section"><ShieldCheck size={22} className="accent"/><div><h2>Resultado oficial nacional</h2><p className="small muted">{data?.source.verifiedSignatures?'Arquivo nacional do TSE com assinatura digital verificada.':'Aguardando validação da fonte oficial nacional.'} Posições são calculadas por votos, com empates. Liderança parcial não significa eleição.</p><details><summary>Consultar fontes</summary><ul>{data?.source.files.map(url=><li key={url}><a href={url} target="_blank" rel="noreferrer">{url}</a></li>)}</ul></details></div></section>
     </main><ProjectFooter/>
   </>;

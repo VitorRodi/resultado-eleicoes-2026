@@ -1,11 +1,11 @@
-import type { Candidate, Office, OfficeMeta } from '../../types/election';
+import type { Candidate, Office, OfficeMeta, PartyResult } from '../../types/election';
 import type { TseResult } from './types';
 import { parseNumber, officialTimestamp } from './parser';
 import { rankCandidates } from '../../lib/ranking';
 import { officialPhoto } from './photos';
 import { electedByTse } from '../../lib/elected';
 
-export function normalizeResult(result: TseResult, office: Office, photoDirectory: string): { candidates: Candidate[]; meta: OfficeMeta } {
+export function normalizeResult(result: TseResult, office: Office, photoDirectory: string): { candidates: Candidate[]; meta: OfficeMeta; parties:PartyResult[] } {
   const visible = result.dv === 's';
   const started = visible && parseNumber(result.s.st) > 0 && result.and !== 'n';
   const candidates: Candidate[] = [];
@@ -16,10 +16,18 @@ export function normalizeResult(result: TseResult, office: Office, photoDirector
       votes: started ? parseNumber(c.vap) : 0, percentage: started ? parseNumber(c.pvapn ?? c.pvap) : 0,
       rank: null, officialStatus: c.st || null, officialElected: started && electedByTse(office,c.e === 's',c.st || null,result.md),
       photoUrl: officialPhoto(photoDirectory, String(c.sqcand)), destination: c.dvt || null,
+      federation:group.tp==='f'?group.nm||null:null,
     });
   }
   return {
     candidates: rankCandidates(candidates, started),
+    parties: visible ? result.carg[0].agr.flatMap(group=>group.par.map(party=>({
+      id:party.sg, name:party.nm||party.sg, label:party.sg,
+      federation:group.tp==='f'?group.nm||`Federação ${group.n}`:null,
+      nominalVotes:started&&party.tvtn!==undefined?parseNumber(party.tvtn):null,
+      legendVotes:started&&party.tvtl!==undefined?parseNumber(party.tvtl):null,
+      electedIds:candidates.filter(c=>c.party===party.sg&&c.officialElected).map(c=>c.id),
+    }))) : [],
     meta: {
       status: !visible ? 'unavailable' : !started ? 'waiting' : result.tf === 's' && result.and === 'f' ? 'finished' : 'counting',
       percentage: visible ? parseNumber(result.s.pstn ?? result.s.pst) : null,

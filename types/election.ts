@@ -5,6 +5,11 @@ export type Candidate = {
   office: Office; votes: number; percentage: number; rank: number | null;
   officialStatus: string | null; officialElected: boolean; photoUrl: string | null;
   destination: string | null;
+  federation?: string | null;
+};
+export type PartyResult = {
+  id:string; name:string; label:string; federation:string|null;
+  nominalVotes:number|null; legendVotes:number|null; electedIds:string[];
 };
 export type OfficeMeta = {
   status: 'waiting' | 'counting' | 'finished' | 'unavailable';
@@ -49,6 +54,7 @@ export type ElectionSnapshot = {
   president: Candidate[]; governor: Candidate[]; senator: Candidate[];
   federalDeputy: Candidate[]; stateDeputy: Candidate[];
   offices: Record<Office, OfficeMeta>;
+  partyResults?: Partial<Record<Office, PartyResult[]>>;
   municipalities: Municipality[];
   municipalResults: Record<string, MunicipalResult>;
   source: { name: string; url: string; verifiedSignatures: boolean; files: string[] };
