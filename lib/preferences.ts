@@ -11,6 +11,13 @@ export const municipalKey = (s:MunicipalRequest) => `${s.office}:${s.code}`;
 export function municipalRequests(selections:RegionalSelection[]): MunicipalRequest[] {
   return [...new Map(selections.flatMap(s=>s.municipalityCodes.map(code=>({office:s.office,code}))).map(s=>[municipalKey(s),s])).values()].sort((a,b)=>municipalKey(a).localeCompare(municipalKey(b)));
 }
+export function applyRegionalSelections(current:RegionalSelection[], additions:RegionalSelection[], appendCities=false):RegionalSelection[]{
+  const additionsWithCities=additions.map(s=>({...s,municipalityCodes:appendCities?[...(current.find(c=>selectionKey(c)===selectionKey(s))?.municipalityCodes||[]),...s.municipalityCodes]:s.municipalityCodes}));
+  const combined=[...new Map([...current,...additionsWithCities].map(s=>[selectionKey(s),{...s,municipalityCodes:[...new Set(s.municipalityCodes)]}])).values()];
+  if(combined.length>50)throw new Error('Seu painel permite até 50 candidatos por município. Remova um acompanhamento para continuar.');
+  if(municipalRequests(combined).length>MAX_MUNICIPAL_REQUESTS)throw new Error('Seu painel permite até 30 combinações de cargo e cidade. Remova algumas cidades para continuar.');
+  return combined;
+}
 export function parsePreferences(value:unknown): WatchPreferences {
   const parsed = preferencesSchema.safeParse(value);
   if (!parsed.success) return emptyPreferences();

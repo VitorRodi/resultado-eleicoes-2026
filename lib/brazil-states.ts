@@ -1,0 +1,16 @@
+export const BRAZIL_STATES=[
+  {id:'12',uf:'AC',name:'Acre',label:[-70,-9]}, {id:'27',uf:'AL',name:'Alagoas',label:[-36.5,-9.6]},
+  {id:'16',uf:'AP',name:'Amapá',label:[-51.9,1]}, {id:'13',uf:'AM',name:'Amazonas',label:[-64,-4]},
+  {id:'29',uf:'BA',name:'Bahia',label:[-41.8,-12.8]}, {id:'23',uf:'CE',name:'Ceará',label:[-39.5,-5.2]},
+  {id:'53',uf:'DF',name:'Distrito Federal',label:[-47.9,-15.8]}, {id:'32',uf:'ES',name:'Espírito Santo',label:[-40.5,-19.6]},
+  {id:'52',uf:'GO',name:'Goiás',label:[-49.6,-16.3]}, {id:'21',uf:'MA',name:'Maranhão',label:[-45,-5.5]},
+  {id:'51',uf:'MT',name:'Mato Grosso',label:[-56,-12.8]}, {id:'50',uf:'MS',name:'Mato Grosso do Sul',label:[-55,-20.5]},
+  {id:'31',uf:'MG',name:'Minas Gerais',label:[-44.5,-18.5]}, {id:'15',uf:'PA',name:'Pará',label:[-53,-4.5]},
+  {id:'25',uf:'PB',name:'Paraíba',label:[-36.6,-7.2]}, {id:'41',uf:'PR',name:'Paraná',label:[-51.7,-24.5]},
+  {id:'26',uf:'PE',name:'Pernambuco',label:[-37.5,-8.5]}, {id:'22',uf:'PI',name:'Piauí',label:[-42.5,-7.5]},
+  {id:'33',uf:'RJ',name:'Rio de Janeiro',label:[-42.7,-22.5]}, {id:'24',uf:'RN',name:'Rio Grande do Norte',label:[-36.6,-5.6]},
+  {id:'43',uf:'RS',name:'Rio Grande do Sul',label:[-53,-29.5]}, {id:'11',uf:'RO',name:'Rondônia',label:[-63,-11]},
+  {id:'14',uf:'RR',name:'Roraima',label:[-61.3,2.2]}, {id:'42',uf:'SC',name:'Santa Catarina',label:[-50.3,-27.2]},
+  {id:'35',uf:'SP',name:'São Paulo',label:[-48.5,-22.5]}, {id:'28',uf:'SE',name:'Sergipe',label:[-37.3,-10.6]},
+  {id:'17',uf:'TO',name:'Tocantins',label:[-48.5,-10]},
+] as const;

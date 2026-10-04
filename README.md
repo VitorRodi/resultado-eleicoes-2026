@@ -10,9 +10,12 @@ Painel independente com dados oficiais do TSE. Reúne os cinco cargos do primeir
 - Panorama estadual, rankings por votos e busca por nome ou número.
 - Três quadros largos abaixo da presidência para Senado, deputados federais e estaduais, no mesmo estilo visual: posições, fotos, votos, percentuais, vagas e andamento oficial. “Por posição” usa as primeiras posições nominais até o número de vagas publicado pelo TSE (2, 16 e 40 na consulta de SC), incluindo empates na última posição.
 - Cada quadro permite alternar para “Eleitos confirmados”, que considera a lista completa, inclusive candidaturas fora das primeiras posições nominais. Governador mantém o resumo de eleitos no ranking.
-- Acompanhamento especial de qualquer candidatura dos cinco cargos em SC, com votos, posição, situação oficial e variação entre atualizações.
+- Acompanhamento especial de qualquer candidatura dos cinco cargos em SC, com votos, percentual, situação oficial e variação de votos entre atualizações.
+- Seleção múltipla de candidatos no acompanhamento municipal: o mesmo conjunto de cidades é aplicado a todos os selecionados, com verificação do limite antes de salvar.
+- Mapa do Brasil com o percentual de seções totalizadas para presidente nas 27 UFs, seleção por mouse ou teclado e atualização a cada 30 segundos. Arquivo EA14 oficial do TSE; malha geográfica simplificada do IBGE.
+- Rodapé com autoria de Vitor Rodi, LinkedIn e botão para copiar a chave Pix de apoio voluntário.
 - Votação municipal personalizada: cada candidato pode ter suas próprias cidades entre os 295 municípios de SC. É possível editar e remover acompanhamentos. Cunhataí está disponível no catálogo oficial.
-- A primeira visita começa sem candidatos ou região predefinidos. Preferências ficam no `localStorage` deste navegador, sem conta ou sincronização entre dispositivos.
+- O acompanhamento inicial solicitado pelo autor inclui Daniela Reinehr, Oscar Gutz e Massocco, identificados por nome e número no catálogo oficial, nos mesmos cartões de votos e situação oficial. Os nove municípios são Cunhataí, Riqueza, Caibi, Palmitos, Águas de Chapecó, São Carlos, Planalto Alegre, Cunha Porã e Saudades. É possível remover, editar e adicionar acompanhamentos; a configuração inicial é aplicada uma única vez e não volta após uma remoção. Preferências ficam no `localStorage` deste navegador, sem conta ou sincronização entre dispositivos.
 - Atualização a cada 15 segundos após a consulta anterior, botão manual e pausa em abas ocultas.
 - Layout responsivo, diálogo nativo, seleção por teclado e busca de cidades.
 - Fontes e horários oficiais em “Consultar arquivos e metodologia”.
@@ -63,7 +66,7 @@ O arquivo nacional validado foi `https://resultados.tse.jus.br/oficial/ele2026/6
 
 Arquivos JWS são verificados com Ed25519 (`node:crypto`) e chave pública fixada a partir do Apêndice B do manual. Chaves informadas pelo arquivo recebido não são aceitas. São rejeitados arquivos simulados, assinatura inválida, eleição, turno, cargo ou abrangência incompatíveis e números inválidos.
 
-Candidaturas são identificadas por cargo e `sqcand`, sem nomes fixos no acompanhamento. Fotos usam o diretório `ft` do EA11 e o ID oficial; presidente usa abrangência `br` e demais cargos, `sc`. Falhas de imagem exibem iniciais.
+Candidaturas são identificadas por cargo e `sqcand`, com a configuração inicial solicitada resolvida no catálogo oficial, sem resultados inseridos manualmente. Fotos usam o diretório `ft` do EA11 e o ID oficial; presidente usa abrangência `br` e demais cargos, `sc`. Falhas de imagem exibem iniciais.
 
 A consulta inicial usa oito arquivos: configuração eleitoral, catálogo municipal, cinco cargos estaduais e presidência nacional. Resultados municipais são consultados sob demanda. Candidatos do mesmo cargo na mesma cidade compartilham uma consulta. Todas as URLs usadas aparecem em `source.files`.
 
@@ -84,6 +87,8 @@ A consulta inicial usa oito arquivos: configuração eleitoral, catálogo munici
 - Respostas saudáveis sem seleção municipal usam cache CDN (`s-maxage=10`, `stale-while-revalidate=5`). Consultas personalizadas e respostas com falha usam `no-store`.
 
 ## API
+
+`GET /api/elections/br/progress` retorna apenas percentuais, seções e andamento das UFs para a eleição presidencial. Usa o diretório `ab` do EA11 e valida o arquivo `br-e006257-ab.jws`, incluindo assinatura, fase oficial, turno, eleição, UFs, duplicações e limites numéricos. Brasil agregado e exterior não entram no mapa. Dados ausentes continuam indisponíveis; falhas preservam o último progresso válido.
 
 `GET /api/elections/sc` retorna `status`, `updatedAt`, `checkedAt`, `stale`, `warnings`, `progress`, `leaders`, `nationalPresident`, cinco listas de candidatos de SC, `offices`, `municipalities`, `municipalResults` e `source`.
 

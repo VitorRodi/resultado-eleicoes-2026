@@ -141,7 +141,7 @@ test('soma municipal exclui ausência de dados e evita duplicação',() => {
   assert.equal(s.total,300); assert.equal(s.available,2); assert.equal(s.largest?.name,'Cunha Porã');
 });
 test('ausência municipal não aparece como zero',() => assert.equal(sumRegional([municipal('Caibi',null)]).total,null));
-test('novo visitante inicia sem candidatos ou cidades definidos',()=>assert.deepEqual(emptyPreferences(),{version:1,candidates:[],regional:[]}));
+test('preferências vazias são a base antes de resolver a configuração inicial oficial',()=>assert.deepEqual(emptyPreferences(),{version:1,candidates:[],regional:[]}));
 test('preferências inválidas ou de versão desconhecida não são carregadas',()=>{
   for(const value of [null,{},'bad',{version:2,candidates:[],regional:[]},{version:1,candidates:[{candidateId:'x',office:'governor'}],regional:[]}])assert.deepEqual(parsePreferences(value),emptyPreferences());
 });

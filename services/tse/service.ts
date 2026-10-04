@@ -2,6 +2,7 @@ import { CONFIG_URL, TSE_ORIGIN, fetchOfficial } from './client';
 import { configurationSchema, municipalitySchema, type TseConfiguration } from './types';
 import { parseResult, parseNationalPresident } from './parser';
 import { normalizeResult } from './normalize';
+import { parseBrazilProgress, emptyBrazilProgress, type BrazilProgress } from './progress';
 import { OFFICE_CONFIG } from '../../lib/config';
 import { SnapshotCache } from '../../lib/cache';
 import { municipalKey } from '../../lib/preferences';
@@ -105,6 +106,14 @@ const snapshotCache=new SnapshotCache<ElectionSnapshot>(12_000,last=>{
   const base=last||emptySnapshot();return {...base,stale:true,checkedAt:new Date().toISOString(),warnings:['Não foi possível atualizar o TSE. '+(last?'Último resultado válido preservado.':'Aguardando disponibilidade da fonte oficial.')]};
 });
 const municipalCaches=new Map<string,SnapshotCache<MunicipalResult>>();
+const brazilProgressCache=new SnapshotCache<BrazilProgress>(12_000,last=>({...last||emptyBrazilProgress(),stale:true,checkedAt:new Date().toISOString()}));
+export async function getBrazilProgress():Promise<BrazilProgress>{
+  return brazilProgressCache.get(async previous=>{const ctx=await getContext(),url=`${directory(ctx,'ab','president','br')}/br-e${ctx.elections.president.padStart(6,'0')}-ab.jws`;
+    const result=parseBrazilProgress(await fetchOfficial(url),ctx.elections.president,url);
+    if(previous?.updatedAt&&result.updatedAt&&result.updatedAt<previous.updatedAt)throw new Error('Geração de acompanhamento anterior.');
+    return result;
+  });
+}
 export class UnknownMunicipalityError extends Error {}
 export async function getElectionSnapshot(requests:MunicipalRequest[]=[]):Promise<ElectionSnapshot> {
   const base=await snapshotCache.get(loadSnapshot);

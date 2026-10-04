@@ -4,6 +4,9 @@ import { ArrowUpRight, CheckCheck, CirclePause, Clock3, ExternalLink, Radio, Ref
 import Avatar from '@/components/cards/avatar';
 import NationalPresident from '@/components/cards/national-president';
 import PositionPanel from '@/components/cards/position-panel';
+import ProjectFooter from './project-footer';
+import BrazilProgressMap from '@/components/charts/brazil-progress-map';
+import { defaultWatchlist, DEFAULTS_KEY } from '@/lib/default-watchlist';
 import Watchlist from '@/components/tracking/watchlist';
 import { emptyPreferences, municipalRequests, municipalKey, parsePreferences, selectionKey, STORAGE_KEY } from '@/lib/preferences';
 import Ranking from '@/components/rankings/ranking';
@@ -29,12 +32,13 @@ export default function Dashboard() {
   const [tracking,setTracking]=useState<Record<string,TrackedCandidate>>({});
   const snapshotRef=useRef<ElectionSnapshot|null>(null),trackingRef=useRef<Record<string,TrackedCandidate>>({});
   const busy=useRef(false),controller=useRef<AbortController|null>(null),nextUpdate=useRef(0),requestId=useRef(0);
+  const seedNeeded=useRef(false);
   const regionalQuery=municipalRequests(preferences.regional).map(municipalKey).join(',');
   useEffect(()=>{
     let active=true;
     void Promise.resolve().then(()=>{
       if(!active)return;
-      try { const stored=localStorage.getItem(STORAGE_KEY); if(stored)setPreferences(parsePreferences(JSON.parse(stored))); }
+      try { const stored=localStorage.getItem(STORAGE_KEY); if(stored)setPreferences(parsePreferences(JSON.parse(stored)));seedNeeded.current=!localStorage.getItem(DEFAULTS_KEY); }
       catch { setStorageWarning('Não foi possível recuperar suas escolhas. Você pode montar seu painel novamente.'); }
       setReady(true);
     });return()=>{active=false;};
@@ -55,6 +59,7 @@ export default function Dashboard() {
       let data:ElectionSnapshot=await response.json();
       if(!data?.offices||!data?.source||!data?.nationalPresident||!data?.municipalResults||!Array.isArray(data.municipalities))throw new Error('Resposta inválida.');
       if(id!==requestId.current)return;
+      if(seedNeeded.current&&data.source.verifiedSignatures){const preset=defaultWatchlist(data);if(preset){seedNeeded.current=false;updatePreferences(preset);try{localStorage.setItem(DEFAULTS_KEY,'applied');}catch{ /* Preferences remain usable for this visit. */ }}}
       const previous=snapshotRef.current;
       if(previous?.source.verifiedSignatures&&!data.source.verifiedSignatures)data={...previous,stale:true,checkedAt:data.checkedAt,warnings:data.warnings};
       const nextTracking:Record<string,TrackedCandidate>={};
@@ -91,14 +96,15 @@ export default function Dashboard() {
   const cancelRefresh=useCallback(()=>{requestId.current++;controller.current?.abort();busy.current=false;},[]);
   useEffect(()=>{
     if(!ready)return;
-    void refresh();
+    let active=true;
+    void Promise.resolve().then(()=>{if(active)void refresh();});
     const timer=window.setInterval(()=>{
       const hidden=document.hidden;setPaused(hidden);
       if(hidden||busy.current)return;
       const left=Math.max(0,Math.ceil((nextUpdate.current-Date.now())/1000));setCountdown(left);
       if(left===0)void refresh();
     },1000);
-    return()=>{clearInterval(timer);cancelRefresh();};
+    return()=>{active=false;clearInterval(timer);cancelRefresh();};
   },[refresh,ready,cancelRefresh]);
   const waiting = snapshot?.status === 'waiting';
   const warnings = [...(snapshot?.warnings || []), ...(error ? [error] : []), ...(storageWarning ? [storageWarning] : [])];
@@ -120,8 +126,9 @@ export default function Dashboard() {
       <div className="section-heading"><div><span className="section-tag">RESULTADOS POR CARGO</span><h2>Os rankings de Santa Catarina</h2></div><a className="text-link small" href="#federalDeputy">Ir para deputados <ArrowUpRight size={14} /></a></div>
       <section className="major-rankings" aria-label="Rankings majoritários">{(['president','governor','senator'] as const).map(office => <Ranking key={office} office={office} candidates={snapshot?.[office]} meta={snapshot?.offices[office]} highlightedIds={preferences.candidates.filter(s=>s.office===office).map(s=>s.candidateId)} />)}</section>
       <section className="two-columns deputy-section" aria-label="Rankings de deputados">{(['federalDeputy','stateDeputy'] as const).map(office => <Ranking key={office} office={office} candidates={snapshot?.[office]} meta={snapshot?.offices[office]} highlightedIds={preferences.candidates.filter(s=>s.office===office).map(s=>s.candidateId)} />)}</section>
+      <BrazilProgressMap />
       <section className="source-section" id="fontes"><ShieldCheck size={22} className="accent" /><div><h2>Direto da fonte oficial</h2><p className="muted small">{snapshot?.source.verifiedSignatures ? 'Arquivos oficiais do TSE com assinatura digital verificada.' : 'Os resultados são exibidos somente após a validação da fonte oficial.'} Cada cargo e município pode ter um horário de totalização diferente.</p><details><summary>Consultar arquivos e metodologia</summary><p className="small muted">O progresso do cabeçalho usa as seções totalizadas para governador. Cada ranking mostra o progresso do próprio cargo. Percentuais e situações são os publicados pelo TSE; posições são calculadas por votos nominais, com empates. A primeira comparação aparece após duas atualizações de votação. Ausência de resultado municipal não entra na soma regional.</p><ul>{snapshot?.source.files.map(url => <li key={url}><a href={url} target="_blank" rel="noreferrer">{url}</a></li>)}</ul><a className="text-link small" href="https://www.tse.jus.br/eleicoes/informacoes-tecnicas-sobre-a-divulgacao-de-resultados" target="_blank" rel="noreferrer">Documentação técnica TSE 2026 <ExternalLink size={12} /></a></details></div></section>
     </main>
-    <footer className="container footer"><div><span className="footer-brand">RESULTADO ELEIÇÕES 2026</span><p className="small muted">Santa Catarina · 1º turno</p></div><p>Os dados eleitorais exibidos neste projeto são obtidos a partir das fontes oficiais de divulgação de resultados da Justiça Eleitoral. Este projeto é independente e não possui vínculo oficial com o Tribunal Superior Eleitoral (TSE).</p><a href="https://github.com/VitorRodi/resultado-eleicoes-2026" target="_blank" rel="noreferrer" className="small text-link">Código aberto <ExternalLink size={12} /></a></footer>
+    <ProjectFooter />
   </>;
 }
