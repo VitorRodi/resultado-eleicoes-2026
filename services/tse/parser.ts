@@ -1,24 +1,24 @@
 import { resultSchema, type TseResult } from './types';
 import type { Office } from '../../types/election';
-import { OFFICE_CONFIG } from '../../lib/config';
+import { officeCode } from '../../lib/config';
 
 export function parseNumber(value: string | number): number {
   const n = typeof value === 'number' ? value : Number(value.replace(',', '.'));
   if (!Number.isFinite(n) || n < 0) throw new Error('Número inválido no arquivo oficial.');
   return n;
 }
-export function parseResult(raw: unknown, office: Office, election: string, municipality?: string): TseResult {
-  return validateResult(raw,office,election,municipality?'mu':'uf',municipality||'sc');
+export function parseResult(raw: unknown, office: Office, election: string, municipality?: string,uf='sc'): TseResult {
+  return validateResult(raw,office,election,municipality?'mu':'uf',municipality||uf,uf);
 }
 export function parseNationalPresident(raw:unknown,election:string):TseResult {
   return validateResult(raw,'president',election,'br','br');
 }
-function validateResult(raw:unknown,office:Office,election:string,scope:string,code:string):TseResult {
+function validateResult(raw:unknown,office:Office,election:string,scope:string,code:string,uf='sc'):TseResult {
   const result = resultSchema.parse(raw);
   if (String(result.ele) !== election || result.t !== '1') throw new Error('Eleição ou turno incorreto.');
   if (result.tpabr !== scope || result.cdabr.toLowerCase() !== code)
     throw new Error('Abrangência incorreta.');
-  if (result.carg.length !== 1 || Number(result.carg[0].cd) !== OFFICE_CONFIG[office].code)
+  if (result.carg.length !== 1 || Number(result.carg[0].cd) !== officeCode(office,uf))
     throw new Error('Cargo incorreto.');
   const sections = parseNumber(result.s.st), total = parseNumber(result.s.ts);
   const progress = parseNumber(result.s.pstn ?? result.s.pst);

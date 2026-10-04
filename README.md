@@ -1,21 +1,25 @@
-# Resultado Eleições 2026 · Santa Catarina e presidência no Brasil
+# Resultado Eleições 2026 · Brasil e estados
 
-Painel independente com dados oficiais do TSE. Reúne os cinco cargos do primeiro turno de 2026 em Santa Catarina e os dois candidatos a presidente mais votados no Brasil até o momento.
+Painel independente com dados oficiais do TSE. Reúne os cinco cargos do primeiro turno de 2026 nas 27 UFs e a presidência nacional. Santa Catarina é a seleção inicial; o menu lateral permite trocar de estado e o celular usa um seletor no topo.
 
 [Acessar o painel](https://resultado-eleicoes-2026.vercel.app/) · [Código no GitHub](https://github.com/VitorRodi/resultado-eleicoes-2026)
 
 ## Recursos
 
+- Seleção dos 26 estados e Distrito Federal. Cada seleção troca os resultados, fotos, candidaturas e catálogo municipal. No DF, o cargo local usa o código 8 e o nome deputado distrital.
+- Preferências independentes por UF, preservando as escolhas anteriores de SC. Somente o estado selecionado é consultado pelo navegador; não há download de todos os resultados na primeira visita.
+- Cartões acompanhados mostram posição nominal por votos e faixa de situação eleitoral oficial. A posição não produz uma projeção de eleição; o selo de confirmação exige a indicação validada do TSE.
+
 - Presidência nacional: dois mais votados, votos, percentuais, totalização e horário oficial. Usa o arquivo BR, incluindo o exterior, sem somar arquivos estaduais.
 - Panorama estadual, rankings por votos e busca por nome ou número.
 - Três quadros largos abaixo da presidência para Senado, deputados federais e estaduais, no mesmo estilo visual: posições, fotos, votos, percentuais, vagas e andamento oficial. “Por posição” usa as primeiras posições nominais até o número de vagas publicado pelo TSE (2, 16 e 40 na consulta de SC), incluindo empates na última posição.
 - Cada quadro permite alternar para “Eleitos confirmados”, que considera a lista completa, inclusive candidaturas fora das primeiras posições nominais. Governador mantém o resumo de eleitos no ranking.
-- Acompanhamento especial de qualquer candidatura dos cinco cargos em SC, com votos, percentual, situação oficial e variação de votos entre atualizações.
+- Acompanhamento especial de qualquer candidatura dos cinco cargos da UF selecionada, com votos, posição, percentual, situação oficial e variação de votos entre atualizações.
 - Seleção múltipla de candidatos no acompanhamento municipal: o mesmo conjunto de cidades é aplicado a todos os selecionados, com verificação do limite antes de salvar.
 - Mapa do Brasil com o percentual de seções totalizadas para presidente nas 27 UFs, seleção por mouse ou teclado e atualização a cada 30 segundos. Arquivo EA14 oficial do TSE; malha geográfica simplificada do IBGE.
 - Rodapé com autoria de Vitor Rodi, LinkedIn e botão para copiar a chave Pix de apoio voluntário.
-- Votação municipal personalizada: cada candidato pode ter suas próprias cidades entre os 295 municípios de SC. É possível editar e remover acompanhamentos. Cunhataí está disponível no catálogo oficial.
-- O acompanhamento inicial solicitado pelo autor inclui Daniela Reinehr, Oscar Gutz e Massocco, identificados por nome e número no catálogo oficial, nos mesmos cartões de votos e situação oficial. Os nove municípios são Cunhataí, Riqueza, Caibi, Palmitos, Águas de Chapecó, São Carlos, Planalto Alegre, Cunha Porã e Saudades. É possível remover, editar e adicionar acompanhamentos; a configuração inicial é aplicada uma única vez e não volta após uma remoção. Preferências ficam no `localStorage` deste navegador, sem conta ou sincronização entre dispositivos.
+- Votação municipal personalizada: cada candidato pode ter suas próprias cidades entre os municípios da UF selecionada (295 em SC). É possível editar e remover acompanhamentos. Cunhataí está disponível no catálogo oficial.
+- O acompanhamento inicial solicitado pelo autor inclui Daniela Reinehr, Oscar Gutz e Massocco, identificados por nome e número no catálogo oficial, nos mesmos cartões de votos e situação oficial. Os nove municípios são Cunhataí, Riqueza, Caibi, Palmitos, Águas de Chapecó, São Carlos, Planalto Alegre, Cunha Porã e Saudades. É possível remover, editar e adicionar acompanhamentos; a configuração inicial é aplicada uma única vez e não volta após uma remoção. Preferências ficam no `localStorage` deste navegador, com uma chave por UF, sem conta ou sincronização entre dispositivos.
 - Atualização a cada 15 segundos após a consulta anterior, botão manual e pausa em abas ocultas.
 - Layout responsivo, diálogo nativo, seleção por teclado e busca de cidades.
 - Fontes e horários oficiais em “Consultar arquivos e metodologia”.
@@ -60,9 +64,9 @@ tests/                         testes e fixtures oficiais
 
 [Documentação técnica TSE 2026](https://www.tse.jus.br/eleicoes/informacoes-tecnicas-sobre-a-divulgacao-de-resultados), [EA20](https://www.tse.jus.br/eleicoes/eleicoes-2026-content/arquivos/divulgacao-de-resultados/tse-ea20-arquivo-de-resultado-unificado) e [manual JWS](https://www.tse.jus.br/eleicoes/eleicoes-2026-content/arquivos/divulgacao-de-resultados/manual-verificacao-jws), consultados em 04/10/2026.
 
-A descoberta começa no [EA11 oficial](https://resultados.tse.jus.br/oficial/comum/config/ele-c.jws), que define ciclo, diretórios, pleito e eleições. O EA12 fornece o catálogo municipal completo de SC. Os EA20 fornecem resultados nacionais, estaduais e municipais. Na validação, o ciclo foi `ele2026`, o pleito `3220`, a eleição federal `6257` e a estadual `6259`.
+A descoberta começa no [EA11 oficial](https://resultados.tse.jus.br/oficial/comum/config/ele-c.jws), que define ciclo, diretórios, pleito e eleições. O EA12 fornece o catálogo municipal completo da UF selecionada. Os EA20 fornecem resultados nacionais, estaduais e municipais. Na validação, o ciclo foi `ele2026`, o pleito `3220`, a eleição federal `6257` e a estadual `6259`.
 
-O arquivo nacional validado foi `https://resultados.tse.jus.br/oficial/ele2026/6257/dados/br/br-c0001-e006257-u.jws`. Ele tem abrangência BR. O parser de SC rejeita arquivos BR e o parser da presidência nacional rejeita resultados estaduais.
+O arquivo nacional validado foi `https://resultados.tse.jus.br/oficial/ele2026/6257/dados/br/br-c0001-e006257-u.jws`. Ele tem abrangência BR. O parser da UF rejeita arquivos de outra UF ou BR e o parser da presidência nacional rejeita resultados estaduais.
 
 Arquivos JWS são verificados com Ed25519 (`node:crypto`) e chave pública fixada a partir do Apêndice B do manual. Chaves informadas pelo arquivo recebido não são aceitas. São rejeitados arquivos simulados, assinatura inválida, eleição, turno, cargo ou abrangência incompatíveis e números inválidos.
 
@@ -90,7 +94,9 @@ A consulta inicial usa oito arquivos: configuração eleitoral, catálogo munici
 
 `GET /api/elections/br/progress` retorna apenas percentuais, seções e andamento das UFs para a eleição presidencial. Usa o diretório `ab` do EA11 e valida o arquivo `br-e006257-ab.jws`, incluindo assinatura, fase oficial, turno, eleição, UFs, duplicações e limites numéricos. Brasil agregado e exterior não entram no mapa. Dados ausentes continuam indisponíveis; falhas preservam o último progresso válido.
 
-`GET /api/elections/sc` retorna `status`, `updatedAt`, `checkedAt`, `stale`, `warnings`, `progress`, `leaders`, `nationalPresident`, cinco listas de candidatos de SC, `offices`, `municipalities`, `municipalResults` e `source`.
+`GET /api/elections/sc?uf=sp` seleciona São Paulo; a ausência de `uf` mantém SC. São aceitas apenas as 27 siglas conhecidas, sem distinção de maiúsculas. A API rejeita municípios de outra UF e usa caches separados por UF e cargo/município.
+
+`GET /api/elections/sc` retorna `state` com sigla e nome da UF, `status`, `updatedAt`, `checkedAt`, `stale`, `warnings`, `progress`, `leaders`, `nationalPresident`, cinco listas de candidatos de SC, `offices`, `municipalities`, `municipalResults` e `source`.
 
 `nationalPresident` contém até dois candidatos, `meta` com progresso/horário nacional e `stale`. O resultado nacional não substitui o ranking presidencial de SC.
 

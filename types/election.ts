@@ -29,6 +29,7 @@ export type MunicipalResult = {
   candidateVotes: Record<string, { votes: number; percentage: number }>;
 };
 export type ElectionSnapshot = {
+  state:{uf:string;name:string};
   status: 'waiting' | 'counting' | 'finished' | 'unavailable';
   updatedAt: string | null; checkedAt: string; stale: boolean; warnings: string[];
   progress: { percentage: number | null; sections: number | null; totalSections: number | null; office: 'governor' };

@@ -186,7 +186,7 @@ test('integração: catálogo SC, consultas sob demanda, cache e erro',async()=>
     const s=await getElectionSnapshot();assert.equal(s.status,'waiting');assert.equal(s.stale,false);assert.equal(s.source.verifiedSignatures,true);assert.equal(s.source.files.length,8);assert.equal(s.nationalPresident.meta.status,'waiting');assert.deepEqual(s.nationalPresident.candidates,[]);
     assert.equal(s.municipalities.length,295);assert.equal(new Set(s.municipalities.map(m=>m.code)).size,295);assert.deepEqual(s.municipalResults,{});
     const before=requests;await getElectionSnapshot();assert.equal(requests,before);
-    await assert.rejects(getElectionSnapshot([{office:'governor',code:'99999'}]),/fora de Santa Catarina/);assert.equal(requests,before);
+    await assert.rejects(getElectionSnapshot([{office:'governor',code:'99999'}]),/fora de SC/);assert.equal(requests,before);
     const chosen=[{office:'federalDeputy' as const,code:'80594'},{office:'stateDeputy' as const,code:'80918'}];
     const local=await getElectionSnapshot(chosen);assert.equal(local.source.files.length,10);assert.equal(requests,before+2);
     assert.equal(local.municipalResults['federalDeputy:80594'].municipality.name,'CAIBI');assert.equal(local.municipalResults['stateDeputy:80918'].meta.status,'waiting');

@@ -9,3 +9,6 @@ export const OFFICE_CONFIG: Record<Office, { code: number; label: string; type: 
 export function canonical(text: string): string {
   return text.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/\s+/g, ' ').trim();
 }
+
+export const officeCode=(office:Office,uf:string)=>office==='stateDeputy'&&uf.toLowerCase()==='df'?8:OFFICE_CONFIG[office].code;
+export const officeLabel=(office:Office,uf:string)=>office==='stateDeputy'&&uf.toLowerCase()==='df'?'Deputado distrital':OFFICE_CONFIG[office].label;
