@@ -8,7 +8,7 @@ import '@fontsource/barlow-condensed/700.css';
 import './globals.css';
 export const metadata: Metadata = {
   title: 'Resultado Eleições 2026 | Santa Catarina',
-  description: 'Apuração oficial do TSE em Santa Catarina. Presidente, governador, Senado, deputados e votação regional de Daniela Reinehr e Oscar Gutz.',
+  description: 'Resultados oficiais do TSE em Santa Catarina e os dois presidenciáveis mais votados no Brasil. Escolha candidatos e municípios para acompanhar.',
   icons: { icon: '/favicon.svg' },
 };
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

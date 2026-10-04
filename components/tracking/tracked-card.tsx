@@ -1,16 +1,16 @@
 'use client';
-import { ArrowDownRight, ArrowUpRight, Minus, ScanFace } from 'lucide-react';
+import { ArrowDownRight, ArrowUpRight, Minus, X } from 'lucide-react';
 import Avatar from '@/components/cards/avatar';
 import { number, percentage } from '@/lib/formatting';
-import { TRACKED } from '@/lib/config';
-import type { TrackedCandidate, TrackedKey, OfficeMeta } from '@/types/election';
-export default function TrackedCard({ trackKey, data, meta }: { trackKey: TrackedKey; data?: TrackedCandidate; meta?: OfficeMeta }) {
-  const c = data?.candidate, active = c?.rank != null;
+import { OFFICE_CONFIG } from '@/lib/config';
+import type { TrackedCandidate, Candidate, Office, OfficeMeta } from '@/types/election';
+export default function TrackedCard({ candidate, office, data, meta, onRemove }: { candidate:Candidate|null; office:Office; data?: TrackedCandidate; meta?: OfficeMeta; onRemove:()=>void }) {
+  const c = candidate, active = c?.rank != null;
   const delta = data?.voteDelta, movement = data?.rankDelta;
   return <article className="tracked-card panel">
-    <div className="tracked-top"><span className="eyebrow">ACOMPANHAMENTO ESPECIAL</span><ScanFace size={19} aria-hidden="true" /></div>
-    <div className="candidate-identity"><Avatar name={TRACKED[trackKey].name} url={c?.photoUrl} large />
-      <div><p className="small muted">{trackKey === 'danielaReinehr' ? 'Deputada federal' : 'Deputado estadual'}</p><h3>{TRACKED[trackKey].name}</h3>
+    <div className="tracked-top"><span className="eyebrow">ACOMPANHAMENTO ESPECIAL</span><button className="icon-button" aria-label={`Remover ${c?.name || 'candidato'} do acompanhamento`} onClick={onRemove}><X size={17} /></button></div>
+    <div className="candidate-identity"><Avatar name={c?.name || '?'} url={c?.photoUrl} large />
+      <div><p className="small muted">{OFFICE_CONFIG[office].label}</p><h3>{c?.name || 'Candidatura indisponível'}</h3>
         <p className="identity-meta">{c ? <><span>{c.number}</span><span>{c.party}</span><span className="verified">Registro TSE</span></> : 'Aguardando identificação oficial'}</p></div>
     </div>
     <div className="candidate-numbers"><div><strong className="vote-number">{number(active ? c?.votes : null)}</strong><span className="small muted">votos em Santa Catarina</span></div>

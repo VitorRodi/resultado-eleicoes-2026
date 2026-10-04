@@ -24,6 +24,14 @@ type CachedFile = { value: unknown; expires: number; etag: string | null; modifi
 const files = new Map<string, CachedFile>();
 const pending = new Map<string, Promise<unknown>>();
 const cooldowns = new Map<string, { until: number; status: number }>();
+let activeRequests = 0;
+const queue: Array<() => void> = [];
+async function withRequestSlot<T>(operation:()=>Promise<T>):Promise<T> {
+  if(activeRequests>=6)await new Promise<void>(resolve=>queue.push(resolve));
+  else activeRequests++;
+  try{return await operation();}finally{const next=queue.shift();if(next)next();else activeRequests--;}
+}
+function boundMap<T>(map:Map<string,T>){while(map.size>200)map.delete(map.keys().next().value!);}
 export async function fetchOfficial(url: string, ttl = 12_000): Promise<unknown> {
   const target = new URL(url);
   if (target.origin !== TSE_ORIGIN || !target.pathname.startsWith('/oficial/') || !target.pathname.endsWith('.jws'))
@@ -33,7 +41,7 @@ export async function fetchOfficial(url: string, ttl = 12_000): Promise<unknown>
   const cooling = cooldowns.get(url);
   if (cooling && cooling.until > Date.now()) throw new TseHttpError(cooling.status, url);
   if (pending.has(url)) return pending.get(url)!;
-  const task = (async () => {
+  const task = withRequestSlot(async () => {
     const headers: Record<string, string> = { Accept: 'application/jose, text/plain, */*' };
     if (existing?.etag) headers['If-None-Match'] = existing.etag;
     if (existing?.modified) headers['If-Modified-Since'] = existing.modified;
@@ -46,13 +54,15 @@ export async function fetchOfficial(url: string, ttl = 12_000): Promise<unknown>
       // Avoid hammering missing files or extending a TSE temporary block.
       const wait = response.status === 404 ? 60_000 : [403,429].includes(response.status) ? 610_000 : 15_000;
       cooldowns.set(url, { until: Date.now() + wait, status: response.status });
+      boundMap(cooldowns);
       throw new TseHttpError(response.status, url);
     }
     const value = verifyOfficialJws(await response.text());
     files.set(url, { value, expires: Date.now() + ttl, etag: response.headers.get('etag'), modified: response.headers.get('last-modified') });
+    boundMap(files);
     cooldowns.delete(url);
     return value;
-  })();
+  });
   pending.set(url, task);
   try { return await task; } finally { pending.delete(url); }
 }

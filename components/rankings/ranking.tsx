@@ -5,7 +5,7 @@ import Avatar from '@/components/cards/avatar';
 import { OFFICE_CONFIG, canonical } from '@/lib/config';
 import { number, percentage, clock } from '@/lib/formatting';
 import type { Candidate, Office, OfficeMeta } from '@/types/election';
-export default function Ranking({ office, candidates = [], meta }: { office: Office; candidates?: Candidate[]; meta?: OfficeMeta }) {
+export default function Ranking({ office, candidates = [], meta, highlightedIds = [] }: { office: Office; candidates?: Candidate[]; meta?: OfficeMeta; highlightedIds?:string[] }) {
   const [query,setQuery] = useState(''), [expanded,setExpanded] = useState(false);
   const deputy = ['federalDeputy','stateDeputy'].includes(office), limit = office === 'federalDeputy' ? 20 : deputy ? 30 : 100;
   const filtered = candidates.filter(c => canonical(c.name).includes(canonical(query)) || canonical(c.fullName).includes(canonical(query)) || c.number.includes(query.trim()));
@@ -16,7 +16,7 @@ export default function Ranking({ office, candidates = [], meta }: { office: Off
     {deputy && <label className="search"><Search size={17} aria-hidden="true" /><input aria-label={`Buscar ${OFFICE_CONFIG[office].label} por nome ou número`} placeholder="Buscar por nome ou número" value={query} onChange={e => setQuery(e.target.value)} /></label>}
     {!active && <div className="ranking-notice">{meta?.status === 'unavailable' ? 'Dados oficiais temporariamente indisponíveis.' : 'Aguardando início da totalização.'}{candidates.length > 0 && <span> Candidaturas confirmadas pelo TSE.</span>}</div>}
     {active && <div className="ranking-columns" aria-hidden="true"><span>CANDIDATO</span><span>VOTOS / %</span></div>}
-    {rows.map(c => <div className={`ranking-row ${['daniela reinehr','oscar gutz'].includes(canonical(c.name)) ? 'tracked-ranking-row' : ''}`} key={c.id}>
+    {rows.map(c => <div className={`ranking-row ${highlightedIds.includes(c.id) ? 'tracked-ranking-row' : ''}`} key={c.id}>
       <span className="rank-position">{c.rank != null ? `${c.rank}º` : '—'}</span><Avatar name={c.name} url={c.photoUrl} />
       <div className="rank-name"><strong>{c.name}</strong><span className="small muted">{c.party} · {c.number}{c.officialStatus ? <span className="official-status"> · {c.officialStatus}</span> : ''}</span>{c.destination && c.destination !== 'Válido' && <span className="small warning-text">{c.destination}</span>}</div>
       <div className="rank-votes"><strong>{number(active ? c.votes : null)}</strong><span className="small muted">{percentage(active ? c.percentage : null)}</span></div>

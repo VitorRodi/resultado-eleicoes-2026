@@ -1,6 +1,5 @@
 export const OFFICES = ['president', 'governor', 'senator', 'federalDeputy', 'stateDeputy'] as const;
 export type Office = typeof OFFICES[number];
-export type TrackedKey = 'danielaReinehr' | 'oscarGutz';
 export type Candidate = {
   id: string; name: string; fullName: string; number: string; party: string;
   office: Office; votes: number; percentage: number; rank: number | null;
@@ -20,15 +19,25 @@ export type MunicipalVote = {
   name: string; code: string | null; votes: number | null; percentage: number | null;
   status: 'waiting' | 'counting' | 'finished' | 'unavailable'; updatedAt: string | null;
 };
+export type Municipality = { name: string; code: string };
+export type CandidateSelection = { candidateId: string; office: Office };
+export type RegionalSelection = CandidateSelection & { municipalityCodes: string[] };
+export type WatchPreferences = { version: 1; candidates: CandidateSelection[]; regional: RegionalSelection[] };
+export type MunicipalRequest = { office: Office; code: string };
+export type MunicipalResult = {
+  municipality: Municipality; office: Office; meta: OfficeMeta; stale: boolean;
+  candidateVotes: Record<string, { votes: number; percentage: number }>;
+};
 export type ElectionSnapshot = {
   status: 'waiting' | 'counting' | 'finished' | 'unavailable';
   updatedAt: string | null; checkedAt: string; stale: boolean; warnings: string[];
   progress: { percentage: number | null; sections: number | null; totalSections: number | null; office: 'governor' };
   leaders: { president: Candidate | null; governor: Candidate | null; senator: Candidate[] };
+  nationalPresident: { candidates: Candidate[]; meta: OfficeMeta; stale: boolean };
   president: Candidate[]; governor: Candidate[]; senator: Candidate[];
   federalDeputy: Candidate[]; stateDeputy: Candidate[];
   offices: Record<Office, OfficeMeta>;
-  trackedCandidates: Record<TrackedKey, TrackedCandidate>;
-  regionalMunicipalVotes: Record<TrackedKey, MunicipalVote[]>;
+  municipalities: Municipality[];
+  municipalResults: Record<string, MunicipalResult>;
   source: { name: string; url: string; verifiedSignatures: boolean; files: string[] };
 };

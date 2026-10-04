@@ -1,21 +1,21 @@
 'use client';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, LabelList } from 'recharts';
-import { MapPin } from 'lucide-react';
+import { Pencil, X } from 'lucide-react';
 import Avatar from '@/components/cards/avatar';
-import { MUNICIPALITIES, TRACKED } from '@/lib/config';
+import { OFFICE_CONFIG } from '@/lib/config';
 import { number, percentage } from '@/lib/formatting';
 import { sumRegional } from '@/lib/tracking';
-import type { Candidate, MunicipalVote, TrackedKey } from '@/types/election';
-export default function RegionalChart({ trackKey, rows, candidate }: { trackKey: TrackedKey; rows?: MunicipalVote[]; candidate?: Candidate | null }) {
-  const data: MunicipalVote[] = rows || MUNICIPALITIES.map(name => ({ name, code:null,votes:null,percentage:null,status:'waiting',updatedAt:null }));
+import type { Candidate, MunicipalVote, Office } from '@/types/election';
+export default function RegionalChart({ rows, candidate, office, onEdit, onRemove }: { rows: MunicipalVote[]; candidate: Candidate | null; office:Office; onEdit:()=>void; onRemove:()=>void }) {
+  const data = rows;
   const sorted = [...data].sort((a,b) => (b.votes ?? -1)-(a.votes ?? -1));
   const aggregate = sumRegional(data);
   const chartData = sorted.filter(r => r.votes != null).map(r => ({ ...r, municipality: r.name }));
   return <article className="regional-card panel">
-    <div className="regional-head"><Avatar name={TRACKED[trackKey].name} url={candidate?.photoUrl} /><div><h3>{TRACKED[trackKey].name}</h3><p className="small muted">Votos por município</p></div><MapPin size={19} className="muted" aria-hidden="true" /></div>
-    <div className="regional-total"><strong>{number(aggregate.total)}</strong><span className="muted small">votos nos 9 municípios{aggregate.available > 0 && aggregate.available < 9 ? ` · parcial (${aggregate.available}/9)` : ''}</span></div>
+    <div className="regional-head"><Avatar name={candidate?.name || '?'} url={candidate?.photoUrl} /><div><h3>{candidate?.name || 'Candidatura indisponível'}</h3><p className="small muted">{OFFICE_CONFIG[office].label} · votos por município</p></div><div className="card-actions"><button className="icon-button" onClick={onEdit} aria-label={`Editar cidades de ${candidate?.name || 'candidato'}`}><Pencil size={16} /></button><button className="icon-button" onClick={onRemove} aria-label={`Remover votação municipal de ${candidate?.name || 'candidato'}`}><X size={17} /></button></div></div>
+    <div className="regional-total"><strong>{number(aggregate.total)}</strong><span className="muted small">votos em {data.length} {data.length === 1 ? 'município' : 'municípios'}{aggregate.available > 0 && aggregate.available < data.length ? ` · parcial (${aggregate.available}/${data.length})` : ''}</span></div>
     {aggregate.largest && <p className="largest small">Maior votação: <strong>{aggregate.largest.name}</strong> · {number(aggregate.largest.votes)} votos</p>}
-    {chartData.length > 0 && <div className="chart" role="img" aria-label={`Gráfico de votos de ${TRACKED[trackKey].name} por município`}>
+    {chartData.length > 0 && <div className="chart" role="img" aria-label={`Gráfico de votos de ${candidate?.name || 'candidato'} por município`}>
       <ResponsiveContainer width="100%" height={Math.max(96, chartData.length * 43)} minWidth={0}>
         <BarChart data={chartData} layout="vertical" margin={{ left: 0, right: 46, top: 8, bottom: 8 }}>
           <XAxis type="number" hide domain={[0,'dataMax']} /><YAxis type="category" dataKey="municipality" width={158} axisLine={false} tickLine={false} tick={{ fill:'#b8c6d8', fontSize:12 }} />

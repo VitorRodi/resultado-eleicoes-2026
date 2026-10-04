@@ -8,9 +8,15 @@ export function parseNumber(value: string | number): number {
   return n;
 }
 export function parseResult(raw: unknown, office: Office, election: string, municipality?: string): TseResult {
+  return validateResult(raw,office,election,municipality?'mu':'uf',municipality||'sc');
+}
+export function parseNationalPresident(raw:unknown,election:string):TseResult {
+  return validateResult(raw,'president',election,'br','br');
+}
+function validateResult(raw:unknown,office:Office,election:string,scope:string,code:string):TseResult {
   const result = resultSchema.parse(raw);
   if (String(result.ele) !== election || result.t !== '1') throw new Error('Eleição ou turno incorreto.');
-  if (result.tpabr !== (municipality ? 'mu' : 'uf') || result.cdabr.toLowerCase() !== (municipality || 'sc'))
+  if (result.tpabr !== scope || result.cdabr.toLowerCase() !== code)
     throw new Error('Abrangência incorreta.');
   if (result.carg.length !== 1 || Number(result.carg[0].cd) !== OFFICE_CONFIG[office].code)
     throw new Error('Cargo incorreto.');

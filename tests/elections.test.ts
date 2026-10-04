@@ -3,13 +3,13 @@ import assert from 'node:assert/strict';
 import { readFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { verifyOfficialJws, fetchOfficial } from '../services/tse/client';
-import { parseResult, parseNumber, officialTimestamp } from '../services/tse/parser';
+import { parseResult, parseNationalPresident, parseNumber, officialTimestamp } from '../services/tse/parser';
 import { normalizeResult } from '../services/tse/normalize';
 import { rankCandidates } from '../lib/ranking';
 import { findCandidate, track, sumRegional } from '../lib/tracking';
 import { SnapshotCache } from '../lib/cache';
-import { MUNICIPALITIES, canonical } from '../lib/config';
-import { getElectionSnapshot } from '../services/tse/service';
+import { emptyPreferences, parsePreferences, municipalRequests, parseRegionalQuery, regionalRows } from '../lib/preferences';
+import { emptySnapshot, getElectionSnapshot } from '../services/tse/service';
 import type { Office, Candidate, MunicipalVote } from '../types/election';
 const fixture = (name:string) => readFileSync(join(process.cwd(),'tests/fixtures',name),'utf8');
 const official = (name:string) => verifyOfficialJws(fixture(name));
@@ -39,6 +39,19 @@ test('parser valida os cinco cargos de SC',() => {
 test('rejeita eleição incorreta',() => assert.throws(() => parseResult(rawFederal(),'federalDeputy','619')));
 test('rejeita resultados de simulado',() => assert.throws(() => parseResult({...rawFederal(),f:'s'},'federalDeputy','6259')));
 test('rejeita abrangência nacional no ranking de SC',() => assert.throws(() => parseResult({...rawFederal(),tpabr:'br',cdabr:'br'},'federalDeputy','6259')));
+test('presidência nacional aceita apenas o arquivo BR da eleição federal',()=>{
+  const raw=official('br-c0001-e006257-u.jws');assert.equal(parseNationalPresident(raw,'6257').cdabr,'br');
+  assert.throws(()=>parseNationalPresident(official('sc-c0001-e006257-u.jws'),'6257'));
+  assert.throws(()=>parseNationalPresident(raw,'6259'));
+});
+test('dois mais votados nacionais usam votos de todo o Brasil e aguardam antes da contagem',()=>{
+  const raw=parseNationalPresident(official('br-c0001-e006257-u.jws'),'6257');
+  const waiting=normalizeResult(raw,'president','https://resultados.tse.jus.br/oficial/ele2026/6257/fotos/br');assert.ok(waiting.candidates.every(c=>c.rank===null));
+  const started=structuredClone(raw);started.and='p';started.s.st='1';let votes=100;
+  for(const ag of started.carg[0].agr)for(const party of ag.par)for(const c of party.cand){c.vap=String(votes++);c.pvapn='1';}
+  const top=normalizeResult(started,'president','https://resultados.tse.jus.br/oficial/ele2026/6257/fotos/br').candidates.slice(0,2);
+  assert.equal(top.length,2);assert.ok(top[0].votes>top[1].votes);assert.deepEqual(top.map(c=>c.rank),[1,2]);
+});
 test('rejeita cargo trocado',() => assert.throws(() => parseResult(rawFederal(),'stateDeputy','6259')));
 test('converte decimal oficial e rejeita número inválido',() => { assert.equal(parseNumber('42,81'),42.81); assert.throws(() => parseNumber('NaN')); });
 test('horário do TSE é interpretado em Brasília',() => assert.equal(officialTimestamp('04/10/2026','17:24:11'),'2026-10-04T20:24:11.000Z'));
@@ -79,7 +92,31 @@ test('soma municipal exclui ausência de dados e evita duplicação',() => {
   assert.equal(s.total,300); assert.equal(s.available,2); assert.equal(s.largest?.name,'Cunha Porã');
 });
 test('ausência municipal não aparece como zero',() => assert.equal(sumRegional([municipal('Caibi',null)]).total,null));
-test('lista regional contém nove municípios e Cunha Porã uma vez',() => {assert.equal(MUNICIPALITIES.length,9);assert.equal(MUNICIPALITIES.filter(n=>canonical(n)==='cunha pora').length,1);});
+test('novo visitante inicia sem candidatos ou cidades definidos',()=>assert.deepEqual(emptyPreferences(),{version:1,candidates:[],regional:[]}));
+test('preferências inválidas ou de versão desconhecida não são carregadas',()=>{
+  for(const value of [null,{},'bad',{version:2,candidates:[],regional:[]},{version:1,candidates:[{candidateId:'x',office:'governor'}],regional:[]}])assert.deepEqual(parsePreferences(value),emptyPreferences());
+});
+test('preferências deduplicam candidatos e cidades por ID e cargo',()=>{
+  const c={office:'federalDeputy',candidateId:'123'};
+  const p=parsePreferences({version:1,candidates:[c,c],regional:[{...c,municipalityCodes:['80594','80594','80918']}]});
+  assert.equal(p.candidates.length,1);assert.deepEqual(p.regional[0].municipalityCodes,['80594','80918']);
+});
+test('candidatos do mesmo cargo compartilham a consulta municipal',()=>{
+  const requests=municipalRequests([{office:'federalDeputy',candidateId:'1',municipalityCodes:['80594']},{office:'federalDeputy',candidateId:'2',municipalityCodes:['80594']},{office:'stateDeputy',candidateId:'3',municipalityCodes:['80918']}]);
+  assert.deepEqual(requests,[{office:'federalDeputy',code:'80594'},{office:'stateDeputy',code:'80918'}]);
+});
+test('consulta rejeita entradas malformadas e limita quantidade',()=>{
+  assert.deepEqual(parseRegionalQuery('governor:80594,governor:80594'),[{office:'governor',code:'80594'}]);
+  for(const q of ['other:80594','governor:abcde','governor:80594:extra',Array(31).fill('governor:80594').join(',')])assert.throws(()=>parseRegionalQuery(q));
+});
+test('cada candidato usa seus votos e suas próprias cidades',()=>{
+  const s=emptySnapshot();s.municipalities=[{name:'Caibi',code:'80594'},{name:'Cunha Porã',code:'80918'}];
+  s.municipalResults['federalDeputy:80594']={office:'federalDeputy',municipality:s.municipalities[0],meta:{...s.offices.federalDeputy,status:'counting',percentage:55},stale:false,candidateVotes:{'1':{votes:400,percentage:10},'2':{votes:200,percentage:5}}};
+  assert.equal(regionalRows({office:'federalDeputy',candidateId:'1',municipalityCodes:['80594']},s)[0].votes,400);
+  assert.equal(regionalRows({office:'federalDeputy',candidateId:'2',municipalityCodes:['80594']},s)[0].votes,200);
+  const missing=regionalRows({office:'stateDeputy',candidateId:'3',municipalityCodes:['80918']},s)[0];assert.equal(missing.name,'Cunha Porã');assert.equal(missing.votes,null);
+  assert.equal(regionalRows({office:'federalDeputy',candidateId:'99',municipalityCodes:['80594']},s)[0].status,'unavailable');
+});
 test('cache deduplica chamadas simultâneas',async () => {
   let calls=0; const c=new SnapshotCache<number>(10000,()=>-1); const loader=async()=>{calls++;await Promise.resolve();return 42;};
   assert.deepEqual(await Promise.all([c.get(loader),c.get(loader),c.get(loader)]),[42,42,42]); await c.get(loader);assert.equal(calls,1);
@@ -89,19 +126,33 @@ test('cache preserva último snapshot em erro',async () => {
   await c.get(async()=>({value:123})); const next=await c.get(async()=>{throw new Error('network');}); assert.equal(next.value,123);assert.equal(next.stale,true);
 });
 test('cliente bloqueia fontes não oficiais',async () => {await assert.rejects(fetchOfficial('https://example.com/result.jws'));await assert.rejects(fetchOfficial('https://resultados-sim.tse.jus.br/simulado/a.jws'));});
-test('integração: assinatura, cargos, 18 consultas municipais, cache e erro',async () => {
-  let requests=0; const realFetch=globalThis.fetch, realNow=Date.now;
-  mock.method(globalThis,'fetch',async (input:string|URL|Request)=>{
-    const url=new URL(String(input)); requests++;
-    const name=url.pathname.split('/').at(-1)!; const path=join(process.cwd(),'tests/fixtures',name);
+test('integração: catálogo SC, consultas sob demanda, cache e erro',async()=>{
+  let requests=0;const realFetch=globalThis.fetch,realNow=Date.now;
+  mock.method(globalThis,'fetch',async(input:string|URL|Request)=>{
+    const url=new URL(String(input));requests++;
+    const name=url.pathname.split('/').at(-1)!;const path=join(process.cwd(),'tests/fixtures',name);
     return existsSync(path)?new Response(fixture(name),{status:200}):new Response('',{status:404});
   });
-  try {
-    const s=await getElectionSnapshot(); assert.equal(s.status,'waiting');assert.equal(s.stale,false);assert.equal(s.source.verifiedSignatures,true);assert.equal(s.source.files.length,25);
-    assert.equal(s.trackedCandidates.danielaReinehr.candidate?.number,'2210');assert.equal(s.trackedCandidates.oscarGutz.candidate?.number,'22470');
-    for (const key of ['danielaReinehr','oscarGutz'] as const) {const rows=s.regionalMunicipalVotes[key];assert.equal(rows.length,9);assert.equal(new Set(rows.map(r=>r.code)).size,9);assert.ok(rows.every(r=>r.votes===null));}
+  try{
+    const s=await getElectionSnapshot();assert.equal(s.status,'waiting');assert.equal(s.stale,false);assert.equal(s.source.verifiedSignatures,true);assert.equal(s.source.files.length,8);assert.equal(s.nationalPresident.meta.status,'waiting');assert.deepEqual(s.nationalPresident.candidates,[]);
+    assert.equal(s.municipalities.length,295);assert.equal(new Set(s.municipalities.map(m=>m.code)).size,295);assert.deepEqual(s.municipalResults,{});
     const before=requests;await getElectionSnapshot();assert.equal(requests,before);
+    await assert.rejects(getElectionSnapshot([{office:'governor',code:'99999'}]),/fora de Santa Catarina/);assert.equal(requests,before);
+    const chosen=[{office:'federalDeputy' as const,code:'80594'},{office:'stateDeputy' as const,code:'80918'}];
+    const local=await getElectionSnapshot(chosen);assert.equal(local.source.files.length,10);assert.equal(requests,before+2);
+    assert.equal(local.municipalResults['federalDeputy:80594'].municipality.name,'CAIBI');assert.equal(local.municipalResults['stateDeputy:80918'].meta.status,'waiting');
+    assert.deepEqual(local.municipalResults['stateDeputy:80918'].candidateVotes,{});
+    await getElectionSnapshot([...chosen,chosen[0]]);assert.equal(requests,before+2);
     const original=realNow();Date.now=()=>original+13000;globalThis.fetch=async()=>{throw new Error('offline');};
-    const stale=await getElectionSnapshot();assert.equal(stale.stale,true);assert.equal(stale.trackedCandidates.oscarGutz.candidate?.id,s.trackedCandidates.oscarGutz.candidate?.id);
-  } finally {globalThis.fetch=realFetch;Date.now=realNow;mock.restoreAll();}
+    const stale=await getElectionSnapshot(chosen);assert.equal(stale.stale,true);assert.deepEqual(stale.stateDeputy,s.stateDeputy);assert.equal(stale.municipalResults['stateDeputy:80918'].stale,true);
+  }finally{globalThis.fetch=realFetch;Date.now=realNow;mock.restoreAll();}
+});
+test('cliente limita concorrência global e compartilha arquivo simultâneo',async()=>{
+  const realFetch=globalThis.fetch;let active=0,max=0,calls=0;
+  globalThis.fetch=async()=>{calls++;active++;max=Math.max(max,active);await new Promise(resolve=>setTimeout(resolve,10));active--;return new Response(fixture('ele-c.jws'),{status:200});};
+  try{
+    const urls=Array.from({length:12},(_,i)=>`https://resultados.tse.jus.br/oficial/tests/concurrency-${i}.jws`);
+    await Promise.all([...urls,urls[0],urls[0]].map(url=>fetchOfficial(url)));
+    assert.equal(calls,12);assert.equal(max,6);
+  }finally{globalThis.fetch=realFetch;}
 });
