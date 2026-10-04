@@ -1,6 +1,8 @@
 import { z } from 'zod';
 
 const scalar = z.union([z.string(), z.number()]);
+const count=scalar.refine(value=>{const n=typeof value==='number'?value:Number(value);return String(value).trim()!==''&&Number.isSafeInteger(n)&&n>=0;},'Quantidade eleitoral inválida');
+const percent=scalar.refine(value=>{const n=typeof value==='number'?value:Number(value.replace(',','.'));return String(value).trim()!==''&&Number.isFinite(n)&&n>=0&&n<=100;},'Percentual eleitoral inválido');
 const cand = z.object({
   n: scalar, sqcand: scalar, nm: z.string(), nmu: z.string(), seq: scalar,
   e: z.enum(['s','n']), st: z.string(), vap: scalar, pvap: scalar,
@@ -22,6 +24,8 @@ export const resultSchema = z.object({
     })),
   })),
   s: z.object({ ts: scalar, st: scalar, pst: scalar, pstn: scalar.optional() }),
+  e:z.object({te:count.optional(),esa:count.optional(),c:count.optional(),a:count.optional(),pc:percent.optional(),pcn:percent.optional(),pa:percent.optional(),pan:percent.optional()}).optional(),
+  v:z.object({tv:count.optional(),vv:count.optional(),vb:count.optional(),tvn:count.optional(),vn:count.optional(),vnt:count.optional(),ptvn:percent.optional(),ptvnn:percent.optional(),van:count.optional(),vansj:count.optional(),vscv:count.optional()}).optional(),
 });
 export type TseResult = z.infer<typeof resultSchema>;
 export const configurationSchema = z.object({

@@ -67,7 +67,7 @@ export function emptySnapshot(uf='sc'):ElectionSnapshot {
   return {state:{uf,name:BRAZIL_STATES.find(s=>s.uf.toLowerCase()===uf)?.name||uf.toUpperCase()},status:'unavailable',updatedAt:null,checkedAt:new Date().toISOString(),stale:false,warnings:[],
     progress:{percentage:null,sections:null,totalSections:null,office:'governor'},
     president:[],governor:[],senator:[],federalDeputy:[],stateDeputy:[],leaders:{president:null,governor:null,senator:[]},nationalPresident:{candidates:[],meta:emptyOffice(),stale:false},
-    offices:Object.fromEntries(OFFICES.map(o=>[o,emptyOffice()])) as Record<Office,OfficeMeta>,partyResults:{},municipalities:[],municipalResults:{},
+    offices:Object.fromEntries(OFFICES.map(o=>[o,emptyOffice()])) as Record<Office,OfficeMeta>,partyResults:{},statistics:{},municipalities:[],municipalResults:{},
     source:{name:'TSE / Justiça Eleitoral',url:TSE_ORIGIN,verifiedSignatures:false,files:[CONFIG_URL]}};
 }
 async function mapLimited<T,R>(items:T[],fn:(item:T)=>Promise<R>,concurrency=6):Promise<R[]> {
@@ -89,7 +89,7 @@ export async function getPresidentsByState():Promise<PresidentsByStateSnapshot>{
       try{
         const normalized=normalizeResult(parseResult(await fetchOfficial(url),'president',ctx.elections.president,undefined,uf),'president',directory(ctx,'ft','president'));
         if(prior?.meta.updatedAt&&normalized.meta.updatedAt&&normalized.meta.updatedAt<prior.meta.updatedAt)throw new Error('Geração estadual anterior recebida.');
-        return {uf:state.uf,name:state.name,candidates:normalized.candidates.filter(c=>c.rank!==null).slice(0,2),meta:normalized.meta,stale:false,verifiedSignatures:true,source:url} satisfies StatePresidentResult;
+        return {uf:state.uf,name:state.name,candidates:normalized.candidates.filter(c=>c.rank!==null).slice(0,2),meta:normalized.meta,statistics:normalized.statistics,stale:false,verifiedSignatures:true,source:url} satisfies StatePresidentResult;
       }catch{
         return prior?{...prior,stale:true}:{uf:state.uf,name:state.name,candidates:[],meta:emptyOffice(),stale:true,verifiedSignatures:false,source:url};
       }
@@ -107,11 +107,11 @@ async function loadSnapshot(previous:ElectionSnapshot|undefined,uf='sc'):Promise
       const normalized=normalizeResult(result,office,directory(ctx,'ft',office));
       const prior=previous?.offices[office];
       if(prior?.updatedAt&&normalized.meta.updatedAt&&normalized.meta.updatedAt<prior.updatedAt)throw new Error('Geração anterior recebida.');
-      snapshot[office]=normalized.candidates;snapshot.offices[office]=normalized.meta;snapshot.partyResults![office]=normalized.parties;available++;
+      snapshot[office]=normalized.candidates;snapshot.offices[office]=normalized.meta;snapshot.partyResults![office]=normalized.parties;snapshot.statistics![office]=normalized.statistics;available++;
       if(result.dv!=='s')snapshot.warnings.push(`${OFFICE_CONFIG[office].label}: divulgação suspensa pelo TSE.`);
     }catch{
       snapshot.stale=true;
-      if(previous?.offices[office].generation){snapshot[office]=previous[office];snapshot.offices[office]=previous.offices[office];snapshot.partyResults![office]=previous.partyResults?.[office]||[];}
+      if(previous?.offices[office].generation){snapshot[office]=previous[office];snapshot.offices[office]=previous.offices[office];snapshot.partyResults![office]=previous.partyResults?.[office]||[];if(previous.statistics?.[office])snapshot.statistics![office]=previous.statistics[office];}
       snapshot.warnings.push(`${OFFICE_CONFIG[office].label}: atualização indisponível${previous?.offices[office].generation?'; dados anteriores preservados':''}.`);
     }
   });

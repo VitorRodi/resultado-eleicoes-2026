@@ -1,8 +1,8 @@
 'use client';
-import { LayoutGrid, ListOrdered, MapPin, Users, Map, ShieldCheck, RotateCcw, SlidersHorizontal, ArrowLeftRight, History } from 'lucide-react';
+import { LayoutGrid, ListOrdered, MapPin, Users, Map, ShieldCheck, RotateCcw, SlidersHorizontal, ArrowLeftRight, History, Vote } from 'lucide-react';
 import { officeLabel } from '@/lib/config';
 import { OFFICES, type Office } from '@/types/election';
-export type PanelView='all'|'results'|'candidates'|'municipal'|'map'|'sources'|'comparison'|'history'|'parties';
+export type PanelView='all'|'results'|'candidates'|'municipal'|'map'|'sources'|'comparison'|'history'|'parties'|'turnout';
 export type OfficeFilter='all'|Office;
 const views=[
   {id:'all',label:'Tudo',icon:LayoutGrid},
@@ -12,6 +12,7 @@ const views=[
   {id:'comparison',label:'Comparar candidatos',icon:ArrowLeftRight},
   {id:'history',label:'Histórico',icon:History},
   {id:'parties',label:'Partidos e federações',icon:Users},
+  {id:'turnout',label:'Votantes e nulos',icon:Vote},
   {id:'map',label:'Mapa da apuração',icon:Map},
   {id:'sources',label:'Fontes',icon:ShieldCheck},
 ] as const;

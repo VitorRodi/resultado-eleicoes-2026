@@ -11,6 +11,13 @@ export type PartyResult = {
   id:string; name:string; label:string; federation:string|null;
   nominalVotes:number|null; legendVotes:number|null; electedIds:string[];
 };
+export type VoteStatistics={
+  eligible:number|null; countedElectorate:number|null;
+  turnout:number|null; turnoutPercentage:number|null; abstentions:number|null; abstentionPercentage:number|null;
+  totalVotes:number|null; validVotes:number|null; blankVotes:number|null;
+  nullVotes:number|null; nullVotesPercentage:number|null; technicalNullVotes:number|null;
+  annulledVotes:number|null; annulledSubJudiceVotes:number|null; noCandidateVotes:number|null;
+};
 export type OfficeMeta = {
   status: 'waiting' | 'counting' | 'finished' | 'unavailable';
   percentage: number | null; sections: number | null; totalSections: number | null;
@@ -35,10 +42,12 @@ export type MunicipalResult = {
 };
 export type NationalPresidentSnapshot = {
   candidates: Candidate[]; meta: OfficeMeta; stale: boolean; checkedAt: string;
+  statistics?:VoteStatistics;
   source: { verifiedSignatures: boolean; files: string[] };
 };
 export type StatePresidentResult = {
   uf: string; name: string; candidates: Candidate[]; meta: OfficeMeta;
+  statistics?:VoteStatistics;
   stale: boolean; verifiedSignatures: boolean; source: string;
 };
 export type PresidentsByStateSnapshot = {
@@ -55,6 +64,7 @@ export type ElectionSnapshot = {
   federalDeputy: Candidate[]; stateDeputy: Candidate[];
   offices: Record<Office, OfficeMeta>;
   partyResults?: Partial<Record<Office, PartyResult[]>>;
+  statistics?: Partial<Record<Office, VoteStatistics>>;
   municipalities: Municipality[];
   municipalResults: Record<string, MunicipalResult>;
   source: { name: string; url: string; verifiedSignatures: boolean; files: string[] };

@@ -20,6 +20,7 @@ import { track } from '@/lib/tracking';
 import {DisplaySettingsProvider} from './display-settings';
 import PartyPanel from '@/components/rankings/party-panel';
 import {useCandidateHistory} from '@/hooks/use-candidate-history';
+import TurnoutChart from '@/components/charts/turnout-chart';
 import { OFFICES, type Office, type Candidate, type ElectionSnapshot, type TrackedCandidate, type WatchPreferences } from '@/types/election';
 
 function Leader({ office, candidates, state,uf='sc' }: { uf?:string; office:'president'|'governor'|'senator'; candidates:Candidate[]; state?:ElectionSnapshot }) {
@@ -94,6 +95,7 @@ function StateDashboard({uf,onSelectState}:{uf:string;onSelectState:(uf:string)=
         if(prior?.generation&&((updatedAt&&prior.updatedAt&&updatedAt<prior.updatedAt)||!data.offices[office].generation)){
           data[office]=previous![office];data.offices[office]=prior;data.stale=true;
           data.partyResults={...data.partyResults,[office]:previous!.partyResults?.[office]||[]};
+          data.statistics={...data.statistics,[office]:previous!.statistics?.[office]};
           if(office==='governor')data.progress=previous!.progress;
           if(office==='president'||office==='governor')data.leaders[office]=previous!.leaders[office];
           if(office==='senator')data.leaders.senator=previous!.leaders.senator;
@@ -151,6 +153,7 @@ function StateDashboard({uf,onSelectState}:{uf:string;onSelectState:(uf:string)=
       </section>
       {warnings.length > 0 && <aside className="warning" role="status"><TriangleAlert size={18} aria-hidden="true" /><div><strong>Atualização com aviso</strong>{warnings.map((w,i) => <p key={`${w}-${i}`}>{w}</p>)}</div></aside>}
       {showResults&&selectedOffice('president')&&<NationalPresident data={snapshot?.nationalPresident} />}
+      {['all','results','turnout'].includes(view)&&<TurnoutChart snapshot={snapshot} uf={uf} stateName={stateDefinition.name} officeFilter={officeFilter}/>}
       {showResults&&(['senator','federalDeputy','stateDeputy'] as const).filter(selectedOffice).map(office=><PositionPanel key={office} office={office} candidates={snapshot?.[office]} meta={snapshot?.offices[office]} uf={uf} stateName={stateDefinition.name} />)}
       {showResults&&majorOffices.length>0&&<><div className="section-heading"><div><span className="section-tag">PANORAMA ESTADUAL</span><h2>Quem está na frente em {uf.toUpperCase()}?</h2></div><span className="muted small">Liderança parcial não significa eleição.</span></div>
       <section className={`leaders-grid ${majorOffices.length===1?'single-result-grid':''}`} aria-label={`Lideranças em ${stateDefinition.name}`}>{majorOffices.map(office=><Leader key={office} uf={uf} office={office} candidates={office==='senator'?snapshot?.leaders.senator||[]:snapshot?.leaders[office]?[snapshot.leaders[office]!]:[]} state={snapshot||undefined}/>)}</section></>}

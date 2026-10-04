@@ -1,11 +1,12 @@
-import type { Candidate, Office, OfficeMeta, PartyResult } from '../../types/election';
+import type { Candidate, Office, OfficeMeta, PartyResult, VoteStatistics } from '../../types/election';
 import type { TseResult } from './types';
 import { parseNumber, officialTimestamp } from './parser';
 import { rankCandidates } from '../../lib/ranking';
 import { officialPhoto } from './photos';
 import { electedByTse } from '../../lib/elected';
+import {normalizeStatistics} from './statistics';
 
-export function normalizeResult(result: TseResult, office: Office, photoDirectory: string): { candidates: Candidate[]; meta: OfficeMeta; parties:PartyResult[] } {
+export function normalizeResult(result: TseResult, office: Office, photoDirectory: string): { candidates: Candidate[]; meta: OfficeMeta; parties:PartyResult[]; statistics:VoteStatistics } {
   const visible = result.dv === 's';
   const started = visible && parseNumber(result.s.st) > 0 && result.and !== 'n';
   const candidates: Candidate[] = [];
@@ -21,6 +22,7 @@ export function normalizeResult(result: TseResult, office: Office, photoDirector
   }
   return {
     candidates: rankCandidates(candidates, started),
+    statistics:normalizeStatistics(result,visible,started),
     parties: visible ? result.carg[0].agr.flatMap(group=>group.par.map(party=>({
       id:party.sg, name:party.nm||party.sg, label:party.sg,
       federation:group.tp==='f'?group.nm||`Federação ${group.n}`:null,
