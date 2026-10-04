@@ -120,6 +120,9 @@ async function loadSnapshot(previous: ElectionSnapshot | undefined): Promise<Ele
       const normalized = normalizeResult(result,office,directory(ctx,'ft',office));
       const candidateId = snapshot.trackedCandidates[key].candidate?.id;
       const candidate = normalized.candidates.find(c => c.id === candidateId);
+      const prior = previous?.regionalMunicipalVotes[key].find(r => r.code === municipality.code);
+      if (prior?.updatedAt && normalized.meta.updatedAt && normalized.meta.updatedAt < prior.updatedAt)
+        throw new Error('Geração municipal anterior recebida.');
       row = { ...row, percentage: normalized.meta.percentage, status: normalized.meta.status, updatedAt: normalized.meta.updatedAt,
         votes: normalized.meta.status !== 'waiting' && candidate ? candidate.votes : null };
       if (['counting','finished'].includes(normalized.meta.status) && !candidate) row.status = 'unavailable';
