@@ -1,0 +1,34 @@
+export const OFFICES = ['president', 'governor', 'senator', 'federalDeputy', 'stateDeputy'] as const;
+export type Office = typeof OFFICES[number];
+export type TrackedKey = 'danielaReinehr' | 'oscarGutz';
+export type Candidate = {
+  id: string; name: string; fullName: string; number: string; party: string;
+  office: Office; votes: number; percentage: number; rank: number | null;
+  officialStatus: string | null; officialElected: boolean; photoUrl: string | null;
+  destination: string | null;
+};
+export type OfficeMeta = {
+  status: 'waiting' | 'counting' | 'finished' | 'unavailable';
+  percentage: number | null; sections: number | null; totalSections: number | null;
+  updatedAt: string | null; generation: string | null; seats: number | null;
+};
+export type TrackedCandidate = {
+  candidate: Candidate | null; voteDelta: number | null; rankDelta: number | null;
+  previousRank: number | null; gapAbove: number | null;
+};
+export type MunicipalVote = {
+  name: string; code: string | null; votes: number | null; percentage: number | null;
+  status: 'waiting' | 'counting' | 'finished' | 'unavailable'; updatedAt: string | null;
+};
+export type ElectionSnapshot = {
+  status: 'waiting' | 'counting' | 'finished' | 'unavailable';
+  updatedAt: string | null; checkedAt: string; stale: boolean; warnings: string[];
+  progress: { percentage: number | null; sections: number | null; totalSections: number | null; office: 'governor' };
+  leaders: { president: Candidate | null; governor: Candidate | null; senator: Candidate[] };
+  president: Candidate[]; governor: Candidate[]; senator: Candidate[];
+  federalDeputy: Candidate[]; stateDeputy: Candidate[];
+  offices: Record<Office, OfficeMeta>;
+  trackedCandidates: Record<TrackedKey, TrackedCandidate>;
+  regionalMunicipalVotes: Record<TrackedKey, MunicipalVote[]>;
+  source: { name: string; url: string; verifiedSignatures: boolean; files: string[] };
+};

@@ -1,0 +1,5 @@
+# Fixtures oficiais de teste
+
+Arquivos JWS baixados diretamente de `https://resultados.tse.jus.br/oficial/` em 04/10/2026, antes da totalização. As assinaturas são verificadas nos testes com a chave oficial publicada pelo TSE. `ele-c.jws` é EA11; `mun-e006259-cm.jws` é EA12; arquivos `-u.jws` são EA20.
+
+Estas fixtures **nunca são importadas pela aplicação ou pela API de produção**. Cenários com votos nos testes são mutações sintéticas locais da estrutura oficial, identificadas no código de teste.
