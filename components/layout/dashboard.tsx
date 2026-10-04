@@ -6,6 +6,7 @@ import NationalPresident from '@/components/cards/national-president';
 import PositionPanel from '@/components/cards/position-panel';
 import ProjectFooter from './project-footer';
 import StateNavigation from './state-navigation';
+import PresidentDashboard from './president-dashboard';
 import { BRAZIL_STATES } from '@/lib/brazil-states';
 import BrazilProgressMap from '@/components/charts/brazil-progress-map';
 import { defaultWatchlist, DEFAULTS_KEY } from '@/lib/default-watchlist';
@@ -25,7 +26,7 @@ function Leader({ office, candidates, state,uf='sc' }: { uf?:string; office:'pre
     <div className="leader-footer"><span>{waiting ? 'Totalização não iniciada' : meta?.status === 'finished' ? 'Totalização final' : 'Liderança no resultado atual'}</span><ArrowUpRight size={14} aria-hidden="true" /></div>
   </article>;
 }
-export default function Dashboard(){const [uf,setUf]=useState('sc');return <div className="country-shell"><StateNavigation uf={uf} onSelect={value=>{setUf(value);window.scrollTo({top:0,behavior:'instant'});}}/><div className="country-content"><StateDashboard key={uf} uf={uf}/></div></div>;}
+export default function Dashboard(){const [uf,setUf]=useState('sc');return <div className="country-shell"><StateNavigation uf={uf} onSelect={value=>{setUf(value);window.scrollTo({top:0,behavior:'instant'});}}/><div className="country-content">{uf==='br'?<PresidentDashboard/>:<StateDashboard key={uf} uf={uf}/>}</div></div>;}
 function StateDashboard({uf}:{uf:string}) {
   const stateDefinition=BRAZIL_STATES.find(s=>s.uf.toLowerCase()===uf)!;
   const storageKey=uf==='sc'?STORAGE_KEY:`eleicoes-${uf}-2026:preferences:v1`;

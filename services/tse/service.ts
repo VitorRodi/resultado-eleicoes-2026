@@ -7,7 +7,7 @@ import { OFFICE_CONFIG, officeCode } from '../../lib/config';
 import { BRAZIL_STATES } from '../../lib/brazil-states';
 import { SnapshotCache } from '../../lib/cache';
 import { municipalKey } from '../../lib/preferences';
-import { OFFICES, type ElectionSnapshot, type Office, type OfficeMeta, type Municipality, type MunicipalRequest, type MunicipalResult } from '../../types/election';
+import { OFFICES, type ElectionSnapshot, type Office, type OfficeMeta, type Municipality, type MunicipalRequest, type MunicipalResult, type NationalPresidentSnapshot } from '../../types/election';
 
 type Context = { uf:string; config:TseConfiguration; cycle:string; pleito:string; elections:Record<Office,string>; municipalities:Municipality[]; sources:string[] };
 function directory(ctx:Omit<Context,'municipalities'|'sources'>,type:string,office:Office,scope:string=ctx.uf):string {
@@ -52,6 +52,17 @@ async function getContext(uf='sc'):Promise<Context> {
   return ctx;
 }
 const emptyOffice=():OfficeMeta=>({status:'unavailable',percentage:null,sections:null,totalSections:null,updatedAt:null,generation:null,seats:null});
+const nationalPresidentCache=new SnapshotCache<NationalPresidentSnapshot>(12_000,last=>({
+  ...(last||{candidates:[],meta:emptyOffice(),source:{verifiedSignatures:false,files:[]}}),stale:true,checkedAt:new Date().toISOString(),
+}));
+export async function getNationalPresident():Promise<NationalPresidentSnapshot>{
+  return nationalPresidentCache.get(async previous=>{
+    const ctx=await getContext(),url=`${directory(ctx,'u','president','br')}/br-c0001-e${ctx.elections.president.padStart(6,'0')}-u.jws`;
+    const normalized=normalizeResult(parseNationalPresident(await fetchOfficial(url),ctx.elections.president),'president',directory(ctx,'ft','president'));
+    if(previous?.meta.updatedAt&&normalized.meta.updatedAt&&normalized.meta.updatedAt<previous.meta.updatedAt)throw new Error('Geração nacional anterior recebida.');
+    return {...normalized,stale:false,checkedAt:new Date().toISOString(),source:{verifiedSignatures:true,files:[CONFIG_URL,url]}};
+  });
+}
 export function emptySnapshot(uf='sc'):ElectionSnapshot {
   return {state:{uf,name:BRAZIL_STATES.find(s=>s.uf.toLowerCase()===uf)?.name||uf.toUpperCase()},status:'unavailable',updatedAt:null,checkedAt:new Date().toISOString(),stale:false,warnings:[],
     progress:{percentage:null,sections:null,totalSections:null,office:'governor'},
@@ -86,10 +97,12 @@ async function loadSnapshot(previous:ElectionSnapshot|undefined,uf='sc'):Promise
   const nationalUrl=`${directory(ctx,'u','president','br')}/br-c0001-e${ctx.elections.president.padStart(6,'0')}-u.jws`;
   snapshot.source.files.push(nationalUrl);
   try{
-    const normalized=normalizeResult(parseNationalPresident(await fetchOfficial(nationalUrl),ctx.elections.president),'president',directory(ctx,'ft','president'));
+    const normalized=await getNationalPresident();
+    if(!normalized.source.verifiedSignatures)throw new Error('Resultado nacional indisponível.');
     const prior=previous?.nationalPresident;
     if(prior?.meta.updatedAt&&normalized.meta.updatedAt&&normalized.meta.updatedAt<prior.meta.updatedAt)throw new Error('Geração nacional anterior recebida.');
-    snapshot.nationalPresident={candidates:normalized.candidates.filter(c=>c.rank!==null).slice(0,2),meta:normalized.meta,stale:false};
+    snapshot.nationalPresident={candidates:normalized.candidates.filter(c=>c.rank!==null).slice(0,2),meta:normalized.meta,stale:normalized.stale};
+    if(normalized.stale){snapshot.stale=true;snapshot.warnings.push('Presidente no Brasil: último resultado válido preservado; atualização indisponível.');}
     available++;
     if(normalized.meta.status==='unavailable')snapshot.warnings.push('Presidente no Brasil: divulgação suspensa pelo TSE.');
   }catch{

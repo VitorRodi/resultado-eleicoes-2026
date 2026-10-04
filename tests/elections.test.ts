@@ -10,7 +10,7 @@ import { confirmedElected, electedByTse } from '../lib/elected';
 import { findCandidate, track, sumRegional } from '../lib/tracking';
 import { SnapshotCache } from '../lib/cache';
 import { emptyPreferences, parsePreferences, municipalRequests, parseRegionalQuery, regionalRows } from '../lib/preferences';
-import { emptySnapshot, getElectionSnapshot } from '../services/tse/service';
+import { emptySnapshot, getElectionSnapshot, getNationalPresident } from '../services/tse/service';
 import type { Office, Candidate, MunicipalVote } from '../types/election';
 const fixture = (name:string) => readFileSync(join(process.cwd(),'tests/fixtures',name),'utf8');
 const official = (name:string) => verifyOfficialJws(fixture(name));
@@ -186,6 +186,11 @@ test('integração: catálogo SC, consultas sob demanda, cache e erro',async()=>
     const s=await getElectionSnapshot();assert.equal(s.status,'waiting');assert.equal(s.stale,false);assert.equal(s.source.verifiedSignatures,true);assert.equal(s.source.files.length,8);assert.equal(s.nationalPresident.meta.status,'waiting');assert.deepEqual(s.nationalPresident.candidates,[]);
     assert.equal(s.municipalities.length,295);assert.equal(new Set(s.municipalities.map(m=>m.code)).size,295);assert.deepEqual(s.municipalResults,{});
     const before=requests;await getElectionSnapshot();assert.equal(requests,before);
+    const national=await getNationalPresident();
+    assert.equal(requests,before);assert.equal(national.source.verifiedSignatures,true);assert.equal(national.meta.status,'waiting');
+    assert.ok(national.candidates.length>2);assert.ok(national.candidates.every(c=>c.office==='president'&&c.rank===null));
+    assert.ok(national.source.files.some(url=>url.endsWith('/br-c0001-e006257-u.jws')));
+    assert.ok(national.source.files.every(url=>!url.includes('/sc-c')));
     await assert.rejects(getElectionSnapshot([{office:'governor',code:'99999'}]),/fora de SC/);assert.equal(requests,before);
     const chosen=[{office:'federalDeputy' as const,code:'80594'},{office:'stateDeputy' as const,code:'80918'}];
     const local=await getElectionSnapshot(chosen);assert.equal(local.source.files.length,10);assert.equal(requests,before+2);
@@ -194,6 +199,7 @@ test('integração: catálogo SC, consultas sob demanda, cache e erro',async()=>
     await getElectionSnapshot([...chosen,chosen[0]]);assert.equal(requests,before+2);
     const original=realNow();Date.now=()=>original+13000;globalThis.fetch=async()=>{throw new Error('offline');};
     const stale=await getElectionSnapshot(chosen);assert.equal(stale.stale,true);assert.deepEqual(stale.stateDeputy,s.stateDeputy);assert.equal(stale.municipalResults['stateDeputy:80918'].stale,true);
+    const staleNational=await getNationalPresident();assert.equal(staleNational.stale,true);assert.deepEqual(staleNational.candidates,national.candidates);
   }finally{globalThis.fetch=realFetch;Date.now=realNow;mock.restoreAll();}
 });
 test('cliente limita concorrência global e compartilha arquivo simultâneo',async()=>{

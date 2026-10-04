@@ -6,6 +6,7 @@ Painel independente com dados oficiais do TSE. Reúne os cinco cargos do primeir
 
 ## Recursos
 
+- Aba “Geral · Brasil” acima dos estados: resultado presidencial nacional, incluindo o exterior, com os dois mais votados, ranking completo e progresso nacional. Usa o arquivo BR oficial, sem somar votos de arquivos estaduais.
 - Seleção dos 26 estados e Distrito Federal. Cada seleção troca os resultados, fotos, candidaturas e catálogo municipal. No DF, o cargo local usa o código 8 e o nome deputado distrital.
 - Preferências independentes por UF, preservando as escolhas anteriores de SC. Somente o estado selecionado é consultado pelo navegador; não há download de todos os resultados na primeira visita.
 - Cartões acompanhados mostram posição nominal por votos e faixa de situação eleitoral oficial. A posição não produz uma projeção de eleição; o selo de confirmação exige a indicação validada do TSE.
@@ -91,6 +92,8 @@ A consulta inicial usa oito arquivos: configuração eleitoral, catálogo munici
 - Respostas saudáveis sem seleção municipal usam cache CDN (`s-maxage=10`, `stale-while-revalidate=5`). Consultas personalizadas e respostas com falha usam `no-store`.
 
 ## API
+
+`GET /api/elections/br/president` retorna todos os candidatos à Presidência no resultado nacional, `meta`, `checkedAt`, `stale` e `source`. Valida assinatura e abrangência BR, compartilha a consulta com o destaque nacional das UFs e preserva a última geração válida em falha ou regressão de horário. Antes da contagem, os registros permanecem disponíveis sem posição ou votos apresentados como resultado.
 
 `GET /api/elections/br/progress` retorna apenas percentuais, seções e andamento das UFs para a eleição presidencial. Usa o diretório `ab` do EA11 e valida o arquivo `br-e006257-ab.jws`, incluindo assinatura, fase oficial, turno, eleição, UFs, duplicações e limites numéricos. Brasil agregado e exterior não entram no mapa. Dados ausentes continuam indisponíveis; falhas preservam o último progresso válido.
 

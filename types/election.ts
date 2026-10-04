@@ -28,6 +28,10 @@ export type MunicipalResult = {
   municipality: Municipality; office: Office; meta: OfficeMeta; stale: boolean;
   candidateVotes: Record<string, { votes: number; percentage: number }>;
 };
+export type NationalPresidentSnapshot = {
+  candidates: Candidate[]; meta: OfficeMeta; stale: boolean; checkedAt: string;
+  source: { verifiedSignatures: boolean; files: string[] };
+};
 export type ElectionSnapshot = {
   state:{uf:string;name:string};
   status: 'waiting' | 'counting' | 'finished' | 'unavailable';
