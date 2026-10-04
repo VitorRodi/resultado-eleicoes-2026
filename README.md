@@ -6,6 +6,8 @@ Painel independente com dados oficiais do TSE. Reúne os cinco cargos do primeir
 
 ## Recursos
 
+- Barra de filtros ao abrir cada estado: “Tudo”, “Resultados por cargo”, “Meus candidatos”, “Municípios”, “Mapa da apuração” e “Fontes”. O filtro por cargo atua nos resultados e acompanhamentos; “Limpar filtros” restaura a visão completa. Filtrar não modifica favoritos nem cidades salvas. Novos acompanhamentos começam com o cargo escolhido no filtro.
+- Mapa com liderança presidencial por votos: vermelho para Lula (13/PT), azul para Flávio Bolsonaro (22/PL), indicação distinta para empate, outro candidato ou ausência de dados. Usa os votos oficiais da própria UF; mantém percentuais de apuração e uma opção para voltar ao mapa por progresso. Ao selecionar uma UF, mostra o líder, votos, percentual e horário do resultado estadual. Liderança parcial não representa confirmação de eleição.
 - Aba “Geral · Brasil” acima dos estados: resultado presidencial nacional, incluindo o exterior, com os dois mais votados, ranking completo e progresso nacional. Usa o arquivo BR oficial, sem somar votos de arquivos estaduais.
 - Na aba Geral, quadros com os dois presidenciáveis mais votados em cada uma das 27 UFs, fotos, votos, percentuais estaduais e andamento da apuração. Atualização a cada 30 segundos; falhas preservam o último resultado válido daquela UF.
 - Seleção dos 26 estados e Distrito Federal. Cada seleção troca os resultados, fotos, candidaturas e catálogo municipal. No DF, o cargo local usa o código 8 e o nome deputado distrital.
@@ -133,7 +135,7 @@ Não incluir credenciais, `.env`, cookies, `.vercel`, `node_modules` ou `.next` 
 
 ## Validação
 
-53 testes cobrem assinaturas, parser dos cinco cargos e nacional, seleção dos dois mais votados por UF, isolamento entre estados, deputado distrital, mapa de andamento, seleção municipal múltipla, ranking, empates no limite de vagas, ausência de posições antes da contagem, confirmação de eleitos fora das primeiras posições, segundo turno, suplentes, eleição por QP/média fora do top 20, suspensão de divulgação, variações, soma parcial, preferências vazias ou inválidas, deduplicação, isolamento de cidades por candidato, consultas, catálogo de 295 municípios, carregamento sob demanda, cache, preservação em falhas e concorrência global. Fixtures oficiais são usadas exclusivamente em testes.
+56 testes cobrem assinaturas, parser dos cinco cargos e nacional, seleção dos dois mais votados por UF, isolamento entre estados, deputado distrital, mapa de andamento, seleção municipal múltipla, ranking, empates no limite de vagas, ausência de posições antes da contagem, confirmação de eleitos fora das primeiras posições, segundo turno, suplentes, eleição por QP/média fora do top 20, suspensão de divulgação, variações, soma parcial, preferências vazias ou inválidas, deduplicação, isolamento de cidades por candidato, consultas, catálogo de 295 municípios, carregamento sob demanda, cache, preservação em falhas e concorrência global. Fixtures oficiais são usadas exclusivamente em testes.
 
 TypeScript, lint, build e fluxos de personalização são verificados em desktop e celular.
 
