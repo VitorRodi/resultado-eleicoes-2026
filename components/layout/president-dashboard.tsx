@@ -2,6 +2,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ExternalLink, Globe2, Radio, RefreshCw, ShieldCheck, TriangleAlert } from 'lucide-react';
 import NationalPresident from '@/components/cards/national-president';
+import PresidentsByState from '@/components/cards/presidents-by-state';
 import Ranking from '@/components/rankings/ranking';
 import BrazilProgressMap from '@/components/charts/brazil-progress-map';
 import { clock, number, percentage } from '@/lib/formatting';
@@ -51,6 +52,7 @@ export default function PresidentDashboard(){
       <NationalPresident data={leaders}/>
       <div className="section-heading"><div><span className="section-tag">RESULTADO NACIONAL</span><h2>Todos os candidatos à Presidência</h2><p className="section-description muted">Votos em todo o Brasil e no exterior, ordenados por posição atual.</p></div></div>
       <section className="president-national-ranking" aria-label="Ranking nacional de presidente"><Ranking uf="br" stateName="Brasil e exterior" office="president" candidates={data?.candidates} meta={meta}/></section>
+      <PresidentsByState/>
       <BrazilProgressMap/>
       <section className="source-section"><ShieldCheck size={22} className="accent"/><div><h2>Resultado oficial nacional</h2><p className="small muted">{data?.source.verifiedSignatures?'Arquivo nacional do TSE com assinatura digital verificada.':'Aguardando validação da fonte oficial nacional.'} Posições são calculadas por votos, com empates. Liderança parcial não significa eleição.</p><details><summary>Consultar fontes</summary><ul>{data?.source.files.map(url=><li key={url}><a href={url} target="_blank" rel="noreferrer">{url}</a></li>)}</ul></details></div></section>
     </main><ProjectFooter/>

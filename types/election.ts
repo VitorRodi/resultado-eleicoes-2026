@@ -32,6 +32,13 @@ export type NationalPresidentSnapshot = {
   candidates: Candidate[]; meta: OfficeMeta; stale: boolean; checkedAt: string;
   source: { verifiedSignatures: boolean; files: string[] };
 };
+export type StatePresidentResult = {
+  uf: string; name: string; candidates: Candidate[]; meta: OfficeMeta;
+  stale: boolean; verifiedSignatures: boolean; source: string;
+};
+export type PresidentsByStateSnapshot = {
+  states: StatePresidentResult[]; stale: boolean; checkedAt: string;
+};
 export type ElectionSnapshot = {
   state:{uf:string;name:string};
   status: 'waiting' | 'counting' | 'finished' | 'unavailable';

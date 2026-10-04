@@ -7,7 +7,7 @@ import { OFFICE_CONFIG, officeCode } from '../../lib/config';
 import { BRAZIL_STATES } from '../../lib/brazil-states';
 import { SnapshotCache } from '../../lib/cache';
 import { municipalKey } from '../../lib/preferences';
-import { OFFICES, type ElectionSnapshot, type Office, type OfficeMeta, type Municipality, type MunicipalRequest, type MunicipalResult, type NationalPresidentSnapshot } from '../../types/election';
+import { OFFICES, type ElectionSnapshot, type Office, type OfficeMeta, type Municipality, type MunicipalRequest, type MunicipalResult, type NationalPresidentSnapshot, type PresidentsByStateSnapshot, type StatePresidentResult } from '../../types/election';
 
 type Context = { uf:string; config:TseConfiguration; cycle:string; pleito:string; elections:Record<Office,string>; municipalities:Municipality[]; sources:string[] };
 function directory(ctx:Omit<Context,'municipalities'|'sources'>,type:string,office:Office,scope:string=ctx.uf):string {
@@ -75,6 +75,27 @@ async function mapLimited<T,R>(items:T[],fn:(item:T)=>Promise<R>,concurrency=6):
   await Promise.all(Array.from({length:Math.min(items.length,concurrency)},async()=>{
     while(next<items.length){const i=next++;output[i]=await fn(items[i]);}
   }));return output;
+}
+const emptyPresidentsByState=():PresidentsByStateSnapshot=>({states:BRAZIL_STATES.map(s=>({uf:s.uf,name:s.name,candidates:[],meta:emptyOffice(),stale:true,verifiedSignatures:false,source:''})),stale:true,checkedAt:new Date().toISOString()});
+const presidentsByStateCache=new SnapshotCache<PresidentsByStateSnapshot>(30_000,last=>({
+  ...(last||emptyPresidentsByState()),states:(last||emptyPresidentsByState()).states.map(s=>({...s,stale:true})),stale:true,checkedAt:new Date().toISOString(),
+}));
+export async function getPresidentsByState():Promise<PresidentsByStateSnapshot>{
+  return presidentsByStateCache.get(async previous=>{
+    const ctx=await getContext();
+    const states=await mapLimited([...BRAZIL_STATES],async state=>{
+      const uf=state.uf.toLowerCase(),url=`${directory(ctx,'u','president',uf)}/${uf}-c0001-e${ctx.elections.president.padStart(6,'0')}-u.jws`;
+      const prior=previous?.states.find(s=>s.uf===state.uf);
+      try{
+        const normalized=normalizeResult(parseResult(await fetchOfficial(url),'president',ctx.elections.president,undefined,uf),'president',directory(ctx,'ft','president'));
+        if(prior?.meta.updatedAt&&normalized.meta.updatedAt&&normalized.meta.updatedAt<prior.meta.updatedAt)throw new Error('Geração estadual anterior recebida.');
+        return {uf:state.uf,name:state.name,candidates:normalized.candidates.filter(c=>c.rank!==null).slice(0,2),meta:normalized.meta,stale:false,verifiedSignatures:true,source:url} satisfies StatePresidentResult;
+      }catch{
+        return prior?{...prior,stale:true}:{uf:state.uf,name:state.name,candidates:[],meta:emptyOffice(),stale:true,verifiedSignatures:false,source:url};
+      }
+    });
+    return {states,stale:states.some(s=>s.stale),checkedAt:new Date().toISOString()};
+  });
 }
 async function loadSnapshot(previous:ElectionSnapshot|undefined,uf='sc'):Promise<ElectionSnapshot> {
   const ctx=await getContext(uf),snapshot=emptySnapshot(uf);snapshot.source.files=[...ctx.sources];snapshot.municipalities=ctx.municipalities;

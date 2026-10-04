@@ -7,6 +7,7 @@ Painel independente com dados oficiais do TSE. Reúne os cinco cargos do primeir
 ## Recursos
 
 - Aba “Geral · Brasil” acima dos estados: resultado presidencial nacional, incluindo o exterior, com os dois mais votados, ranking completo e progresso nacional. Usa o arquivo BR oficial, sem somar votos de arquivos estaduais.
+- Na aba Geral, quadros com os dois presidenciáveis mais votados em cada uma das 27 UFs, fotos, votos, percentuais estaduais e andamento da apuração. Atualização a cada 30 segundos; falhas preservam o último resultado válido daquela UF.
 - Seleção dos 26 estados e Distrito Federal. Cada seleção troca os resultados, fotos, candidaturas e catálogo municipal. No DF, o cargo local usa o código 8 e o nome deputado distrital.
 - Preferências independentes por UF, preservando as escolhas anteriores de SC. Somente o estado selecionado é consultado pelo navegador; não há download de todos os resultados na primeira visita.
 - Cartões acompanhados mostram posição nominal por votos e faixa de situação eleitoral oficial. A posição não produz uma projeção de eleição; o selo de confirmação exige a indicação validada do TSE.
@@ -93,6 +94,8 @@ A consulta inicial usa oito arquivos: configuração eleitoral, catálogo munici
 
 ## API
 
+`GET /api/elections/br/president/states` retorna `states` com as 27 UFs, cada uma com até dois candidatos mais votados, `meta`, `stale`, `verifiedSignatures` e `source`, além de `checkedAt` e `stale` gerais. Consulta somente os arquivos presidenciais estaduais, valida assinatura e abrangência individual, limita a concorrência e mantém o último resultado válido por UF. Não produz ranking antes do início da contagem; dados ausentes permanecem indisponíveis. Em empate, exibe até dois nomes em ordem alfabética entre empatados.
+
 `GET /api/elections/br/president` retorna todos os candidatos à Presidência no resultado nacional, `meta`, `checkedAt`, `stale` e `source`. Valida assinatura e abrangência BR, compartilha a consulta com o destaque nacional das UFs e preserva a última geração válida em falha ou regressão de horário. Antes da contagem, os registros permanecem disponíveis sem posição ou votos apresentados como resultado.
 
 `GET /api/elections/br/progress` retorna apenas percentuais, seções e andamento das UFs para a eleição presidencial. Usa o diretório `ab` do EA11 e valida o arquivo `br-e006257-ab.jws`, incluindo assinatura, fase oficial, turno, eleição, UFs, duplicações e limites numéricos. Brasil agregado e exterior não entram no mapa. Dados ausentes continuam indisponíveis; falhas preservam o último progresso válido.
@@ -130,7 +133,7 @@ Não incluir credenciais, `.env`, cookies, `.vercel`, `node_modules` ou `.next` 
 
 ## Validação
 
-43 testes cobrem assinaturas, parser dos cinco cargos e nacional, seleção dos dois mais votados, ranking, empates no limite de vagas, ausência de posições antes da contagem, confirmação de eleitos fora das primeiras posições, segundo turno, suplentes, eleição por QP/média fora do top 20, suspensão de divulgação, variações, soma parcial, preferências vazias ou inválidas, deduplicação, isolamento de cidades por candidato, consultas, catálogo de 295 municípios, carregamento sob demanda, cache, preservação em falhas e concorrência global. Fixtures oficiais são usadas exclusivamente em testes.
+53 testes cobrem assinaturas, parser dos cinco cargos e nacional, seleção dos dois mais votados por UF, isolamento entre estados, deputado distrital, mapa de andamento, seleção municipal múltipla, ranking, empates no limite de vagas, ausência de posições antes da contagem, confirmação de eleitos fora das primeiras posições, segundo turno, suplentes, eleição por QP/média fora do top 20, suspensão de divulgação, variações, soma parcial, preferências vazias ou inválidas, deduplicação, isolamento de cidades por candidato, consultas, catálogo de 295 municípios, carregamento sob demanda, cache, preservação em falhas e concorrência global. Fixtures oficiais são usadas exclusivamente em testes.
 
 TypeScript, lint, build e fluxos de personalização são verificados em desktop e celular.
 
