@@ -11,6 +11,7 @@ export const resultSchema = z.object({
   tpabr: z.enum(['br','uf','mu','zona']), cdabr: z.string(),
   dg: z.string(), hg: z.string(), idg: scalar, dt: z.string(), ht: z.string(),
   dv: z.enum(['s','n']), tf: z.enum(['s','n']), and: z.enum(['n','p','f']),
+  md: z.enum(['e','s','n']).optional(),
   carg: z.array(z.object({
     cd: scalar, nv: scalar,
     agr: z.array(z.object({ par: z.array(z.object({ sg: z.string(), cand: z.array(cand) })) })),

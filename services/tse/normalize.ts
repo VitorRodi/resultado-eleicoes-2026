@@ -3,6 +3,7 @@ import type { TseResult } from './types';
 import { parseNumber, officialTimestamp } from './parser';
 import { rankCandidates } from '../../lib/ranking';
 import { officialPhoto } from './photos';
+import { electedByTse } from '../../lib/elected';
 
 export function normalizeResult(result: TseResult, office: Office, photoDirectory: string): { candidates: Candidate[]; meta: OfficeMeta } {
   const visible = result.dv === 's';
@@ -13,7 +14,7 @@ export function normalizeResult(result: TseResult, office: Office, photoDirector
     candidates.push({
       id: String(c.sqcand), name: c.nmu || c.nm, fullName: c.nm, number: String(c.n), party: party.sg, office,
       votes: started ? parseNumber(c.vap) : 0, percentage: started ? parseNumber(c.pvapn ?? c.pvap) : 0,
-      rank: null, officialStatus: c.st || null, officialElected: c.e === 's',
+      rank: null, officialStatus: c.st || null, officialElected: started && electedByTse(office,c.e === 's',c.st || null,result.md),
       photoUrl: officialPhoto(photoDirectory, String(c.sqcand)), destination: c.dvt || null,
     });
   }

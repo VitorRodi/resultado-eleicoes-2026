@@ -6,6 +6,7 @@ import { verifyOfficialJws, fetchOfficial } from '../services/tse/client';
 import { parseResult, parseNationalPresident, parseNumber, officialTimestamp } from '../services/tse/parser';
 import { normalizeResult } from '../services/tse/normalize';
 import { rankCandidates } from '../lib/ranking';
+import { confirmedElected, electedByTse } from '../lib/elected';
 import { findCandidate, track, sumRegional } from '../lib/tracking';
 import { SnapshotCache } from '../lib/cache';
 import { emptyPreferences, parsePreferences, municipalRequests, parseRegionalQuery, regionalRows } from '../lib/preferences';
@@ -76,6 +77,41 @@ test('empates compartilham posição',() => {
 test('primeiro por votos não vira eleito automaticamente',() => {
   const n=normalizeResult(voting(),'federalDeputy','https://resultados.tse.jus.br/oficial/ele2026/6259/fotos/sc');
   assert.equal(n.candidates[0].officialElected,false); assert.equal(n.candidates[0].officialStatus,null);
+});
+test('quadro de eleitos inclui confirmação por QP e média, mesmo fora do top 20',()=>{
+  const raw=voting();const candidates=raw.carg[0].agr.flatMap(a=>a.par.flatMap(p=>p.cand));
+  for(const [index,status] of [[0,'Eleito por QP'],[1,'Eleito por média']] as const){candidates[index].e='s';candidates[index].st=status;}
+  const result=normalizeResult(raw,'federalDeputy','https://resultados.tse.jus.br/oficial/ele2026/6259/fotos/sc');
+  const elected=confirmedElected(result.candidates);assert.equal(elected.length,2);assert.ok(elected.every(c=>c.rank!>20));
+  assert.equal(result.candidates[0].officialElected,false);
+});
+test('segundo turno não é tratado como eleição de presidente ou governador',()=>{
+  for(const office of ['president','governor'] as const){
+    assert.equal(electedByTse(office,true,'2º turno'),false);
+    assert.equal(electedByTse(office,true,null,'s'),false);
+    assert.equal(electedByTse(office,true,null),false);
+    assert.equal(electedByTse(office,true,'Eleito'),true);
+    assert.equal(electedByTse(office,true,null,'e'),true);
+  }
+});
+test('normalização da presidência respeita a definição matemática e o segundo turno',()=>{
+  const raw=parseNationalPresident(official('br-c0001-e006257-u.jws'),'6257');raw.and='p';raw.s.st='1';raw.md='s';
+  const candidate=raw.carg[0].agr[0].par[0].cand[0];candidate.e='s';candidate.st='2º turno';
+  const directory='https://resultados.tse.jus.br/oficial/ele2026/6257/fotos/br';
+  assert.equal(normalizeResult(raw,'president',directory).candidates.find(c=>c.id===String(candidate.sqcand))?.officialElected,false);
+  raw.md='e';candidate.st='';assert.equal(normalizeResult(raw,'president',directory).candidates.find(c=>c.id===String(candidate.sqcand))?.officialElected,true);
+});
+test('suplente ou não eleito não entra no quadro, mesmo com sinal conflitante',()=>{
+  for(const office of ['federalDeputy','stateDeputy','senator'] as const){
+    assert.equal(electedByTse(office,true,'Suplente'),false);
+    assert.equal(electedByTse(office,true,'Não eleito'),false);
+    assert.equal(electedByTse(office,false,'Eleito'),false);
+    assert.equal(electedByTse(office,true,'Eleito'),true);
+  }
+});
+test('zerésima nunca exibe eleito, mesmo que um sinal seja recebido antes da totalização',()=>{
+  const raw=rawFederal();raw.carg[0].agr[0].par[0].cand[0].e='s';raw.carg[0].agr[0].par[0].cand[0].st='Eleito';
+  assert.deepEqual(confirmedElected(normalizeResult(raw,'federalDeputy','https://resultados.tse.jus.br/oficial/ele2026/6259/fotos/sc').candidates),[]);
 });
 test('suspensão de divulgação oculta votação',() => {
   const n=normalizeResult({...voting(),dv:'n'},'federalDeputy','https://resultados.tse.jus.br/oficial/ele2026/6259/fotos/sc');
