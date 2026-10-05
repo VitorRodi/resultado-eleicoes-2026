@@ -1,4 +1,18 @@
 /* Reports use a document layout: forms above a readable, exportable sheet. */
+.regional-pdf-actions {
+  border-top: 1px solid var(--border);
+  padding-top: 16px;
+  margin-top: 16px;
+}
+.regional-pdf-actions button {
+  max-width: 100%;
+  white-space: normal;
+  justify-content: center;
+  text-align: center;
+}
+.regional-pdf-actions p {
+  margin: 8px 0 0;
+}
 .report-picker {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));

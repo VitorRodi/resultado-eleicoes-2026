@@ -47,6 +47,6 @@ export function regionalRows(selection:RegionalSelection, snapshot:ElectionSnaps
     const active=result && ['counting','finished'].includes(result.meta.status);
     return {name:result?.municipality.name || snapshot?.municipalities.find(m=>m.code===code)?.name || `Município ${code}`,
       code,votes:active && vote ? vote.votes : null,percentage:result?.meta.percentage ?? null,
-      status:active && !vote ? 'unavailable' : result?.meta.status || 'waiting',updatedAt:result?.meta.updatedAt || null};
+      status:active && !vote ? 'unavailable' : result?.meta.status || 'waiting',updatedAt:result?.meta.updatedAt || null,stale:result?.stale||false};
   });
 }

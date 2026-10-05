@@ -31,6 +31,7 @@ export type TrackedCandidate = {
 export type MunicipalVote = {
   name: string; code: string | null; votes: number | null; percentage: number | null;
   status: 'waiting' | 'counting' | 'finished' | 'unavailable'; updatedAt: string | null;
+  stale?:boolean;
 };
 export type Municipality = { name: string; code: string; ibgeCode?:string };
 export type CandidateSelection = { candidateId: string; office: Office };
