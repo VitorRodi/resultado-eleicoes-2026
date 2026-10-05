@@ -6,6 +6,7 @@ import {
   Map,
   ShieldCheck,
   RotateCcw,
+  FileText,
 } from "lucide-react";
 import { officeLabel } from "@/lib/config";
 import { OFFICES, type Office } from "@/types/election";
@@ -23,7 +24,9 @@ export type PanelView =
   | "turnout"
   | "alerts"
   | "municipalMap"
-  | "excel";
+  | "excel"
+  | "cityExport"
+  | "report";
 export type OfficeFilter = "all" | Office;
 const groups = [
   {
@@ -52,6 +55,7 @@ const groups = [
     items: [
       { id: "municipal", label: "Votos nas cidades" },
       { id: "excel", label: "Excel por cidade" },
+      { id: "cityExport", label: "Lista de votos da cidade" },
       { id: "municipalMap", label: "Mapa dos municípios" },
     ],
   },
@@ -62,6 +66,11 @@ const groups = [
       { id: "map", label: "Mapa da apuração" },
       { id: "turnout", label: "Votantes e nulos" },
     ],
+  },
+  {
+    label: "Relatórios",
+    icon: FileText,
+    items: [{ id: "report", label: "Relatório de candidato" }],
   },
   {
     label: "Fontes",
@@ -104,6 +113,8 @@ export default function PanelFilters({
       "alerts",
       "municipalMap",
       "excel",
+      "cityExport",
+      "report",
     ].includes(view),
     filtered = office !== "all" || pending;
   return (

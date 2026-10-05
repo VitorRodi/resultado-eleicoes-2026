@@ -5,6 +5,7 @@ import {
   FileSpreadsheet,
   Map,
   ListOrdered,
+  FileText,
 } from "lucide-react";
 import type { PanelView } from "./panel-filters";
 const actions = [
@@ -28,6 +29,18 @@ const actions = [
     icon: FileSpreadsheet,
   },
   {
+    view: "report",
+    label: "Relatório de candidato",
+    description: "Votação, situação oficial e gráficos de cidades e regiões.",
+    icon: FileText,
+  },
+  {
+    view: "cityExport",
+    label: "Lista de votos da cidade",
+    description: "Todos os candidatos de um cargo, com download em Excel.",
+    icon: FileSpreadsheet,
+  },
+  {
     view: "map",
     label: "Mapa da apuração",
     description: "Explore a liderança e as seções apuradas em cada estado.",
@@ -45,10 +58,10 @@ export default function PanelOverview({
     <section className="overview-section" aria-labelledby="overview-title">
       <div className="section-heading">
         <div>
-          <span className="section-tag">Seu caminho pela apuração</span>
-          <h2 id="overview-title">O que você quer acompanhar?</h2>
+          <span className="section-tag">Resultados de {stateName}</span>
+          <h2 id="overview-title">Escolha sua consulta</h2>
           <p className="section-description muted">
-            Comece por {stateName}. Explore os detalhes no seu ritmo.
+            Acompanhe a votação ou prepare um arquivo para compartilhar.
           </p>
         </div>
       </div>

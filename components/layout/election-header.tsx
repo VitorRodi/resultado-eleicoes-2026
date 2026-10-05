@@ -31,10 +31,10 @@ export default function ElectionHeader({
             {uf.toUpperCase()}
           </div>
           <div>
-            <p className="eyebrow">Acompanhe os resultados</p>
+            <p className="eyebrow">Resultados · Eleições 2026</p>
             <h1>{name}</h1>
             <p className="masthead-description">
-              Uma leitura mais próxima da apuração.
+              Candidatos, cidades e resultados em um só lugar.
             </p>
           </div>
         </div>

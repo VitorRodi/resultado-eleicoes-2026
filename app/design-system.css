@@ -1395,3 +1395,70 @@ summary {
     padding-bottom: 8px;
   }
 }
+.historical-comparison {
+  padding: 18px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg);
+  margin-bottom: 20px;
+}
+.historical-comparison > .small {
+  margin-top: 12px;
+  line-height: 1.7;
+}
+.historical-fields {
+  display: grid;
+  grid-template-columns: 1fr 1.6fr;
+  gap: 16px;
+  margin-top: 18px;
+}
+.historical-fields > label {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  font-size: 13px;
+  min-width: 0;
+}
+.historical-fields .search {
+  margin: 0;
+}
+.historical-fields select {
+  width: 100%;
+  min-height: 44px;
+  min-width: 0;
+  background: var(--panel);
+  color: var(--text);
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  padding: 10px;
+  font: inherit;
+}
+.historical-selected {
+  color: var(--accent);
+  border-left: 3px solid var(--accent);
+  padding-left: 12px;
+}
+.municipal-excel-preview td:not(:first-child),
+.municipal-excel-preview th:not(:first-child) {
+  text-align: right;
+}
+.municipal-excel-preview td:last-child {
+  min-width: 0;
+}
+.municipal-excel-preview th {
+  white-space: nowrap;
+}
+@media (max-width: 720px) {
+  .historical-fields {
+    grid-template-columns: 1fr;
+  }
+  .historical-comparison {
+    padding: 15px;
+  }
+  .historical-comparison .pending-toggle {
+    align-items: flex-start;
+  }
+  .historical-comparison .pending-toggle input {
+    margin-top: 3px;
+  }
+}

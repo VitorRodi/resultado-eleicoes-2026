@@ -1,0 +1,226 @@
+/* Reports use a document layout: forms above a readable, exportable sheet. */
+.report-picker {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+  margin: 24px 0;
+}
+.report-picker label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  min-width: 0;
+}
+.report-picker select,
+.report-picker input {
+  width: 100%;
+  max-width: 100%;
+  min-height: 46px;
+  border: 1px solid var(--border-strong);
+  border-radius: 5px;
+  background: var(--panel);
+  color: var(--text);
+  padding: 10px 12px;
+  font-weight: 400;
+}
+.report-picker .search {
+  position: relative;
+  display: flex;
+  align-items: center;
+  border: 0;
+  padding: 0;
+  background: transparent;
+}
+.report-picker .search > svg {
+  position: absolute;
+  left: 12px;
+  color: var(--muted);
+}
+.report-picker .search input {
+  padding-left: 37px;
+}
+.report-credit {
+  border-top: 1px solid var(--border);
+  padding-top: 18px;
+  margin-top: 28px;
+  color: var(--muted);
+}
+.report-credit a {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.report-preview-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  margin: 28px 0 12px;
+  flex-wrap: wrap;
+}
+.report-preview-heading h3 {
+  font-size: 17px;
+}
+.candidate-report-preview {
+  width: 100%;
+  height: 920px;
+  border: 1px solid var(--border);
+  background: #fff;
+  border-radius: 5px;
+}
+.candidate-report-link {
+  margin: 0 24px 18px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--accent);
+  font-size: 13px;
+  border: 1px solid var(--accent-border);
+  border-radius: 5px;
+  background: var(--panel);
+  padding: 8px 14px;
+}
+.candidate-report-link:hover {
+  background: var(--accent-soft);
+}
+.report-table {
+  max-height: 620px;
+  overflow: auto;
+  margin-top: 24px;
+  border-top: 2px solid var(--accent);
+}
+.report-table table {
+  border-collapse: collapse;
+  width: 100%;
+}
+.report-table caption {
+  text-align: left;
+  font-weight: 600;
+  padding: 16px 10px;
+}
+.report-table th {
+  text-align: left;
+  background: var(--surface-soft);
+  font-size: 12px;
+  position: sticky;
+  top: 0;
+}
+.report-table td,
+.report-table th {
+  padding: 12px 10px;
+  border-bottom: 1px solid var(--border);
+}
+.report-table td:nth-child(2),
+.report-table th:nth-child(2) {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.report-table td:first-child span {
+  display: block;
+  margin-top: 3px;
+}
+/* Fewer nested panels and quieter icons make the hierarchy clearer. */
+.panel {
+  border-radius: 8px;
+}
+.panel-filters {
+  border-radius: 0;
+  border-left: 0;
+  border-right: 0;
+  background: transparent;
+  padding-left: 0;
+  padding-right: 0;
+}
+.primary-resource-nav button,
+.national-resource-nav button {
+  border-radius: 0;
+  border-bottom: 3px solid transparent;
+  padding: 11px 12px;
+}
+.primary-resource-nav button[aria-pressed="true"],
+.national-resource-nav button[aria-pressed="true"] {
+  background: transparent;
+  border-bottom-color: var(--accent);
+  color: var(--text);
+}
+.overview-actions {
+  gap: 0 32px;
+  border-top: 1px solid var(--border);
+}
+.overview-action {
+  border: 0;
+  border-bottom: 1px solid var(--border);
+  border-radius: 0;
+  background: transparent;
+  padding: 23px 4px;
+  align-items: center;
+  gap: 14px;
+}
+.overview-action:hover {
+  background: var(--surface-soft);
+  border-color: var(--border);
+}
+.overview-icon {
+  border-radius: 0;
+  background: transparent;
+  width: 30px;
+  height: 36px;
+  color: var(--muted);
+}
+.overview-action > svg {
+  margin-top: 0;
+}
+.overview-action strong {
+  margin-bottom: 3px;
+}
+.section-tag {
+  text-transform: none;
+  letter-spacing: 0.025em;
+  font-weight: 500;
+  color: var(--muted);
+}
+.tracked-top .eyebrow {
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: 12px;
+  font-weight: 500;
+}
+@media (max-width: 800px) {
+  .report-picker {
+    grid-template-columns: 1fr;
+  }
+  .candidate-report-preview {
+    height: 780px;
+  }
+  .candidate-report-link {
+    margin-left: 18px;
+  }
+  .primary-resource-nav {
+    padding-bottom: 0;
+  }
+  .overview-actions {
+    gap: 0 20px;
+  }
+}
+@media (max-width: 540px) {
+  .overview-actions {
+    grid-template-columns: 1fr;
+  }
+  .overview-action {
+    padding: 18px 4px;
+  }
+  .report-table {
+    max-height: 480px;
+  }
+  .report-picker input,
+  .report-picker select {
+    font-size: 16px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .overview-action {
+    transition: none;
+  }
+}

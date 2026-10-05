@@ -218,13 +218,38 @@ export async function getCandidateMunicipalVotes(uf:string,office:Office,candida
   if(!OFFICES.includes(office)||!/^\d{1,20}$/.test(candidateId)||!unique.length||unique.length>20||unique.some(c=>!/^\d{5}$/.test(c)))throw new UnknownMunicipalityError('Cargo, candidato ou municípios inválidos.');
   const ctx=await getContext(uf);
   if(unique.some(code=>!ctx.municipalities.some(m=>m.code===code)))throw new UnknownMunicipalityError('Município fora da UF.');
-  const stateResult=parseResult(await fetchOfficial(resultUrl(ctx,office)),office,ctx.elections[office],undefined,uf);
-  if(stateResult.dv!=='s')throw new Error('Divulgação do cargo suspensa pelo TSE.');
-  const candidate=stateResult.carg[0].agr.flatMap(g=>g.par.flatMap(p=>p.cand.map(c=>({...c,party:p.sg})))).find(c=>String(c.sqcand)===candidateId);
-  if(!candidate)throw new UnknownMunicipalityError('Candidato não encontrado neste cargo e estado.');
+  const candidate=await getCandidateIdentity(uf,office,candidateId);
   const rows=await mapLimited(unique,async code=>{
     const result=await loadMunicipalResult(ctx,{office,code}),active=['counting','finished'].includes(result.meta.status),vote=active?result.candidateVotes[candidateId]:undefined;
     return {code,name:result.municipality.name,votes:vote?.votes??null,percentage:result.meta.percentage,status:active&&!vote?'missing':result.meta.status,updatedAt:result.meta.updatedAt,stale:result.stale,verifiedSignatures:result.meta.generation!==null,source:resultUrl(ctx,office,code)} satisfies MunicipalExportRow;
   });
-  return {uf,candidate:{id:candidateId,name:candidate.nmu||candidate.nm,number:String(candidate.n),party:candidate.party,office},rows,stale:rows.some(row=>row.stale),checkedAt:new Date().toISOString()};
+  return {uf,candidate:{id:candidateId,name:candidate.name,number:candidate.number,party:candidate.party,office},rows,stale:rows.some(row=>row.stale),checkedAt:new Date().toISOString()};
+}
+
+export async function getCandidateIdentity(uf:string,office:Office,candidateId:string){
+  if(!OFFICES.includes(office)||!/^\d{1,20}$/.test(candidateId))throw new UnknownMunicipalityError('Candidatura inválida.');
+  const ctx=await getContext(uf);
+  const stateResult=parseResult(await fetchOfficial(resultUrl(ctx,office)),office,ctx.elections[office],undefined,uf);
+  if(stateResult.dv!=='s')throw new Error('Divulgação do cargo suspensa pelo TSE.');
+  const candidate=stateResult.carg[0].agr.flatMap(g=>g.par.flatMap(p=>p.cand.map(c=>({...c,party:p.sg})))).find(c=>String(c.sqcand)===candidateId);
+  if(!candidate)throw new UnknownMunicipalityError('Candidato não encontrado neste cargo e estado.');
+  return {id:candidateId,name:candidate.nmu||candidate.nm,fullName:candidate.nm,number:String(candidate.n),party:candidate.party,office};
+}
+
+const cityListCaches=new Map<string,SnapshotCache<import('../../lib/city-results').CityResults>>();
+export async function getCityCandidateList(uf:string,office:Office,code:string){
+  if(!OFFICES.includes(office)||!/^\d{5}$/.test(code))throw new UnknownMunicipalityError('Cargo ou município inválido.');
+  const ctx=await getContext(uf),municipality=ctx.municipalities.find(city=>city.code===code);
+  if(!municipality)throw new UnknownMunicipalityError('Município fora da UF.');
+  const key=`${uf}:${office}:${code}`;
+  if(!cityListCaches.has(key)){
+    if(cityListCaches.size>=40)cityListCaches.delete(cityListCaches.keys().next().value!);
+    cityListCaches.set(key,new SnapshotCache(12_000,last=>last?{...last,stale:true}:{uf,office,municipality,candidates:[],status:'unavailable',updatedAt:null,stale:true,verifiedSignatures:false}));
+  }
+  return cityListCaches.get(key)!.get(async previous=>{
+    const result=normalizeResult(parseResult(await fetchOfficial(resultUrl(ctx,office,code)),office,ctx.elections[office],code,uf),office,directory(ctx,'ft',office));
+    if(previous?.updatedAt&&result.meta.updatedAt&&result.meta.updatedAt<previous.updatedAt)throw new Error('Resultado municipal anterior recebido.');
+    const active=['counting','finished'].includes(result.meta.status);
+    return {uf,office,municipality,candidates:result.candidates.map(c=>({id:c.id,name:c.name,number:c.number,party:c.party,votes:active?c.votes:null})),status:result.meta.status,updatedAt:result.meta.updatedAt,stale:false,verifiedSignatures:true};
+  });
 }

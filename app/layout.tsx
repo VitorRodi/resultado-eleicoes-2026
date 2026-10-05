@@ -1,20 +1,28 @@
-import type { Metadata } from 'next';
-import '@fontsource/manrope/400.css';
-import '@fontsource/manrope/500.css';
-import '@fontsource/manrope/600.css';
-import '@fontsource/manrope/700.css';
-import '@fontsource/dm-sans/400.css';
-import '@fontsource/dm-sans/500.css';
-import '@fontsource/dm-sans/600.css';
-import '@fontsource/dm-sans/700.css';
-import '@fontsource/newsreader/400.css';
-import '@fontsource/newsreader/600.css';
-import './globals.css';
+import type { Metadata } from "next";
+import "@fontsource/manrope/400.css";
+import "@fontsource/manrope/500.css";
+import "@fontsource/manrope/600.css";
+import "@fontsource/manrope/700.css";
+import "@fontsource/dm-sans/400.css";
+import "@fontsource/dm-sans/500.css";
+import "@fontsource/dm-sans/600.css";
+import "@fontsource/dm-sans/700.css";
+import "@fontsource/newsreader/400.css";
+import "@fontsource/newsreader/600.css";
+import "./globals.css";
+import "./reports.css";
 export const metadata: Metadata = {
-  title: 'Resultado Eleições 2026 | Brasil e estados',
-  description: 'Resultados oficiais do TSE por estado e presidência nacional. Escolha a UF, candidatos e municípios para acompanhar a apuração.',
-  icons: { icon: '/favicon.svg' },
+  title: "Resultado Eleições 2026 | Brasil e estados",
+  description:
+    "Resultados oficiais do TSE por estado e presidência nacional. Escolha a UF, candidatos e municípios para acompanhar a apuração.",
+  icons: { icon: "/favicon.svg" },
 };
-export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  return <html lang="pt-BR"><body>{children}</body></html>;
+export default function RootLayout({
+  children,
+}: Readonly<{ children: React.ReactNode }>) {
+  return (
+    <html lang="pt-BR">
+      <body>{children}</body>
+    </html>
+  );
 }

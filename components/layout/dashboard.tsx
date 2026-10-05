@@ -80,6 +80,12 @@ const MunicipalMap = dynamic(
   },
 );
 import MunicipalExcelExport from "@/components/tracking/municipal-excel-export";
+const CityVoteExport = dynamic(
+  () => import("@/components/tracking/city-vote-export"),
+);
+const CandidateReportPanel = dynamic(
+  () => import("@/components/tracking/candidate-report"),
+);
 import {
   OFFICES,
   type Office,
@@ -266,6 +272,9 @@ function StateDashboard({
   );
   const [view, setView] = useState<PanelView>("overview"),
     [officeFilter, setOfficeFilter] = useState<OfficeFilter>("all");
+  const [reportCandidate, setReportCandidate] = useState<
+    import("@/types/election").Candidate | null
+  >(null);
   const [pendingOnly, setPendingOnly] = useState(false),
     [shared, setShared] = useState(false);
   const notices = useCandidateAlerts(snapshot, preferences);
@@ -789,6 +798,11 @@ function StateDashboard({
           view,
         ) && (
           <Watchlist
+            onReport={(candidate) => {
+              setReportCandidate(candidate);
+              setView("report");
+              showFilters();
+            }}
             pendingOnly={pendingOnly}
             uf={uf}
             snapshot={snapshot}
@@ -895,6 +909,17 @@ function StateDashboard({
             uf={uf}
             snapshot={snapshot}
             officeFilter={officeFilter}
+          />
+        )}
+        {(view === "all" || view === "cityExport") && (
+          <CityVoteExport key={uf} uf={uf} snapshot={snapshot} />
+        )}
+        {(view === "all" || view === "report") && (
+          <CandidateReportPanel
+            key={`${uf}:${reportCandidate?.id || "none"}`}
+            uf={uf}
+            snapshot={snapshot}
+            initialCandidate={reportCandidate}
           />
         )}
         {(view === "map" ||
