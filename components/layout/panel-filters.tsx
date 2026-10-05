@@ -1,14 +1,15 @@
 'use client';
-import { LayoutGrid, ListOrdered, MapPin, Users, Map, ShieldCheck, RotateCcw, SlidersHorizontal, ArrowLeftRight, History, Vote } from 'lucide-react';
+import { LayoutGrid, ListOrdered, MapPin, Users, Map, ShieldCheck, RotateCcw, SlidersHorizontal, ArrowLeftRight, History, Vote, FileSpreadsheet } from 'lucide-react';
 import { officeLabel } from '@/lib/config';
 import { OFFICES, type Office } from '@/types/election';
-export type PanelView='all'|'results'|'candidates'|'municipal'|'map'|'sources'|'comparison'|'history'|'parties'|'turnout'|'alerts'|'municipalMap';
+export type PanelView='all'|'results'|'candidates'|'municipal'|'map'|'sources'|'comparison'|'history'|'parties'|'turnout'|'alerts'|'municipalMap'|'excel';
 export type OfficeFilter='all'|Office;
 const views=[
   {id:'all',label:'Tudo',icon:LayoutGrid},
   {id:'results',label:'Resultados por cargo',icon:ListOrdered},
   {id:'candidates',label:'Meus candidatos',icon:Users},
   {id:'municipal',label:'Municípios',icon:MapPin},
+  {id:'excel',label:'Excel por cidade',icon:FileSpreadsheet},
   {id:'comparison',label:'Comparar candidatos',icon:ArrowLeftRight},
   {id:'history',label:'Histórico',icon:History},
   {id:'parties',label:'Partidos e federações',icon:Users},
@@ -19,7 +20,7 @@ const views=[
   {id:'sources',label:'Fontes',icon:ShieldCheck},
 ] as const;
 export default function PanelFilters({uf,stateName,view,office,onViewChange,onOfficeChange,onReset,pending,onPending}:{uf:string;stateName:string;view:PanelView;office:OfficeFilter;onViewChange:(view:PanelView)=>void;onOfficeChange:(office:OfficeFilter)=>void;onReset:()=>void;pending:boolean;onPending:(v:boolean)=>void}){
-  const canFilterOffice=!['map','sources','alerts','municipalMap'].includes(view),filtered=view!=='all'||office!=='all'||pending;
+  const canFilterOffice=!['map','sources','alerts','municipalMap','excel'].includes(view),filtered=view!=='all'||office!=='all'||pending;
   return <section className="panel-filters panel" id="filtros-painel" aria-labelledby="panel-filters-title">
     <div className="panel-filters-heading"><div><SlidersHorizontal size={17} aria-hidden="true"/><h2 id="panel-filters-title">Explore {stateName}</h2></div>{filtered&&<button className="reset-panel-filters" onClick={onReset}><RotateCcw size={13} aria-hidden="true"/>Limpar filtros</button>}</div>
     <nav className="panel-resource-filters" aria-label="Filtrar recursos do painel">{views.map(item=><button key={item.id} aria-pressed={view===item.id} onClick={()=>onViewChange(item.id)}><item.icon size={15} aria-hidden="true"/>{item.label}</button>)}</nav>

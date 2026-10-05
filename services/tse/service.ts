@@ -8,6 +8,7 @@ import { OFFICE_CONFIG, officeCode } from '../../lib/config';
 import { BRAZIL_STATES } from '../../lib/brazil-states';
 import { SnapshotCache } from '../../lib/cache';
 import { municipalKey } from '../../lib/preferences';
+import type {MunicipalExportRow} from '../../lib/municipal-export';
 import { OFFICES, type ElectionSnapshot, type Office, type OfficeMeta, type Municipality, type MunicipalRequest, type MunicipalResult, type NationalPresidentSnapshot, type PresidentsByStateSnapshot, type StatePresidentResult } from '../../types/election';
 
 type Context = { uf:string; config:TseConfiguration; cycle:string; pleito:string; elections:Record<Office,string>; municipalities:Municipality[]; sources:string[] };
@@ -190,21 +191,40 @@ export async function getElectionSnapshot(requests:MunicipalRequest[]=[],uf='sc'
   for(const r of unique)if(!OFFICES.includes(r.office)||!base.municipalities.some(m=>m.code===r.code))throw new UnknownMunicipalityError(`Cargo ou município fora de ${uf.toUpperCase()}.`);
   const ctx=await getContext(uf);
   const results=await mapLimited(unique,async r=>{
-    const key=municipalKey(r),cacheKey=`${uf}:${key}`,municipality=ctx.municipalities.find(m=>m.code===r.code)!;
-    if(!municipalCaches.has(cacheKey)){
-      // Bound retained municipal snapshots while sharing them across visitors and candidates.
-      if(municipalCaches.size>=200)municipalCaches.delete(municipalCaches.keys().next().value!);
-      municipalCaches.set(cacheKey,new SnapshotCache<MunicipalResult>(12_000,last=>last?{...last,stale:true}:{municipality,office:r.office,meta:emptyOffice(),stale:true,candidateVotes:{}}));
-    }
-    const result=await municipalCaches.get(cacheKey)!.get(async previous=>{
-      const normalized=normalizeResult(parseResult(await fetchOfficial(resultUrl(ctx,r.office,r.code)),r.office,ctx.elections[r.office],r.code,uf),r.office,directory(ctx,'ft',r.office));
-      if(previous?.meta.updatedAt&&normalized.meta.updatedAt&&normalized.meta.updatedAt<previous.meta.updatedAt)throw new Error('Geração municipal anterior recebida.');
-      const active=['counting','finished'].includes(normalized.meta.status);
-      return {municipality,office:r.office,meta:normalized.meta,stale:false,candidateVotes:active?Object.fromEntries(normalized.candidates.map(c=>[c.id,{votes:c.votes,percentage:c.percentage}])):{}};
-    });return {key,result,url:resultUrl(ctx,r.office,r.code)};
+    const result=await loadMunicipalResult(ctx,r);return {key:municipalKey(r),result,url:resultUrl(ctx,r.office,r.code)};
   });
   const failed=results.filter(r=>r.result.stale||r.result.meta.status==='unavailable');
   return {...base,checkedAt:new Date().toISOString(),stale:base.stale||failed.length>0,
     warnings:[...base.warnings,...(failed.length?['Parte dos resultados municipais não atualizou. Valores anteriores, quando disponíveis, foram preservados.']:[])],
     municipalResults:Object.fromEntries(results.map(r=>[r.key,r.result])),source:{...base.source,files:[...base.source.files,...results.map(r=>r.url)].sort()}};
+}
+
+async function loadMunicipalResult(ctx:Context,r:MunicipalRequest):Promise<MunicipalResult>{
+  const cacheKey=`${ctx.uf}:${municipalKey(r)}`,municipality=ctx.municipalities.find(m=>m.code===r.code)!;
+  if(!municipalCaches.has(cacheKey)){
+    if(municipalCaches.size>=200)municipalCaches.delete(municipalCaches.keys().next().value!);
+    municipalCaches.set(cacheKey,new SnapshotCache<MunicipalResult>(12_000,last=>last?{...last,stale:true}:{municipality,office:r.office,meta:emptyOffice(),stale:true,candidateVotes:{}}));
+  }
+  return municipalCaches.get(cacheKey)!.get(async previous=>{
+    const normalized=normalizeResult(parseResult(await fetchOfficial(resultUrl(ctx,r.office,r.code)),r.office,ctx.elections[r.office],r.code,ctx.uf),r.office,directory(ctx,'ft',r.office));
+    if(previous?.meta.updatedAt&&normalized.meta.updatedAt&&normalized.meta.updatedAt<previous.meta.updatedAt)throw new Error('Geração municipal anterior recebida.');
+    const active=['counting','finished'].includes(normalized.meta.status);
+    return {municipality,office:r.office,meta:normalized.meta,stale:false,candidateVotes:active?Object.fromEntries(normalized.candidates.map(c=>[c.id,{votes:c.votes,percentage:c.percentage}])):{}};
+  });
+}
+
+export async function getCandidateMunicipalVotes(uf:string,office:Office,candidateId:string,codes:string[]){
+  const unique=[...new Set(codes)];
+  if(!OFFICES.includes(office)||!/^\d{1,20}$/.test(candidateId)||!unique.length||unique.length>20||unique.some(c=>!/^\d{5}$/.test(c)))throw new UnknownMunicipalityError('Cargo, candidato ou municípios inválidos.');
+  const ctx=await getContext(uf);
+  if(unique.some(code=>!ctx.municipalities.some(m=>m.code===code)))throw new UnknownMunicipalityError('Município fora da UF.');
+  const stateResult=parseResult(await fetchOfficial(resultUrl(ctx,office)),office,ctx.elections[office],undefined,uf);
+  if(stateResult.dv!=='s')throw new Error('Divulgação do cargo suspensa pelo TSE.');
+  const candidate=stateResult.carg[0].agr.flatMap(g=>g.par.flatMap(p=>p.cand.map(c=>({...c,party:p.sg})))).find(c=>String(c.sqcand)===candidateId);
+  if(!candidate)throw new UnknownMunicipalityError('Candidato não encontrado neste cargo e estado.');
+  const rows=await mapLimited(unique,async code=>{
+    const result=await loadMunicipalResult(ctx,{office,code}),active=['counting','finished'].includes(result.meta.status),vote=active?result.candidateVotes[candidateId]:undefined;
+    return {code,name:result.municipality.name,votes:vote?.votes??null,percentage:result.meta.percentage,status:active&&!vote?'missing':result.meta.status,updatedAt:result.meta.updatedAt,stale:result.stale,verifiedSignatures:result.meta.generation!==null,source:resultUrl(ctx,office,code)} satisfies MunicipalExportRow;
+  });
+  return {uf,candidate:{id:candidateId,name:candidate.nmu||candidate.nm,number:String(candidate.n),party:candidate.party,office},rows,stale:rows.some(row=>row.stale),checkedAt:new Date().toISOString()};
 }
