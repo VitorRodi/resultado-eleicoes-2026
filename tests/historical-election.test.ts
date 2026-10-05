@@ -117,36 +117,32 @@ test("Excel compara anos com fórmulas, sinais, base zero e ausência sem coluna
   await book.xlsx.load(bytes.buffer as ArrayBuffer);
   assert.deepEqual(
     book.worksheets.map((s) => s.name),
-    ["Votos por cidade", "Comparação 2022 x 2026"],
+    ["Votos por cidade"],
   );
-  const sheet = book.getWorksheet(2)!;
+  const sheet = book.getWorksheet(1)!;
+  assert.equal(sheet.columnCount, 4);
   assert.deepEqual((sheet.getRow(7).values as unknown[]).slice(1), [
     "Município",
-    "Votos em 2022",
-    "Votos em 2026",
+    "Votos do candidato em 2026",
+    "Votos do candidato em 2022",
     "Diferença de votos",
-    "Variação (%)",
-    "Observação",
   ]);
-  assert.equal(sheet.getCell("D8").formula, 'IF(COUNT(B8:C8)=2,C8-B8,"")');
+  assert.equal(sheet.getCell("D8").formula, 'IF(COUNT(B8:C8)=2,B8-C8,"")');
   assert.equal(sheet.getCell("D8").result, 30);
-  assert.equal(sheet.getCell("E8").result, 0.3);
   assert.equal(sheet.getCell("D9").result, -30);
-  assert.equal(sheet.getCell("E9").result, -0.3);
-  assert.equal(sheet.getCell("B10").value, 0);
+  assert.equal(sheet.getCell("C10").value, 0);
   assert.equal(sheet.getCell("D10").result, 30);
-  assert.ok(!sheet.getCell("E10").result);
-  assert.match(String(sheet.getCell("F10").value), /zero/);
-  assert.equal(sheet.getCell("B11").value, null);
+  assert.equal(sheet.getCell("C11").value, null);
   assert.ok(!sheet.getCell("D11").result);
-  assert.match(String(sheet.getCell("F11").value), /Sem resultado de 2022/);
-  assert.equal(sheet.getCell("C12").value, null);
+  assert.equal(sheet.getCell("B12").value, null);
   assert.ok(!sheet.getCell("D12").result);
   assert.match(sheet.getCell("D8").numFmt, /\+/);
-  assert.match(sheet.getCell("E8").numFmt, /%/);
   assert.match(String(sheet.getCell("A3").value), /Deputado estadual/);
   assert.match(String(sheet.getCell("A3").value), /Deputado federal/);
-  assert.match(municipalWorkbookName(exportData), /^comparacao-2022-2026/);
+  assert.equal(
+    municipalWorkbookName(exportData),
+    "votos-por-municipio-de-nome-na-urna-atual-sc-2022-2026.xlsx",
+  );
   await assert.rejects(() =>
     municipalWorkbook(exportData, new Date(), { ...historical, id: "789" }),
   );

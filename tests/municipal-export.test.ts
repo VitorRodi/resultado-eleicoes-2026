@@ -88,7 +88,7 @@ test("exportação conserva zero, ausência, cobertura e valida cidade, cargo e 
   );
 });
 
-test("Excel simplificado contém números, zero, células em branco, filtros e total, sem colunas técnicas", async () => {
+test("Excel simplificado contém números, zero, células em branco, filtros e autoria, sem colunas técnicas", async () => {
   const bytes = await municipalWorkbook(
     input,
     new Date("2026-10-04T23:00:00Z"),
@@ -101,16 +101,16 @@ test("Excel simplificado contém números, zero, células em branco, filtros e t
   assert.equal(sheet.getCell("B8").value, 0);
   assert.equal(sheet.getCell("B9").value, 12345);
   assert.equal(sheet.getCell("B10").value, null);
-  assert.equal(sheet.columnCount, 3);
+  assert.equal(sheet.columnCount, 2);
   assert.deepEqual((sheet.getRow(7).values as unknown[]).slice(1), [
     "Município",
-    "Votos em 2026",
-    "Observação",
+    "Votos do candidato em 2026",
   ]);
-  assert.equal(sheet.getCell("C10").value, "Não consultado");
   assert.equal(workbook.worksheets.length, 1);
-  assert.equal(sheet.getCell("B5").formula, "SUM(B8:B10)");
-  assert.equal(sheet.getCell("B5").result, 12345);
+  assert.deepEqual(sheet.getCell("A13").value, {
+    text: "Feito por Vitor Rodi · LinkedIn: linkedin.com/in/vitor-rodi",
+    hyperlink: "https://br.linkedin.com/in/vitor-rodi",
+  });
   assert.ok(sheet.autoFilter);
   assert.equal((sheet.views[0] as ExcelJS.WorksheetViewFrozen).ySplit, 7);
   const malicious = structuredClone(input);

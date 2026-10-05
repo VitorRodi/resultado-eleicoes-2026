@@ -66,7 +66,7 @@ export async function cityWorkbook(input: CityResults) {
   const footer = 8 + candidates.length;
   sheet.mergeCells(footer, 1, footer, 2);
   sheet.getCell(footer, 1).value = {
-    text: "Feito por Vitor Rodi · LinkedIn",
+    text: "Feito por Vitor Rodi · LinkedIn: linkedin.com/in/vitor-rodi",
     hyperlink: "https://br.linkedin.com/in/vitor-rodi",
   };
   sheet.getCell(footer, 1).font = {

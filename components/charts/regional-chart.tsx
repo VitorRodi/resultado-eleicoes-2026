@@ -15,6 +15,7 @@ import { officeLabel } from "@/lib/config";
 import { number, percentage } from "@/lib/formatting";
 import { sumRegional } from "@/lib/tracking";
 import { downloadBlob } from "@/lib/download";
+import { municipalDownloadName } from "@/lib/export-filenames";
 import type { Candidate, MunicipalVote, Office } from "@/types/election";
 export default function RegionalChart({
   uf = "sc",
@@ -52,7 +53,7 @@ export default function RegionalChart({
       const bytes = municipalPdf(input, await loadMunicipalPdfFonts());
       downloadBlob(
         new Blob([bytes], { type: "application/pdf" }),
-        `votos-municipios-${uf}-${candidate.number}-2026.pdf`,
+        municipalDownloadName(input, "pdf"),
       );
       setExportMessage("PDF baixado com os votos dos municípios selecionados.");
     } catch (error) {

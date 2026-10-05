@@ -4,8 +4,9 @@ import { Download, FileSpreadsheet, Search } from "lucide-react";
 import { OFFICES, type ElectionSnapshot, type Office } from "@/types/election";
 import { officeLabel, canonical } from "@/lib/config";
 import { matchesCandidate } from "@/lib/panel-tools";
-import { number, percentage } from "@/lib/formatting";
+import { number } from "@/lib/formatting";
 import { downloadBlob } from "@/lib/download";
+import { municipalDownloadName } from "@/lib/export-filenames";
 import {
   initialExportRows,
   mergeExportRows,
@@ -218,13 +219,10 @@ export default function MunicipalExcelExport({
         throw new Error(
           "Não foi possível gerar o arquivo. Tente baixar novamente.",
         );
-      downloadBlob(
-        await response.blob(),
-        `${data.historyCandidateId ? "comparacao-2022-2026" : "votos-por-cidade"}-${uf}-${data.candidate.number}-${data.candidate.id}.xlsx`,
-      );
+      downloadBlob(await response.blob(), municipalDownloadName(data, "xlsx"));
       if (!signal?.aborted)
         setMessage(
-          `Excel gerado: ${data.rows.length} cidades, ${data.rows.filter((r) => r.votes !== null).length} com votos disponíveis.${data.historyCandidateId ? " A aba “Comparação 2022 x 2026” inclui a diferença de votos e a variação percentual." : " Arquivo com votos de 2026."}`,
+          `Excel gerado: ${data.rows.length} cidades, ${data.rows.filter((r) => r.votes !== null).length} com votos disponíveis.${data.historyCandidateId ? " A mesma planilha inclui votos de 2026, votos de 2022 e a diferença de votos." : " Arquivo com votos de 2026."}`,
         );
     } finally {
       setDownloading(false);
@@ -411,7 +409,7 @@ export default function MunicipalExcelExport({
               setCompare(e.target.checked);
             }}
           />
-          Incluir aba de comparação com 2022
+          Comparar com 2022 na mesma planilha
         </label>
         {compare && candidate && (
           <>
@@ -478,8 +476,7 @@ export default function MunicipalExcelExport({
         )}
         <p className="small muted">
           Primeiro turno nos dois anos. Os votos de 2026 podem estar parciais.
-          Diferença = 2026 − 2022; variação % = diferença ÷ 2022. Base zero não
-          tem variação percentual.
+          Diferença = votos de 2026 − votos de 2022.
         </p>
       </div>
       <div className="tool-actions">
@@ -555,14 +552,11 @@ export default function MunicipalExcelExport({
             <thead>
               <tr>
                 <th>Município</th>
-                {result.historyCandidateId && <th>Votos em 2022</th>}
-                <th>Votos em 2026</th>
+                <th>Votos do candidato em 2026</th>
                 {result.historyCandidateId && (
-                  <>
-                    <th>Diferença</th>
-                    <th>Variação (%)</th>
-                  </>
+                  <th>Votos do candidato em 2022</th>
                 )}
+                {result.historyCandidateId && <th>Diferença de votos</th>}
               </tr>
             </thead>
             <tbody>
@@ -575,8 +569,8 @@ export default function MunicipalExcelExport({
                 return (
                   <tr key={row.code}>
                     <td>{row.name}</td>
-                    {result.historyCandidateId && <td>{number(old)}</td>}
                     <td>{number(row.votes)}</td>
+                    {result.historyCandidateId && <td>{number(old)}</td>}
                     {result.historyCandidateId && (
                       <>
                         <td
@@ -589,11 +583,6 @@ export default function MunicipalExcelExport({
                           {change.difference === null
                             ? "—"
                             : `${change.difference > 0 ? "+" : ""}${number(change.difference)}`}
-                        </td>
-                        <td>
-                          {change.relative === null
-                            ? "—"
-                            : `${change.relative > 0 ? "+" : ""}${percentage(change.relative * 100)}`}
                         </td>
                       </>
                     )}

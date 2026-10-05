@@ -1,6 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
+import { municipalDownloadName } from "../lib/export-filenames";
 import {
   municipalPdf,
   municipalPdfSummary,
@@ -52,6 +53,17 @@ const input: MunicipalPdfInput = {
   ],
 };
 test("PDF municipal usa somente as cidades escolhidas, conserva zero, ausência e valores anteriores", () => {
+  assert.equal(
+    municipalDownloadName(input, "pdf"),
+    "votos-por-municipio-de-daniela-reinehr-sc-2026.pdf",
+  );
+  assert.equal(
+    municipalDownloadName(
+      { uf: "sc", candidate: { name: 'Águas / João " da Silva\r\n' } },
+      "pdf",
+    ),
+    "votos-por-municipio-de-aguas-joao-da-silva-sc-2026.pdf",
+  );
   const summary = municipalPdfSummary(input);
   assert.equal(summary.rows.length, 3);
   assert.equal(summary.total, 130);
