@@ -18,9 +18,9 @@ export default function RegionalChart({ uf='sc', rows, candidate, office, onEdit
     {chartData.length > 0 && <div className="chart" role="img" aria-label={`Gráfico de votos de ${candidate?.name || 'candidato'} por município`}>
       <ResponsiveContainer width="100%" height={Math.max(96, chartData.length * 43)} minWidth={0}>
         <BarChart data={chartData} layout="vertical" margin={{ left: 0, right: 46, top: 8, bottom: 8 }}>
-          <XAxis type="number" hide domain={[0,'dataMax']} /><YAxis type="category" dataKey="municipality" width={158} axisLine={false} tickLine={false} tick={{ fill:'#b8c6d8', fontSize:12 }} />
-          <Tooltip cursor={{ fill:'#1b293a' }} content={({ active, payload }) => active && payload?.length ? <div className="chart-tooltip"><strong>{payload[0].payload.name}</strong><p>{number(payload[0].payload.votes)} votos</p><p>{percentage(payload[0].payload.percentage)} totalizado</p></div> : null} />
-          <Bar dataKey="votes" fill="#80b9ee" radius={[0,3,3,0]} barSize={12} isAnimationActive={false}><LabelList dataKey="votes" position="right" fill="#edf3fa" fontSize={12} formatter={v => number(Number(v))} /></Bar>
+          <XAxis type="number" hide domain={[0,'dataMax']} /><YAxis type="category" dataKey="municipality" width={158} axisLine={false} tickLine={false} tick={{ fill:'var(--muted)', fontSize:12 }} />
+          <Tooltip cursor={{ fill:'var(--surface-soft)' }} content={({ active, payload }) => active && payload?.length ? <div className="chart-tooltip"><strong>{payload[0].payload.name}</strong><p>{number(payload[0].payload.votes)} votos</p><p>{percentage(payload[0].payload.percentage)} totalizado</p></div> : null} />
+          <Bar dataKey="votes" fill="var(--accent)" radius={[0,3,3,0]} barSize={12} isAnimationActive={false}><LabelList dataKey="votes" position="right" fill="var(--text)" fontSize={12} formatter={v => number(Number(v))} /></Bar>
         </BarChart>
       </ResponsiveContainer>
     </div>}

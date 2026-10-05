@@ -13,28 +13,29 @@ async function cardBlob(candidate:Candidate,meta:OfficeMeta|undefined,uf:string,
   await document.fonts.ready;
   const canvas=document.createElement('canvas');canvas.width=1080;canvas.height=1350;
   const ctx=canvas.getContext('2d');if(!ctx)throw new Error('Não foi possível gerar a imagem neste navegador.');
-  ctx.fillStyle='#0c1119';ctx.fillRect(0,0,1080,1350);
-  ctx.fillStyle='#80b9ee';ctx.fillRect(64,60,952,5);
+  ctx.fillStyle='#f5f7f6';ctx.fillRect(0,0,1080,1350);
+  ctx.fillStyle='#17655c';ctx.fillRect(64,60,952,5);
   ctx.font='600 24px Manrope, sans-serif';ctx.fillText(`ELEIÇÕES 2026 · ${uf.toUpperCase()}`,64,117);
-  ctx.fillStyle='#a5b3c6';ctx.font='24px Manrope, sans-serif';ctx.fillText(officeLabel(candidate.office,uf),64,174);
-  ctx.fillStyle='#edf3fa';ctx.font='700 62px "Barlow Condensed", sans-serif';
+  ctx.fillStyle='#53656b';ctx.font='24px Manrope, sans-serif';ctx.fillText(officeLabel(candidate.office,uf),64,174);
+  ctx.fillStyle='#1b2c32';ctx.font='600 52px "DM Sans", sans-serif';
+  const nameSize=Math.min(52,Math.max(28,Math.floor(52*1666/Math.max(1,ctx.measureText(candidate.name).width))));ctx.font='600 '+nameSize+'px "DM Sans", sans-serif';
   const bottom=wrap(ctx,candidate.name,64,267,952,74);
-  ctx.font='25px Manrope, sans-serif';ctx.fillStyle='#a5b3c6';ctx.fillText(`${candidate.party} · ${candidate.number}`,64,bottom+8);
-  ctx.fillStyle='#141c27';ctx.fillRect(64,455,952,330);
-  ctx.fillStyle='#edf3fa';ctx.font='700 116px "Barlow Condensed", sans-serif';ctx.fillText(number(candidate.rank===null?null:candidate.votes),96,598);
-  ctx.fillStyle='#a5b3c6';ctx.font='22px Manrope, sans-serif';ctx.fillText(`votos em ${stateName}`,96,644);
-  ctx.fillStyle='#80b9ee';ctx.font='600 52px "Barlow Condensed", sans-serif';ctx.fillText(percentage(candidate.rank===null?null:candidate.percentage),96,726);
-  ctx.fillStyle='#edf3fa';ctx.font='600 38px "Barlow Condensed", sans-serif';ctx.fillText(candidate.rank===null?'Aguardando apuração':`${candidate.rank}º por votos`,540,726);
-  ctx.fillStyle='#a5b3c6';ctx.font='23px Manrope, sans-serif';ctx.fillText(meta?.seats?`${meta.seats} ${meta.seats===1?'vaga':'vagas'} no cargo`:'Vagas não informadas',64,852);
-  ctx.fillStyle=candidate.officialElected?'#8dcbb1':'#edf3fa';ctx.font='600 26px Manrope, sans-serif';
+  ctx.font='25px Manrope, sans-serif';ctx.fillStyle='#53656b';ctx.fillText(`${candidate.party} · ${candidate.number}`,64,bottom+8);
+  ctx.fillStyle='#e8f3ee';ctx.fillRect(64,455,952,330);
+  ctx.fillStyle='#1b2c32';ctx.font='700 88px Manrope, sans-serif';ctx.fillText(number(candidate.rank===null?null:candidate.votes),96,598);
+  ctx.fillStyle='#53656b';ctx.font='22px Manrope, sans-serif';ctx.fillText(`votos em ${stateName}`,96,644);
+  ctx.fillStyle='#17655c';ctx.font='600 44px Manrope, sans-serif';ctx.fillText(percentage(candidate.rank===null?null:candidate.percentage),96,726);
+  ctx.fillStyle='#1b2c32';ctx.font='600 32px Manrope, sans-serif';ctx.fillText(candidate.rank===null?'Aguardando apuração':`${candidate.rank}º por votos`,540,726);
+  ctx.fillStyle='#53656b';ctx.font='23px Manrope, sans-serif';ctx.fillText(meta?.seats?`${meta.seats} ${meta.seats===1?'vaga':'vagas'} no cargo`:'Vagas não informadas',64,852);
+  ctx.fillStyle=candidate.officialElected?'#17655c':'#1b2c32';ctx.font='600 26px Manrope, sans-serif';
   wrap(ctx,candidate.officialElected?'Eleito confirmado pelo TSE':candidate.officialStatus||'Eleição ainda não confirmada pelo TSE',64,920,952,36);
-  ctx.fillStyle='#a5b3c6';ctx.font='22px Manrope, sans-serif';
+  ctx.fillStyle='#53656b';ctx.font='22px Manrope, sans-serif';
   wrap(ctx,['federalDeputy','stateDeputy'].includes(candidate.office)?'A posição por votos não garante eleição no sistema proporcional.':'Liderança parcial não significa eleição.',64,1010,952,32);
   const time=meta?.updatedAt?new Intl.DateTimeFormat('pt-BR',{timeZone:'America/Sao_Paulo',dateStyle:'short',timeStyle:'medium'}).format(new Date(meta.updatedAt)):'indisponíveis';
   ctx.font='20px Manrope, sans-serif';ctx.fillText(`Dados TSE: ${time} · Brasília`,64,1131);
-  if(stale){ctx.fillStyle='#e9bd75';ctx.fillText('Último resultado válido · atualização com aviso',64,1167);}
-  ctx.fillStyle='#80b9ee';ctx.fillRect(64,1200,952,1);ctx.font='600 24px Manrope, sans-serif';ctx.fillText('resultado-eleicoes-2026.vercel.app',64,1252);
-  ctx.fillStyle='#a5b3c6';ctx.font='18px Manrope, sans-serif';ctx.fillText('Painel independente · Feito por Vitor Rodi',64,1300);
+  if(stale){ctx.fillStyle='#936320';ctx.fillText('Último resultado válido · atualização com aviso',64,1167);}
+  ctx.fillStyle='#17655c';ctx.fillRect(64,1200,952,1);ctx.font='600 24px Manrope, sans-serif';ctx.fillText('resultado-eleicoes-2026.vercel.app',64,1252);
+  ctx.fillStyle='#53656b';ctx.font='18px Manrope, sans-serif';ctx.fillText('Painel independente · Feito por Vitor Rodi',64,1300);
   return new Promise((resolve,reject)=>canvas.toBlob(blob=>blob?resolve(blob):reject(new Error('Não foi possível gerar o PNG.')),'image/png'));
 }
 export default function ShareCandidate({candidate,meta,uf,stateName,stale=false}:{candidate:Candidate;meta?:OfficeMeta;uf:string;stateName:string;stale?:boolean}){

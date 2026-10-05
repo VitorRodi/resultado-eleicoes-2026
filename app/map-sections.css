@@ -1,6 +1,109 @@
-.selected-section-counts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:16px 0 0;padding-top:14px;border-top:1px solid #37536e}.selected-section-counts dt{color:var(--muted);font-size:10px}.selected-section-counts dd{margin:3px 0 0;font-family:'Barlow Condensed',sans-serif;font-size:30px;line-height:1.2;font-variant-numeric:tabular-nums}.selected-section-counts>div:nth-child(2) dd{color:var(--amber)}
-.state-progress-grid .state-progress-button{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px 5px;min-height:110px;padding-bottom:18px}.state-section-counts{grid-column:1/-1;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin:0;padding-top:7px;border-top:1px solid #2c3d50}.state-progress-grid .state-section-counts small{color:var(--muted);font-size:9px;font-weight:400;margin:0}.state-progress-grid .state-section-counts b{display:block;margin:2px 0 0;font-family:'Barlow Condensed',sans-serif;font-size:21px;line-height:1.15;font-variant-numeric:tabular-nums}.state-section-counts>span:last-child b{color:var(--amber)}.map-sections-note{margin-top:18px;font-size:10px;line-height:1.8}
-.display-root[data-large-text] .state-progress-grid .state-section-counts small,.display-root[data-large-text] .selected-section-counts dt,.display-root[data-large-text] .map-sections-note{font-size:14px}.display-root[data-large-text] .selected-section-counts{grid-template-columns:repeat(2,minmax(0,1fr))}
-@media(max-width:600px){.selected-section-counts{gap:10px}.selected-section-counts dt{font-size:10px}.selected-section-counts dd{font-size:26px}.state-progress-grid .state-progress-button{min-height:122px;gap:8px 6px}.state-progress-grid .state-section-counts small{font-size:10px}.state-progress-grid .state-section-counts b{font-size:24px}.map-sections-note{font-size:11px}.display-root[data-large-text] .selected-section-counts{grid-template-columns:1fr}}
-.state-progress-grid .state-progress-button{container-type:inline-size}.state-progress-grid .state-section-counts b{font-size:clamp(16px,14cqi,22px)}
-@media(max-width:360px){.brazil-map-panel .state-progress-grid{grid-template-columns:1fr}.selected-section-counts{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.selected-section-counts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin: 16px 0 0;
+  padding-top: 14px;
+  border-top: 1px solid var(--border-strong);
+}
+.selected-section-counts dt {
+  color: var(--muted);
+  font-size: 12px;
+}
+.selected-section-counts dd {
+  margin: 3px 0 0;
+  font-family: "Manrope", sans-serif;
+  font-size: 30px;
+  line-height: 1.2;
+  font-variant-numeric: tabular-nums;
+}
+.selected-section-counts > div:nth-child(2) dd {
+  color: var(--amber);
+}
+.state-progress-grid .state-progress-button {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px 5px;
+  min-height: 110px;
+  padding-bottom: 18px;
+}
+.state-section-counts {
+  grid-column: 1/-1;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 7px;
+  margin: 0;
+  padding-top: 7px;
+  border-top: 1px solid var(--border-strong);
+}
+.state-progress-grid .state-section-counts small {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 400;
+  margin: 0;
+}
+.state-progress-grid .state-section-counts b {
+  display: block;
+  margin: 2px 0 0;
+  font-family: "Manrope", sans-serif;
+  font-size: 21px;
+  line-height: 1.15;
+  font-variant-numeric: tabular-nums;
+}
+.state-section-counts > span:last-child b {
+  color: var(--amber);
+}
+.map-sections-note {
+  margin-top: 18px;
+  font-size: 12px;
+  line-height: 1.8;
+}
+.display-root[data-large-text] .state-progress-grid .state-section-counts small,
+.display-root[data-large-text] .selected-section-counts dt,
+.display-root[data-large-text] .map-sections-note {
+  font-size: 14px;
+}
+.display-root[data-large-text] .selected-section-counts {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+@media (max-width: 600px) {
+  .selected-section-counts {
+    gap: 10px;
+  }
+  .selected-section-counts dt {
+    font-size: 12px;
+  }
+  .selected-section-counts dd {
+    font-size: 26px;
+  }
+  .state-progress-grid .state-progress-button {
+    min-height: 122px;
+    gap: 8px 6px;
+  }
+  .state-progress-grid .state-section-counts small {
+    font-size: 12px;
+  }
+  .state-progress-grid .state-section-counts b {
+    font-size: 24px;
+  }
+  .map-sections-note {
+    font-size: 12px;
+  }
+  .display-root[data-large-text] .selected-section-counts {
+    grid-template-columns: 1fr;
+  }
+}
+.state-progress-grid .state-progress-button {
+  container-type: inline-size;
+}
+.state-progress-grid .state-section-counts b {
+  font-size: clamp(16px, 14cqi, 22px);
+}
+@media (max-width: 360px) {
+  .brazil-map-panel .state-progress-grid {
+    grid-template-columns: 1fr;
+  }
+  .selected-section-counts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

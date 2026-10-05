@@ -16,7 +16,7 @@ import ProgressHistory from './progress-history';
 const SYMBOLS={lula:'▲',flavio:'●',tie:'=',other:'◆',unavailable:'—'};
 const pendingSections=(progress:StateProgress|undefined)=>progress?.sections!=null&&progress.totalSections!=null?progress.totalSections-progress.sections:null;
 const sectionSummary=(progress:StateProgress|undefined)=>progress?.sections!=null&&progress.totalSections!=null?`${number(progress.sections)} seções apuradas; ${number(pendingSections(progress))} faltam`:'Contagem de seções indisponível';
-function shade(value:number|null){if(value===null)return '#232e3b';const p=Math.max(0,Math.min(100,value))/100;return `rgb(${Math.round(36+87*p)},${Math.round(59+105*p)},${Math.round(82+120*p)})`;}
+function shade(value:number|null){if(value===null)return '#d8e3df';const p=Math.max(0,Math.min(100,value))/100;return `rgb(${Math.round(216-193*p)},${Math.round(227-126*p)},${Math.round(223-131*p)})`;}
 export default function BrazilProgressMap({onSelectState}:{onSelectState:(uf:string)=>void}){
   const patternId=useId(),{mapPatterns}=useDisplaySettings();
   const [data,setData]=useState<BrazilProgress|null>(null),[selected,setSelected]=useState('SC');
