@@ -38,7 +38,7 @@ export default function RegionalChart({
   const [exporting, setExporting] = useState(false),
     [exportMessage, setExportMessage] = useState("");
   const [comparing, setComparing] = useState(false);
-  async function exportComparison() {
+  async function exportComparison(format: "xlsx" | "pdf" = "xlsx") {
     if (!candidate || comparing || exporting) return;
     const selection = {
       uf,
@@ -48,12 +48,41 @@ export default function RegionalChart({
     setComparing(true);
     setExportMessage("Consultando 2022 e 2026 nas cidades selecionadas…");
     try {
-      const { selectedMunicipalComparison } =
+      const { selectedMunicipalComparison, selectedMunicipalComparisonData } =
         await import("@/lib/selected-municipal-export");
-      const { data, blob } = await selectedMunicipalComparison(selection);
-      downloadBlob(blob, municipalDownloadName(data, "xlsx"));
+      let data;
+      if (format === "pdf") {
+        const result = await selectedMunicipalComparisonData(selection);
+        data = result.data;
+        const { municipalPdf, loadMunicipalPdfFonts } =
+          await import("@/lib/municipal-pdf");
+        const bytes = municipalPdf(
+          {
+            uf,
+            candidate: selection.candidate,
+            generatedAt: new Date().toISOString(),
+            historical: result.history,
+            rows: data.rows.map((row) => ({
+              ...row,
+              status:
+                row.status === "counting" || row.status === "finished"
+                  ? row.status
+                  : "unavailable",
+            })),
+          },
+          await loadMunicipalPdfFonts(),
+        );
+        downloadBlob(
+          new Blob([bytes], { type: "application/pdf" }),
+          municipalDownloadName(data, "pdf"),
+        );
+      } else {
+        const result = await selectedMunicipalComparison(selection);
+        data = result.data;
+        downloadBlob(result.blob, municipalDownloadName(data, "xlsx"));
+      }
       setExportMessage(
-        `Excel baixado com ${data.rows.length} cidades: votos de 2022 e 2026, diferença e variação percentual.${data.rows.some((row) => row.votes === null || row.stale) ? " Parte dos dados está indisponível ou preservada após falha de atualização." : ""}`,
+        `${format === "pdf" ? "PDF" : "Excel"} baixado com ${data.rows.length} cidades: votos de 2022 e 2026, diferença e variação percentual.${data.rows.some((row) => row.votes === null || row.stale) ? " Parte dos dados está indisponível ou preservada após falha de atualização." : ""}`,
       );
     } catch (error) {
       setExportMessage(
@@ -252,6 +281,16 @@ export default function RegionalChart({
         >
           <Download size={16} aria-hidden="true" />
           {comparing ? "Comparando cidades…" : "Excel: comparar 2022 e 2026"}
+        </button>
+        <button
+          className="secondary-button"
+          disabled={
+            !candidate || !aggregate.available || exporting || comparing
+          }
+          onClick={() => void exportComparison("pdf")}
+        >
+          <Download size={16} aria-hidden="true" />
+          {comparing ? "Comparando cidades…" : "PDF: comparar 2022 e 2026"}
         </button>
         <p className="small muted" role="status">
           {exportMessage ||

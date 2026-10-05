@@ -21,7 +21,6 @@ export function municipalDownloadName(
     .toLowerCase()
     .replace(/[^a-z]/g, "")
     .slice(0, 2);
-  const years =
-    format === "xlsx" && selection.historyCandidateId ? "2022-2026" : "2026";
+  const years = selection.historyCandidateId ? "2022-2026" : "2026";
   return `votos-por-municipio-de-${name}-${uf}-${years}.${format}`;
 }

@@ -6,7 +6,7 @@ import {
   municipalExportSchema,
 } from "./municipal-export";
 
-export async function selectedMunicipalComparison(selection: {
+export async function selectedMunicipalComparisonData(selection: {
   uf: string;
   candidate: Candidate;
   codes: string[];
@@ -82,10 +82,19 @@ export async function selectedMunicipalComparison(selection: {
       rows: mergeExportRows(data.rows, batch.rows, batchCodes),
     });
   }
-  const response = await request("/api/elections/municipal/export", {
+  return { data, history };
+}
+export async function selectedMunicipalComparison(
+  selection: Parameters<typeof selectedMunicipalComparisonData>[0],
+) {
+  const { data, history } = await selectedMunicipalComparisonData(selection);
+  const response = await fetch("/api/elections/municipal/export", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
+    signal: AbortSignal.timeout(60_000),
   });
-  return { data, blob: await response.blob() };
+  if (!response.ok)
+    throw new Error("Não foi possível preparar o Excel. Tente novamente.");
+  return { data, history, blob: await response.blob() };
 }

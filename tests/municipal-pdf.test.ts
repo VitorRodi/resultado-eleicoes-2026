@@ -110,5 +110,25 @@ test("PDF é um documento real, com fontes Unicode incorporadas e links de autor
   assert.match(text, /\/FontFile2/);
   assert.match(text, /https:\/\/br.linkedin.com\/in\/vitor-rodi/);
   assert.match(text, /Vitor Rodi/);
+  const comparison = {
+    ...input,
+    historical: {
+      id: "456",
+      name: "DANIELA REINEHR",
+      fullName: "DANIELA CRISTINA REINEHR",
+      number: "2210",
+      party: "PL",
+      office: "federalDeputy" as const,
+      votes: { "80594": 100, "80098": 0 },
+    },
+  };
+  assert.equal(
+    Buffer.from(municipalPdf(comparison, fonts)).subarray(0, 5).toString(),
+    "%PDF-",
+  );
+  assert.equal(
+    municipalDownloadName({ ...input, historyCandidateId: "456" }, "pdf"),
+    "votos-por-municipio-de-daniela-reinehr-sc-2022-2026.pdf",
+  );
   assert.throws(() => municipalPdf({ ...input, rows: [input.rows[2]] }, fonts));
 });

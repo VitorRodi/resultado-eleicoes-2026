@@ -3,13 +3,20 @@ import type { Candidate, MunicipalVote } from "../types/election";
 import { BRAZIL_STATES } from "./brazil-states";
 import { officeLabel } from "./config";
 import { sumRegional } from "./tracking";
-import { number } from "./formatting";
+import { number, percentage } from "./formatting";
+
+import {
+  historicalCandidateSchema,
+  voteChange,
+  type HistoricalCandidate,
+} from "./historical-election";
 
 export type MunicipalPdfInput = {
   uf: string;
   candidate: Candidate;
   rows: MunicipalVote[];
   generatedAt: string;
+  historical?: HistoricalCandidate;
 };
 export type PdfFonts = { regular: string; bold: string };
 const INK = [27, 44, 50] as const,
@@ -66,6 +73,9 @@ export function municipalPdfSummary(input: MunicipalPdfInput) {
 }
 export function municipalPdf(input: MunicipalPdfInput, fonts: PdfFonts) {
   const summary = municipalPdfSummary(input);
+  const history = input.historical
+    ? historicalCandidateSchema.parse(input.historical)
+    : undefined;
   if (!summary.available)
     throw new Error("Aguarde a divulgação dos votos para gerar este PDF.");
   const doc = new jsPDF({
@@ -130,7 +140,16 @@ export function municipalPdf(input: MunicipalPdfInput, fonts: PdfFonts) {
       y = 53;
       return;
     }
-    write("Votação nos municípios selecionados", left, 37, 10, false, MUTED);
+    write(
+      history
+        ? "Votos por município - comparação 2022 e 2026"
+        : "Votação nos municípios selecionados",
+      left,
+      37,
+      10,
+      false,
+      MUTED,
+    );
     doc.setFont("NotoSans", "bold");
     doc.setFontSize(21);
     const title = doc.splitTextToSize(
@@ -149,11 +168,29 @@ export function municipalPdf(input: MunicipalPdfInput, fonts: PdfFonts) {
       write(line, left, y, 9, false, MUTED);
       y += 4.8;
     }
+    if (history) {
+      doc.setFontSize(8);
+      const previousIdentity = doc.splitTextToSize(
+        `2022: ${clean(history.name)} - ${history.number} - ${history.party} - ${officeLabel(history.office, input.uf)}`,
+        width,
+      ) as string[];
+      for (const line of previousIdentity) {
+        write(line, left, y, 8, false, MUTED);
+        y += 4.8;
+      }
+    }
     y += 9;
     doc.setDrawColor(213, 223, 218);
     doc.setLineWidth(0.3);
     doc.line(left, y - 5, right, y - 5);
-    write("Votos nas cidades escolhidas", left, y, 8, false, MUTED);
+    write(
+      history ? "Votos de 2026 nas cidades" : "Votos nas cidades escolhidas",
+      left,
+      y,
+      8,
+      false,
+      MUTED,
+    );
     write("Cidades selecionadas", 86, y, 8, false, MUTED);
     write("Cidades com votos", 148, y, 8, false, MUTED);
     write(number(summary.total), left, y + 10, 22, true, GREEN);
@@ -167,7 +204,11 @@ export function municipalPdf(input: MunicipalPdfInput, fonts: PdfFonts) {
     );
     y += 21;
     write(
-      summary.partial
+      summary.partial ||
+        (history &&
+          summary.rows.some(
+            (row) => !row.code || history.votes[row.code] === undefined,
+          ))
         ? "Consulta parcial - confira as cidades sem dados ou com valores anteriores."
         : "Votos disponíveis em todas as cidades selecionadas.",
       left,
@@ -191,8 +232,18 @@ export function municipalPdf(input: MunicipalPdfInput, fonts: PdfFonts) {
     doc.setFillColor(...GREEN);
     doc.rect(left, y - 5, width, 10, "F");
     write("Município", left + 3, y + 1, 9, true, [255, 255, 255]);
-    write("Comparação visual", 113, y + 1, 8, true, [255, 255, 255]);
-    write("Votos", right - 3, y + 1, 9, true, [255, 255, 255], "right");
+    if (history) {
+      for (const [label, x] of [
+        ["2022", 120],
+        ["2026", 144],
+        ["Diferença", 166],
+        ["Variação (%)", 189],
+      ] as const)
+        write(label, x, y + 1, 7, true, [255, 255, 255], "right");
+    } else {
+      write("Comparação visual", 113, y + 1, 8, true, [255, 255, 255]);
+      write("Votos", right - 3, y + 1, 9, true, [255, 255, 255], "right");
+    }
     y += 9;
   }
   startPage();
@@ -201,7 +252,10 @@ export function municipalPdf(input: MunicipalPdfInput, fonts: PdfFonts) {
   for (const [i, row] of summary.rows.entries()) {
     doc.setFont("NotoSans", "normal");
     doc.setFontSize(9);
-    const lines = doc.splitTextToSize(clean(row.name), 86) as string[];
+    const lines = doc.splitTextToSize(
+      clean(row.name),
+      history ? 72 : 86,
+    ) as string[];
     const height = Math.max(11, lines.length * 4.5 + 6) + (row.stale ? 4 : 0);
     if (y + height > 259) {
       doc.addPage();
@@ -223,7 +277,44 @@ export function municipalPdf(input: MunicipalPdfInput, fonts: PdfFonts) {
         false,
         MUTED,
       );
-    if (row.votes !== null) {
+    if (history) {
+      const previous = row.code ? (history.votes[row.code] ?? null) : null;
+      const change = voteChange(previous, row.votes);
+      write(
+        previous === null ? "Sem dados" : number(previous),
+        120,
+        y + 2,
+        8,
+        false,
+        INK,
+        "right",
+      );
+      write(
+        row.votes === null ? "Sem dados" : number(row.votes),
+        144,
+        y + 2,
+        8,
+        true,
+        INK,
+        "right",
+      );
+      const delta =
+        change.difference === null
+          ? "—"
+          : `${change.difference > 0 ? "+" : ""}${number(change.difference)}`;
+      const pct =
+        change.relative === null
+          ? previous === 0 && row.votes !== null
+            ? "Base zero"
+            : "—"
+          : `${change.relative > 0 ? "+" : ""}${percentage(change.relative * 100)}`;
+      const color =
+        change.difference !== null && change.difference < 0
+          ? ([177, 60, 70] as const)
+          : GREEN;
+      write(delta, 166, y + 2, 8, true, color, "right");
+      write(pct, 189, y + 2, 7, true, color, "right");
+    } else if (row.votes !== null) {
       doc.setFillColor(222, 233, 225);
       doc.roundedRect(113, y - 1, 50, 3.5, 1, 1, "F");
       if (row.votes > 0) {
@@ -240,7 +331,9 @@ export function municipalPdf(input: MunicipalPdfInput, fonts: PdfFonts) {
   }
   y += 5;
   write(
-    "Barras proporcionais à cidade com maior votação neste conjunto.",
+    history
+      ? "Diferença = 2026 − 2022. Variação (%) = diferença ÷ votos de 2022 × 100; base zero não tem percentual."
+      : "Barras proporcionais à cidade com maior votação neste conjunto.",
     left,
     y,
     7,
