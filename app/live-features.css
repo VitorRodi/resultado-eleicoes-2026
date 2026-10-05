@@ -477,3 +477,94 @@
     text-align: left;
   }
 }
+/* A city is selected directly from the search, without a second long select. */
+.city-vote-fields {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(180px, 1fr);
+  gap: 20px;
+  margin: 24px 0 18px;
+  align-items: start;
+}
+.city-vote-fields label, .city-search-field > label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  min-width: 0;
+}
+.city-search-field { position: relative; min-width: 0; }
+.city-search-control { position: relative; }
+.city-vote-fields .search { margin: 8px 0 0; min-height: 46px; padding: 0 12px; background: var(--panel); }
+.city-result-filters .search { margin-top: 0; }
+.city-vote-fields .search input { min-width: 0; width: 100%; font-weight: 400; }
+.city-vote-fields select {
+  width: 100%;
+  min-height: 46px;
+  padding: 10px 12px;
+  border: 1px solid var(--border-strong);
+  border-radius: 5px;
+  color: var(--text);
+  background: var(--panel);
+  font-weight: 400;
+}
+.city-search-clear {
+  display: grid;
+  place-items: center;
+  background: transparent;
+  color: var(--muted);
+  border: 0;
+  padding: 6px;
+  flex: 0 0 44px;
+  min-height: 44px;
+  cursor: pointer;
+}
+.city-suggestions {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  z-index: 20;
+  background: var(--panel);
+  border: 1px solid var(--border-strong);
+  border-radius: 5px;
+  box-shadow: 0 8px 24px #1b2c3217;
+  overflow: hidden;
+}
+.city-suggestions ul { padding: 4px; margin: 0; list-style: none; max-height: 270px; overflow-y: auto; }
+.city-suggestions button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  min-height: 44px;
+  border: 0;
+  border-radius: 3px;
+  background: transparent;
+  color: var(--text);
+  text-align: left;
+  padding: 10px 12px;
+  font-size: 13px;
+  cursor: pointer;
+}
+.city-suggestions [aria-selected="true"] button, .city-suggestions button:hover { background: var(--accent-soft); color: var(--accent); }
+.city-suggestions small { color: var(--muted); flex-shrink: 0; }
+.city-suggestions > p { margin: 0; border-top: 1px solid var(--border); padding: 10px 12px; }
+.city-search-hint { margin: 8px 0 0; }
+.city-query-status { margin: 16px 0; }
+.city-vote-results { border-top: 1px solid var(--border); padding-top: 24px; margin-top: 24px; }
+.city-result-heading { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; }
+.city-result-heading h3 { font-size: 18px; margin: 0; }
+.city-result-heading p { margin: 6px 0 0; }
+.city-vote-export .report-table { max-height: 600px; overflow: auto; }
+.city-vote-export .report-table td:last-child { font-variant-numeric: tabular-nums; }
+.city-vote-pagination { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 16px; }
+.city-loading-icon { animation: city-spin 1s linear infinite; }
+@keyframes city-spin { to { transform: rotate(360deg); } }
+@media (max-width: 600px) {
+  .city-vote-fields { grid-template-columns: minmax(0, 1fr); gap: 16px; }
+  .city-result-heading { align-items: flex-start; flex-direction: column; gap: 8px; }
+  .city-vote-export .tool-actions button { min-height: 44px; white-space: normal; height: auto; }
+}
+@media (prefers-reduced-motion: reduce) { .city-loading-icon { animation: none; } }
