@@ -273,9 +273,6 @@ function StateDashboard({
   );
   const [view, setView] = useState<PanelView>("overview"),
     [officeFilter, setOfficeFilter] = useState<OfficeFilter>("all");
-  const [reportCandidate, setReportCandidate] = useState<
-    import("@/types/election").Candidate | null
-  >(null);
   const [pendingOnly, setPendingOnly] = useState(false),
     [shared, setShared] = useState(false);
   const notices = useCandidateAlerts(snapshot, preferences);
@@ -810,8 +807,7 @@ function StateDashboard({
           view,
         ) && (
           <Watchlist
-            onReport={(candidate) => {
-              setReportCandidate(candidate);
+            onReport={() => {
               setView("report");
               showFilters();
             }}
@@ -928,10 +924,9 @@ function StateDashboard({
         )}
         {(view === "all" || view === "report") && (
           <CandidateReportPanel
-            key={`${uf}:${reportCandidate?.id || "none"}`}
+            key={`${uf}:${view}`}
             uf={uf}
             snapshot={snapshot}
-            initialCandidate={reportCandidate}
             preferences={preferences}
           />
         )}

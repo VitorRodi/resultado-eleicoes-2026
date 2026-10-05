@@ -12,7 +12,6 @@ import {
   OFFICES,
   type Office,
   type ElectionSnapshot,
-  type Candidate,
   type WatchPreferences,
 } from "@/types/election";
 import { officeLabel } from "@/lib/config";
@@ -55,29 +54,18 @@ type HistoryState = {
 export default function CandidateReportPanel({
   uf,
   snapshot,
-  initialCandidate,
   preferences,
 }: {
   uf: string;
   snapshot: ElectionSnapshot | null;
-  initialCandidate?: Candidate | null;
   preferences?: WatchPreferences;
 }) {
   const display = useDisplaySettings();
-  const [office, setOffice] = useState<Office>(
-    initialCandidate?.office || "federalDeputy",
-  );
-  const [candidateId, setCandidateId] = useState(initialCandidate?.id || "");
+  const [office, setOffice] = useState<Office | "">("");
+  const [candidateId, setCandidateId] = useState("");
   const [query, setQuery] = useState("");
-  const [type, setType] = useState<ReportType>("state");
-  const [codes, setCodes] = useState<string[]>(
-    () =>
-      preferences?.regional.find(
-        (s) =>
-          s.candidateId === initialCandidate?.id &&
-          s.office === initialCandidate?.office,
-      )?.municipalityCodes || [],
-  );
+  const [type, setType] = useState<ReportType | "">("");
+  const [codes, setCodes] = useState<string[]>([]);
   const [cityQuery, setCityQuery] = useState("");
   const [personalization, setPersonalization] = useState(
     defaultReportPersonalization,
@@ -95,7 +83,7 @@ export default function CandidateReportPanel({
   const controller = useRef<AbortController | null>(null);
   const preview = useRef<HTMLIFrameElement | null>(null);
   const resultHeading = useRef<HTMLHeadingElement | null>(null);
-  const all = snapshot?.[office] || [];
+  const all = office ? snapshot?.[office] || [] : [];
   const candidate = all.find((c) => c.id === candidateId);
   const choices = all
     .filter((c) => matchesCandidate(c, query))
@@ -128,6 +116,8 @@ export default function CandidateReportPanel({
   );
   const cityCount = type === "state" ? municipalities.length : selected.length;
   const ready =
+    !!office &&
+    !!type &&
     !!candidate &&
     cityCount > 0 &&
     (type !== "comparison" ||
@@ -179,7 +169,7 @@ export default function CandidateReportPanel({
     setHistoryState(null);
   }
   async function generate() {
-    if (!ready || !candidate || !snapshot || controller.current) return;
+    if (!ready || !office || !type || !candidate || !snapshot || controller.current) return;
     const abort = new AbortController();
     controller.current = abort;
     setBusy(true);
@@ -386,12 +376,14 @@ export default function CandidateReportPanel({
                   value={office}
                   onChange={(e) => {
                     resetIdentity();
-                    setOffice(e.target.value as Office);
+                    setOffice(e.target.value as Office | "");
                     setCandidateId("");
                     setQuery("");
                     setCodes([]);
+                    setCityQuery("");
                   }}
                 >
+                  <option value="">Selecione um cargo</option>
                   {OFFICES.map((o) => (
                     <option key={o} value={o}>
                       {officeLabel(o, uf)}
@@ -405,6 +397,7 @@ export default function CandidateReportPanel({
                   <Search size={16} aria-hidden="true" />
                   <input
                     aria-label="Buscar candidato do relatório"
+                    disabled={!office}
                     value={query}
                     placeholder="Nome, número ou partido"
                     onChange={(e) => setQuery(e.target.value)}
@@ -415,17 +408,13 @@ export default function CandidateReportPanel({
                 Candidato
                 <select
                   aria-label="Candidato do relatório"
+                  disabled={!office}
                   value={candidateId}
                   onChange={(e) => {
                     resetIdentity();
                     setCandidateId(e.target.value);
-                    setCodes(
-                      preferences?.regional.find(
-                        (s) =>
-                          s.candidateId === e.target.value &&
-                          s.office === office,
-                      )?.municipalityCodes || [],
-                    );
+                    setCodes([]);
+                    setCityQuery("");
                   }}
                 >
                   <option value="">Selecione um candidato</option>
@@ -442,7 +431,7 @@ export default function CandidateReportPanel({
                 </select>
               </label>
             </div>
-            {!choices.length && (
+            {office && !choices.length && (
               <p className="small muted">
                 Nenhum candidato encontrado para esta busca.
               </p>
@@ -777,7 +766,7 @@ export default function CandidateReportPanel({
                 {candidate ? candidate.name : "Escolha no passo 1"}
                 {candidate && (
                   <small>
-                    {officeLabel(office, uf)} · {candidate.number} ·{" "}
+                    {officeLabel(candidate.office, uf)} · {candidate.number} ·{" "}
                     {candidate.party}
                   </small>
                 )}
@@ -786,7 +775,7 @@ export default function CandidateReportPanel({
             <div>
               <dt>Documento</dt>
               <dd>
-                {REPORT_TYPES.find((option) => option.id === type)?.title}
+                {REPORT_TYPES.find((option) => option.id === type)?.title || "Escolha no passo 2"}
               </dd>
             </div>
             <div>
@@ -853,6 +842,8 @@ export default function CandidateReportPanel({
             <p className="small muted">
               {!candidate
                 ? "Escolha o cargo e o candidato para continuar."
+                : !type
+                  ? "Escolha o tipo de relatório no passo 2."
                 : !cityCount
                   ? "Marque pelo menos uma cidade no passo 3."
                   : "Confira a candidatura de 2022 no passo 2 para continuar."}
