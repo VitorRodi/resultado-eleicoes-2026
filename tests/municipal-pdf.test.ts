@@ -132,3 +132,14 @@ test("PDF é um documento real, com fontes Unicode incorporadas e links de autor
   );
   assert.throws(() => municipalPdf({ ...input, rows: [input.rows[2]] }, fonts));
 });
+
+test("PDF por associação abre cada região numa página própria, inclusive região sem dados", () => {
+  const fonts = {
+    regular: readFileSync("public/fonts/noto-sans/NotoSans-Regular.ttf").toString("base64"),
+    bold: readFileSync("public/fonts/noto-sans/NotoSans-Bold.ttf").toString("base64"),
+  };
+  const bytes = municipalPdf({ ...input, separateAssociations: true, rows: [input.rows[0], { ...input.rows[2], name: "Mondaí" }] }, fonts);
+  const text = Buffer.from(bytes).toString("latin1");
+  assert.equal((text.match(/\/Type \/Page\b/g) || []).length, 2);
+  assert.match(text, /https:\/\/br.linkedin.com\/in\/vitor-rodi/);
+});

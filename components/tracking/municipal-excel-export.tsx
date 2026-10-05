@@ -44,6 +44,7 @@ export default function MunicipalExcelExport({
     [message, setMessage] = useState(""),
     [done, setDone] = useState(0);
   const [association, setAssociation] = useState("all");
+  const [separateAssociations, setSeparateAssociations] = useState(false);
   const [compare, setCompare] = useState(true),
     [choices, setChoices] = useState<HistoricalChoice[]>([]),
     [historyId, setHistoryId] = useState(""),
@@ -250,6 +251,7 @@ export default function MunicipalExcelExport({
       },
       rows: initialExportRows(cities),
       includeAssociations: uf === "sc",
+      separateAssociations: uf === "sc" && separateAssociations,
       ...(compare && history ? { historyCandidateId: history.id } : {}),
     };
     setResult(data);
@@ -344,7 +346,10 @@ export default function MunicipalExcelExport({
           </p>
         </div>
       </header>
-      {uf === "sc" && <AssociationPicker value={association} manual={false} disabled={busy || downloading} onChange={region => {
+      {uf === "sc" && <AssociationPicker value={association} manual={false} disabled={busy || downloading} separate={separateAssociations} onSeparateChange={value => {
+        clearResult();
+        setSeparateAssociations(value);
+      }} onChange={region => {
         clearResult();
         setAssociation(region);
       }} />}

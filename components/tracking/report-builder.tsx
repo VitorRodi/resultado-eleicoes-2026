@@ -69,6 +69,7 @@ export default function CandidateReportPanel({
   const [type, setType] = useState<ReportType | "">("");
   const [codes, setCodes] = useState<string[]>([]);
   const [association, setAssociation] = useState("");
+  const [separateAssociations, setSeparateAssociations] = useState(false);
   const [cityQuery, setCityQuery] = useState("");
   const [personalization, setPersonalization] = useState(
     defaultReportPersonalization,
@@ -194,9 +195,10 @@ export default function CandidateReportPanel({
     );
     let data: PreparedReport = {
       type,
+      separateAssociations: uf === "sc" && type !== "state" && separateAssociations,
       personalization: reportPersonalizationSchema.parse({
         ...personalization,
-        title: personalization.title || (uf === "sc" && association && association !== "all" ? `${association} · ${SC_ASSOCIATIONS.find(region => region.id === association)?.name || ""}` : ""),
+        title: personalization.title || (uf === "sc" && !separateAssociations && association && association !== "all" ? `${association} · ${SC_ASSOCIATIONS.find(region => region.id === association)?.name || ""}` : ""),
       }),
       uf,
       stateName: pinned.state.name,
@@ -302,6 +304,7 @@ export default function CandidateReportPanel({
             uf: report.uf,
             candidate: report.candidate,
             generatedAt: report.generatedAt,
+            separateAssociations: report.separateAssociations,
             historical: report.historical,
             personalization: report.personalization,
             profile: report.type === "state" ? report : undefined,
@@ -330,6 +333,7 @@ export default function CandidateReportPanel({
           rows: report.rows,
           historyCandidateId: report.historical?.id,
           includeAssociations: report.uf === "sc",
+          separateAssociations: report.separateAssociations,
         });
         const response = await fetch("/api/elections/municipal/export", {
           method: "POST",
@@ -595,7 +599,10 @@ export default function CandidateReportPanel({
               <span aria-hidden="true">3</span> Quais cidades entram no
               documento?
             </legend>
-            {uf === "sc" && <AssociationPicker value={association} disabled={locked} onChange={region => {
+            {uf === "sc" && <AssociationPicker value={association} disabled={locked} separate={separateAssociations} onSeparateChange={type !== "state" ? value => {
+              reset();
+              setSeparateAssociations(value);
+            } : undefined} onChange={region => {
               reset();
               setAssociation(region);
               setCityQuery("");

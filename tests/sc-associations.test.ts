@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import ExcelJS from "exceljs";
 import catalog from "../data/sc-associations.json";
-import { SC_ASSOCIATIONS, associationCities, municipalityAssociation } from "../lib/sc-associations";
+import { SC_ASSOCIATIONS, associationCities, municipalityAssociation, groupAssociationRows } from "../lib/sc-associations";
 import { initialExportRows, type MunicipalExport } from "../lib/municipal-export";
 import { municipalWorkbook } from "../lib/municipal-workbook";
 
@@ -21,6 +21,37 @@ test("21 associações cobrem os 295 municípios uma vez, com siglas atuais e se
   assert.equal(municipalityAssociation({ name: "Mondaí" }), "AMEOSC");
   assert.equal(municipalityAssociation({ name: "Herval d'Oeste" }), "AMMOC");
   assert.equal(municipalityAssociation({ name: "São Paulo" }), null);
+});
+
+test("Excel separado cria uma aba por associação com apenas suas cidades e fórmulas locais", async () => {
+  const cities = Object.values(catalog.municipalities).map((city, i) => ({ name: city.name, code: String(80000 + i) }));
+  const rows = initialExportRows(cities).map(row => ({ ...row, votes: 130, verifiedSignatures: true, status: "finished" as const }));
+  const input: MunicipalExport = { uf: "sc", candidate: { id: "123", name: "Teste", number: "2210", party: "PL", office: "federalDeputy" }, separateAssociations: true, historyCandidateId: "456", rows };
+  const historical = { id: "456", name: "Teste", fullName: "Teste", number: "2210", party: "PL", office: "federalDeputy" as const, votes: Object.fromEntries(cities.map(city => [city.code, 100])) };
+  const book = new ExcelJS.Workbook();
+  await book.xlsx.load((await municipalWorkbook(input, new Date(), historical)).buffer as ArrayBuffer);
+  assert.equal(book.worksheets.length, 23);
+  let count = 0;
+  for (const region of SC_ASSOCIATIONS) {
+    const sheet = book.getWorksheet(region.id)!;
+    assert.ok(sheet);
+    assert.deepEqual(sheet.getCell(region.municipalities.length + 10, 1).value, { text: "Relatório feito por Vitor Rodi · Conheça o projeto e acompanhe meu trabalho no LinkedIn", hyperlink: "https://br.linkedin.com/in/vitor-rodi" });
+    assert.equal(sheet.getCell("F7").value, "Região");
+    assert.equal(sheet.getCell(region.municipalities.length + 8, 2).result, region.municipalities.length * 130);
+    assert.equal(sheet.getCell(region.municipalities.length + 8, 4).result, region.municipalities.length * 30);
+    for (let row = 8; row < region.municipalities.length + 8; row++) {
+      assert.equal(municipalityAssociation({ name: String(sheet.getCell(row, 1).value) }), region.id);
+      assert.equal(sheet.getCell(row, 4).result, 30);
+      assert.equal(sheet.getCell(row, 5).result, 0.3);
+      assert.equal(sheet.getCell(row, 6).value, region.id);
+      count++;
+    }
+  }
+  assert.equal(count, 295);
+  assert.deepEqual(groupAssociationRows([{ name: "Cidade não cadastrada" }]).map(group => group.id), ["SEM REGIÃO"]);
+  const single = new ExcelJS.Workbook();
+  await single.xlsx.load((await municipalWorkbook({ ...input, rows: rows.filter(row => municipalityAssociation(row) === "AMERIOS"), historyCandidateId: undefined })).buffer as ArrayBuffer);
+  assert.deepEqual(single.worksheets.map(sheet => sheet.name), ["Votos por cidade", "Regiões", "AMERIOS"]);
 });
 
 test("Excel regional conserva comparação, soma só a seleção e mantém ausência e base zero", async () => {

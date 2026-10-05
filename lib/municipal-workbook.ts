@@ -1,10 +1,11 @@
 import ExcelJS from "exceljs";
-import { municipalityAssociation, SC_ASSOCIATIONS } from "./sc-associations";
+import { municipalityAssociation, SC_ASSOCIATIONS, groupAssociationRows } from "./sc-associations";
 import { officeLabel } from "./config";
 import { municipalDownloadName } from "./export-filenames";
 import {
   municipalExportSchema,
   type MunicipalExport,
+  type MunicipalExportRow,
 } from "./municipal-export";
 import {
   historicalCandidateSchema,
@@ -107,24 +108,16 @@ function rowStyle(sheet: ExcelJS.Worksheet, index: number, columns: number) {
       };
   }
 }
-export async function municipalWorkbook(
-  input: MunicipalExport,
-  generatedAt = new Date(),
-  historical?: HistoricalCandidate,
+function addMunicipalSheet(
+  workbook: ExcelJS.Workbook,
+  data: MunicipalExport,
+  rows: MunicipalExportRow[],
+  history?: HistoricalCandidate,
+  sheetName = "Votos por cidade",
+  regionName?: string,
 ) {
-  const data = municipalExportSchema.parse(input),
-    rows = [...data.rows].sort((a, b) => a.name.localeCompare(b.name, "pt-BR"));
-  const history = historical
-    ? historicalCandidateSchema.parse(historical)
-    : undefined;
-  if (data.historyCandidateId && history?.id !== data.historyCandidateId)
-    throw new Error("Candidatura histórica não corresponde à seleção.");
-  const workbook = new ExcelJS.Workbook();
-  workbook.creator = "Vitor Rodi";
-  workbook.created = generatedAt;
-  workbook.calcProperties.fullCalcOnLoad = true;
   const identity = `${data.candidate.name} (${data.candidate.number} · ${data.candidate.party}) · ${officeLabel(data.candidate.office, data.uf)} · ${data.uf.toUpperCase()}`;
-  const withRegions = data.uf === "sc" && data.includeAssociations === true;
+  const withRegions = data.uf === "sc" && (data.includeAssociations === true || data.separateAssociations === true);
   const columns = (history ? 5 : 2) + (withRegions ? 1 : 0);
   const note = [
     "Primeiro turno. Células vazias indicam votos indisponíveis; zero é um resultado divulgado.",
@@ -134,7 +127,7 @@ export async function municipalWorkbook(
   ].join(" ");
   const sheet = setup(
     workbook,
-    "Votos por cidade",
+    sheetName,
     [...(history ? [38, 28, 28, 28, 24] : [44, 28]), ...(withRegions ? [24] : [])],
     history
       ? "Votos por município · 2022 x 2026"
@@ -142,7 +135,7 @@ export async function municipalWorkbook(
     history
       ? `2026: ${identity}\n2022: ${history.name} (${history.number} · ${history.party}) · ${officeLabel(history.office, data.uf)}`
       : identity,
-    note,
+    regionName ? `${regionName}. ${note}` : note,
   );
   const headers = [
     "Município",
@@ -216,10 +209,31 @@ export async function municipalWorkbook(
       ],
     });
   }
+  if (regionName) {
+    const at = rows.length + 8;
+    const current = rows.every(row => row.votes !== null) ? rows.reduce((sum, row) => sum + row.votes!, 0) : null;
+    const previous = history && rows.every(row => Object.hasOwn(history.votes, row.code)) ? rows.reduce((sum, row) => sum + history.votes[row.code], 0) : null;
+    const change = voteChange(previous, current);
+    sheet.getRow(at).values = ["Total da região",
+      { formula: `IF(COUNT(B8:B${at - 1})=${rows.length},SUM(B8:B${at - 1}),"")`, result: current ?? "" },
+      ...(history ? [
+        { formula: `IF(COUNT(C8:C${at - 1})=${rows.length},SUM(C8:C${at - 1}),"")`, result: previous ?? "" },
+        { formula: `IF(COUNT(B${at}:C${at})=2,B${at}-C${at},"")`, result: change.difference ?? "" },
+        { formula: `IF(OR(COUNT(B${at}:C${at})<2,C${at}=0),"",D${at}/C${at})`, result: change.relative ?? "" },
+      ] : [])];
+    rowStyle(sheet, at, columns);
+    sheet.getCell(at, 2).numFmt = "#,##0";
+    if (history) {
+      sheet.getCell(at, 3).numFmt = "#,##0";
+      sheet.getCell(at, 4).numFmt = "+#,##0;-#,##0;0";
+      sheet.getCell(at, 5).numFmt = "+0.00%;-0.00%;0.00%";
+    }
+    sheet.getRow(at).eachCell(cell => { cell.font = { name: "Arial", size: 11, bold: true, color: { argb: GREEN } }; });
+  }
   const footer = rows.length + 10;
   sheet.mergeCells(footer, 1, footer, columns);
   sheet.getCell(footer, 1).value = {
-    text: "Feito por Vitor Rodi · LinkedIn: linkedin.com/in/vitor-rodi",
+    text: "Relatório feito por Vitor Rodi · Conheça o projeto e acompanhe meu trabalho no LinkedIn",
     hyperlink: "https://br.linkedin.com/in/vitor-rodi",
   };
   sheet.getCell(footer, 1).font = {
@@ -228,7 +242,29 @@ export async function municipalWorkbook(
     color: { argb: GREEN },
     underline: true,
   };
-  sheet.getRow(footer).height = 25;
+  sheet.getCell(footer, 1).alignment = { wrapText: true, vertical: "middle" };
+  sheet.getRow(footer).height = 34;
+}
+
+export async function municipalWorkbook(
+  input: MunicipalExport,
+  generatedAt = new Date(),
+  historical?: HistoricalCandidate,
+) {
+  const data = municipalExportSchema.parse(input),
+    rows = [...data.rows].sort((a, b) => a.name.localeCompare(b.name, "pt-BR"));
+  const history = historical
+    ? historicalCandidateSchema.parse(historical)
+    : undefined;
+  if (data.historyCandidateId && history?.id !== data.historyCandidateId)
+    throw new Error("Candidatura histórica não corresponde à seleção.");
+  const workbook = new ExcelJS.Workbook();
+  workbook.creator = "Vitor Rodi";
+  workbook.created = generatedAt;
+  workbook.calcProperties.fullCalcOnLoad = true;
+  addMunicipalSheet(workbook, data, rows, history);
+  const identity = `${data.candidate.name} (${data.candidate.number} · ${data.candidate.party}) · ${officeLabel(data.candidate.office, data.uf)} · ${data.uf.toUpperCase()}`;
+  const withRegions = data.uf === "sc" && (data.includeAssociations === true || data.separateAssociations === true);
   if (withRegions) {
     const groups = SC_ASSOCIATIONS.map(region => ({ region, cities: rows.filter(row => municipalityAssociation(row) === region.id) })).filter(group => group.cities.length);
     const regionSheet = setup(workbook, "Regiões", history ? [24, 22, 26, 26, 26, 22] : [24, 22, 26], history ? "Votos por região · 2022 x 2026" : "Votos por região · 2026", identity, "Associações de municípios de Santa Catarina. Totais consideram as cidades selecionadas; se faltar votação em alguma cidade, o total daquele ano fica vazio.");
@@ -251,8 +287,15 @@ export async function municipalWorkbook(
     }
     const at = groups.length + 10;
     regionSheet.mergeCells(at, 1, at, regionHeaders.length);
-    regionSheet.getCell(at, 1).value = { text: "Feito por Vitor Rodi · LinkedIn: linkedin.com/in/vitor-rodi", hyperlink: "https://br.linkedin.com/in/vitor-rodi" };
+    regionSheet.getCell(at, 1).value = { text: "Relatório feito por Vitor Rodi · Conheça o projeto e acompanhe meu trabalho no LinkedIn", hyperlink: "https://br.linkedin.com/in/vitor-rodi" };
     regionSheet.getCell(at, 1).font = { name: "Arial", size: 10, color: { argb: GREEN }, underline: true };
+    regionSheet.getCell(at, 1).alignment = { wrapText: true, vertical: "middle" };
+    regionSheet.getRow(at).height = 34;
+  }
+  if (data.uf === "sc" && data.separateAssociations) {
+    for (const group of groupAssociationRows(rows)) {
+      addMunicipalSheet(workbook, data, group.rows, history, group.id, group.name);
+    }
   }
   return new Uint8Array(await workbook.xlsx.writeBuffer());
 }

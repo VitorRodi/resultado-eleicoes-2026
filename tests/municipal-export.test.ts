@@ -108,7 +108,7 @@ test("Excel simplificado contém números, zero, células em branco, filtros e a
   ]);
   assert.equal(workbook.worksheets.length, 1);
   assert.deepEqual(sheet.getCell("A13").value, {
-    text: "Feito por Vitor Rodi · LinkedIn: linkedin.com/in/vitor-rodi",
+    text: "Relatório feito por Vitor Rodi · Conheça o projeto e acompanhe meu trabalho no LinkedIn",
     hyperlink: "https://br.linkedin.com/in/vitor-rodi",
   });
   assert.ok(sheet.autoFilter);

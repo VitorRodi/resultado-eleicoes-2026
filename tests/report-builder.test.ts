@@ -126,6 +126,22 @@ test("relatórios personalizados escapam textos, conservam a autoria e mostram c
   }
   assert.match(preparedReportHtml(report), /<svg/);
 });
+
+test("prévia por associação separa cidades, comparação e totais sem misturar regiões", () => {
+  const html = preparedReportHtml({ ...report, separateAssociations: true });
+  const sections = [...html.matchAll(/<main class="region-report">([\s\S]*?)<\/main>/g)].map(match => match[1]);
+  assert.equal(sections.length, 2);
+  assert.match(sections[0], /AMERIOS/);
+  assert.match(sections[0], /Caibi/);
+  assert.match(sections[0], /Cunhataí/);
+  assert.doesNotMatch(sections[0], /Águas de Chapecó/);
+  assert.match(sections[0], /Totais comparados em 2 de 2/);
+  assert.match(sections[1], /AMOSC/);
+  assert.match(sections[1], /Águas de Chapecó/);
+  assert.doesNotMatch(sections[1], /Caibi/);
+  assert.match(sections[1], /Totais comparados em 0 de 1/);
+  assert.match(html, /break-before:page/);
+});
 test("consulta municipal faz lotes de 20, conserva escopo escolhido e rejeita candidato/municípios incorretos", async () => {
   const original = globalThis.fetch;
   const catalog = Array.from({ length: 35 }, (_, i) => ({

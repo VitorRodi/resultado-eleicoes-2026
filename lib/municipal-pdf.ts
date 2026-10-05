@@ -10,6 +10,7 @@ import {
   reportComparisonTotals,
   type ReportPersonalization,
 } from "./report-options";
+import { groupAssociationRows } from "./sc-associations";
 import { initialExportRows } from "./municipal-export";
 
 import {
@@ -26,6 +27,7 @@ export type MunicipalPdfInput = {
   historical?: HistoricalCandidate;
   personalization?: ReportPersonalization;
   profile?: CandidateReport;
+  separateAssociations?: boolean;
 };
 export type PdfFonts = { regular: string; bold: string };
 const INK = [27, 44, 50] as const,
@@ -81,7 +83,7 @@ export function municipalPdfSummary(input: MunicipalPdfInput) {
   };
 }
 export function municipalPdf(input: MunicipalPdfInput, fonts: PdfFonts) {
-  const summary = municipalPdfSummary(input);
+  let summary = municipalPdfSummary(input);
   const history = input.historical
     ? historicalCandidateSchema.parse(input.historical)
     : undefined;
@@ -119,6 +121,8 @@ export function municipalPdf(input: MunicipalPdfInput, fonts: PdfFonts) {
     right = 192,
     width = 174;
   let y = 0;
+  let activeRegion = "";
+  let activeRegionName = "";
   const write = (
     text: string,
     x: number,
@@ -164,6 +168,10 @@ export function municipalPdf(input: MunicipalPdfInput, fonts: PdfFonts) {
         MUTED,
       );
       y = 47 + lines.length * 6;
+      if (activeRegion) {
+        write(activeRegion, left, y, 10, true, GREEN);
+        y += 8;
+      }
       return;
     }
     write(
@@ -188,6 +196,15 @@ export function municipalPdf(input: MunicipalPdfInput, fonts: PdfFonts) {
       ) as string[];
       for (const line of lines) {
         write(line, left, y, 11, false, GREEN);
+        y += 5.5;
+      }
+      y += 5;
+    }
+    if (activeRegion) {
+      doc.setFont("NotoSans", "bold");
+      doc.setFontSize(11);
+      for (const line of doc.splitTextToSize(`${activeRegion} - ${activeRegionName}`, width) as string[]) {
+        write(line, left, y, 11, true, GREEN);
         y += 5.5;
       }
       y += 5;
@@ -410,281 +427,294 @@ export function municipalPdf(input: MunicipalPdfInput, fonts: PdfFonts) {
     }
     y += 9;
   }
-  startPage();
-  if (personalization?.includeCharts) {
-    chart(
-      "As 10 cidades com mais votos de 2026 neste conjunto",
-      summary.rows
-        .filter((row) => row.votes !== null)
-        .slice(0, 10)
-        .map((row) => ({ name: row.name, votes: row.votes! })),
-    );
-    if (profile) {
-      const distribution = reportDistribution(profile);
+  function renderSection() {
+    startPage();
+    if (personalization?.includeCharts) {
       chart(
-        "As 10 regiões com mais votos disponíveis",
-        distribution.regions.slice(0, 10),
+        "As 10 cidades com mais votos de 2026 neste conjunto",
+        summary.rows
+          .filter((row) => row.votes !== null)
+          .slice(0, 10)
+          .map((row) => ({ name: row.name, votes: row.votes! })),
       );
-      if (y + 14 > 260) {
-        doc.addPage();
-        startPage(true);
+      if (profile) {
+        const distribution = reportDistribution(profile);
+        chart(
+          "As 10 regiões com mais votos disponíveis",
+          distribution.regions.slice(0, 10),
+        );
+        if (y + 14 > 260) {
+          doc.addPage();
+          startPage(true);
+        }
+        write(
+          `Regiões imediatas do IBGE; ${distribution.known} de ${profile.municipalities.length} cidades com votos.`,
+          left,
+          y,
+          8,
+          false,
+          MUTED,
+        );
+        y += 5;
+        write(
+          `${distribution.unmapped} cidades com votos sem região identificada; somas podem diferir do total estadual.`,
+          left,
+          y,
+          8,
+          false,
+          MUTED,
+        );
+        y += 10;
       }
-      write(
-        `Regiões imediatas do IBGE; ${distribution.known} de ${profile.municipalities.length} cidades com votos.`,
-        left,
-        y,
-        8,
-        false,
-        MUTED,
-      );
-      y += 5;
-      write(
-        `${distribution.unmapped} cidades com votos sem região identificada; somas podem diferir do total estadual.`,
-        left,
-        y,
-        8,
-        false,
-        MUTED,
-      );
-      y += 10;
     }
-  }
-  if (y + 25 > 259) {
-    doc.addPage();
-    startPage(true);
-  }
-  tableHeader();
-  const max = Math.max(1, ...summary.rows.map((row) => row.votes ?? 0));
-  for (const [i, row] of summary.rows.entries()) {
-    doc.setFont("NotoSans", "normal");
-    doc.setFontSize(9);
-    const lines = doc.splitTextToSize(
-      clean(row.name),
-      history ? 72 : 86,
-    ) as string[];
-    const height = Math.max(11, lines.length * 4.5 + 6) + (row.stale ? 4 : 0);
-    if (y + height > 259) {
+    if (y + (profile ? 32 : 22) + 40 > 259) {
       doc.addPage();
       startPage(true);
-      tableHeader();
     }
-    if (i % 2) {
-      doc.setFillColor(240, 245, 242);
-      doc.rect(left, y - 4, width, height, "F");
-    }
-    for (const [n, line] of lines.entries())
-      write(line, left + 3, y + 2 + n * 4.5, 9);
-    if (row.stale)
+    y += 5;
+    write(
+      history
+        ? "Diferença = 2026 − 2022. Variação (%) = diferença ÷ votos de 2022 × 100; base zero não tem percentual."
+        : personalization?.includeCharts === false
+          ? "Votação nas cidades selecionadas nesta consulta."
+          : "Barras proporcionais à cidade com maior votação neste conjunto.",
+      left,
+      y,
+      7,
+      false,
+      MUTED,
+    );
+    y += 5;
+    write(
+      "Zero é uma quantidade divulgada; sem dados não significa zero votos.",
+      left,
+      y,
+      7,
+      false,
+      MUTED,
+    );
+    y += 5;
+    if (summary.stale) {
       write(
-        "Último valor disponível",
-        left + 3,
-        y + 3 + lines.length * 4.5,
+        "Há resultados preservados após falha de atualização, indicados na tabela.",
+        left,
+        y,
         7,
         false,
         MUTED,
       );
-    if (history) {
-      const previous = row.code ? (history.votes[row.code] ?? null) : null;
-      const change = voteChange(previous, row.votes);
+      y += 5;
+    }
+    if (summary.lastUpdate)
       write(
-        previous === null ? "Sem dados" : number(previous),
-        120,
-        y + 2,
-        8,
+        `Resultados municipais: ${timestamp(summary.firstUpdate!)} até ${timestamp(summary.lastUpdate)} (Brasília).`,
+        left,
+        y,
+        7,
         false,
-        INK,
-        "right",
+        MUTED,
       );
+    if (profile?.meta.updatedAt) {
+      y += 5;
       write(
-        row.votes === null ? "Sem dados" : number(row.votes),
-        144,
-        y + 2,
-        8,
-        true,
-        INK,
-        "right",
+        `Resultado estadual: ${timestamp(profile.meta.updatedAt)} (Brasília).`,
+        left,
+        y,
+        7,
+        false,
+        MUTED,
       );
-      const delta =
-        change.difference === null
-          ? "—"
-          : `${change.difference > 0 ? "+" : ""}${number(change.difference)}`;
-      const pct =
-        change.relative === null
-          ? previous === 0 && row.votes !== null
-            ? "Base zero"
-            : "—"
-          : `${change.relative > 0 ? "+" : ""}${percentage(change.relative * 100)}`;
-      const color =
-        change.difference !== null && change.difference < 0
-          ? ([177, 60, 70] as const)
-          : GREEN;
-      write(delta, 166, y + 2, 8, true, color, "right");
-      write(pct, 189, y + 2, 7, true, color, "right");
-    } else if (row.votes !== null) {
-      if (personalization?.includeCharts !== false) {
-        doc.setFillColor(222, 233, 225);
-        doc.roundedRect(113, y - 1, 50, 3.5, 1, 1, "F");
-        if (row.votes > 0) {
-          doc.setFillColor(...GREEN);
-          doc.roundedRect(113, y - 1, (50 * row.votes) / max, 3.5, 1, 1, "F");
-        }
-      }
-      write(number(row.votes), right - 3, y + 2, 10, true, INK, "right");
-    } else write("Sem dados", right - 3, y + 2, 8, false, MUTED, "right");
-    y += height;
-  }
-  if (profile) {
-    const distribution = reportDistribution(profile);
-    if (distribution.regions.length) {
+    }
+    y += 10;
+    if (y + 25 > 259) {
       doc.addPage();
       startPage(true);
-      const regionHeader = () => {
-        write("Votos por região imediata", left, y, 13, true);
-        y += 11;
-        doc.setFillColor(...GREEN);
-        doc.rect(left, y - 5, width, 10, "F");
-        write("Região", left + 3, y + 1, 9, true, [255, 255, 255]);
+    }
+    tableHeader();
+    const max = Math.max(1, ...summary.rows.map((row) => row.votes ?? 0));
+    for (const [i, row] of summary.rows.entries()) {
+      doc.setFont("NotoSans", "normal");
+      doc.setFontSize(9);
+      const lines = doc.splitTextToSize(
+        clean(row.name),
+        history ? 72 : 86,
+      ) as string[];
+      const height = Math.max(11, lines.length * 4.5 + 6) + (row.stale ? 4 : 0);
+      if (y + height > 259) {
+        doc.addPage();
+        startPage(true);
+        tableHeader();
+      }
+      if (i % 2) {
+        doc.setFillColor(240, 245, 242);
+        doc.rect(left, y - 4, width, height, "F");
+      }
+      for (const [n, line] of lines.entries())
+        write(line, left + 3, y + 2 + n * 4.5, 9);
+      if (row.stale)
         write(
-          "Votos disponíveis",
-          150,
-          y + 1,
-          8,
-          true,
-          [255, 255, 255],
-          "right",
+          "Último valor disponível",
+          left + 3,
+          y + 3 + lines.length * 4.5,
+          7,
+          false,
+          MUTED,
         );
+      if (history) {
+        const previous = row.code ? (history.votes[row.code] ?? null) : null;
+        const change = voteChange(previous, row.votes);
         write(
-          "Cidades com votos",
-          189,
-          y + 1,
-          8,
-          true,
-          [255, 255, 255],
-          "right",
-        );
-        y += 9;
-      };
-      regionHeader();
-      for (const [i, region] of distribution.regions.entries()) {
-        doc.setFont("NotoSans", "normal");
-        doc.setFontSize(9);
-        const lines = doc.splitTextToSize(clean(region.name), 88) as string[];
-        const height =
-          Math.max(12, lines.length * 4.5 + 6) + (region.stale ? 4 : 0);
-        if (y + height > 259) {
-          doc.addPage();
-          startPage(true);
-          regionHeader();
-        }
-        if (i % 2) {
-          doc.setFillColor(240, 245, 242);
-          doc.rect(left, y - 4, width, height, "F");
-        }
-        lines.forEach((line, n) => write(line, left + 3, y + 2 + n * 4.5, 9));
-        if (region.stale)
-          write(
-            "Últimos valores disponíveis",
-            left + 3,
-            y + 3 + lines.length * 4.5,
-            7,
-            false,
-            MUTED,
-          );
-        write(number(region.votes), 150, y + 2, 9, true, INK, "right");
-        write(
-          `${region.known} de ${region.total}`,
-          189,
+          previous === null ? "Sem dados" : number(previous),
+          120,
           y + 2,
-          9,
+          8,
           false,
           INK,
           "right",
         );
-        y += height;
-      }
-      if (y + 17 > 267) {
+        write(
+          row.votes === null ? "Sem dados" : number(row.votes),
+          144,
+          y + 2,
+          8,
+          true,
+          INK,
+          "right",
+        );
+        const delta =
+          change.difference === null
+            ? "—"
+            : `${change.difference > 0 ? "+" : ""}${number(change.difference)}`;
+        const pct =
+          change.relative === null
+            ? previous === 0 && row.votes !== null
+              ? "Base zero"
+              : "—"
+            : `${change.relative > 0 ? "+" : ""}${percentage(change.relative * 100)}`;
+        const color =
+          change.difference !== null && change.difference < 0
+            ? ([177, 60, 70] as const)
+            : GREEN;
+        write(delta, 166, y + 2, 8, true, color, "right");
+        write(pct, 189, y + 2, 7, true, color, "right");
+      } else if (row.votes !== null) {
+        if (personalization?.includeCharts !== false) {
+          doc.setFillColor(222, 233, 225);
+          doc.roundedRect(113, y - 1, 50, 3.5, 1, 1, "F");
+          if (row.votes > 0) {
+            doc.setFillColor(...GREEN);
+            doc.roundedRect(113, y - 1, (50 * row.votes) / max, 3.5, 1, 1, "F");
+          }
+        }
+        write(number(row.votes), right - 3, y + 2, 10, true, INK, "right");
+      } else write("Sem dados", right - 3, y + 2, 8, false, MUTED, "right");
+      y += height;
+    }
+    if (profile) {
+      const distribution = reportDistribution(profile);
+      if (distribution.regions.length) {
         doc.addPage();
         startPage(true);
+        const regionHeader = () => {
+          write("Votos por região imediata", left, y, 13, true);
+          y += 11;
+          doc.setFillColor(...GREEN);
+          doc.rect(left, y - 5, width, 10, "F");
+          write("Região", left + 3, y + 1, 9, true, [255, 255, 255]);
+          write(
+            "Votos disponíveis",
+            150,
+            y + 1,
+            8,
+            true,
+            [255, 255, 255],
+            "right",
+          );
+          write(
+            "Cidades com votos",
+            189,
+            y + 1,
+            8,
+            true,
+            [255, 255, 255],
+            "right",
+          );
+          y += 9;
+        };
+        regionHeader();
+        for (const [i, region] of distribution.regions.entries()) {
+          doc.setFont("NotoSans", "normal");
+          doc.setFontSize(9);
+          const lines = doc.splitTextToSize(clean(region.name), 88) as string[];
+          const height =
+            Math.max(12, lines.length * 4.5 + 6) + (region.stale ? 4 : 0);
+          if (y + height > 259) {
+            doc.addPage();
+            startPage(true);
+            regionHeader();
+          }
+          if (i % 2) {
+            doc.setFillColor(240, 245, 242);
+            doc.rect(left, y - 4, width, height, "F");
+          }
+          lines.forEach((line, n) => write(line, left + 3, y + 2 + n * 4.5, 9));
+          if (region.stale)
+            write(
+              "Últimos valores disponíveis",
+              left + 3,
+              y + 3 + lines.length * 4.5,
+              7,
+              false,
+              MUTED,
+            );
+          write(number(region.votes), 150, y + 2, 9, true, INK, "right");
+          write(
+            `${region.known} de ${region.total}`,
+            189,
+            y + 2,
+            9,
+            false,
+            INK,
+            "right",
+          );
+          y += height;
+        }
+        if (y + 17 > 267) {
+          doc.addPage();
+          startPage(true);
+        }
+        y += 5;
+        write(
+          `Regiões imediatas do IBGE; ${distribution.unmapped} cidades com votos sem região identificada.`,
+          left,
+          y,
+          8,
+          false,
+          MUTED,
+        );
+        y += 5;
+        write(
+          "Somente municípios com votos disponíveis entram nas somas regionais.",
+          left,
+          y,
+          8,
+          false,
+          MUTED,
+        );
+        y += 7;
       }
-      y += 5;
-      write(
-        `Regiões imediatas do IBGE; ${distribution.unmapped} cidades com votos sem região identificada.`,
-        left,
-        y,
-        8,
-        false,
-        MUTED,
-      );
-      y += 5;
-      write(
-        "Somente municípios com votos disponíveis entram nas somas regionais.",
-        left,
-        y,
-        8,
-        false,
-        MUTED,
-      );
-      y += 7;
     }
+
   }
-  if (y + (profile ? 32 : 22) > 267) {
-    doc.addPage();
-    startPage(true);
-  }
-  y += 5;
-  write(
-    history
-      ? "Diferença = 2026 − 2022. Variação (%) = diferença ÷ votos de 2022 × 100; base zero não tem percentual."
-      : personalization?.includeCharts === false
-        ? "Votação nas cidades selecionadas nesta consulta."
-        : "Barras proporcionais à cidade com maior votação neste conjunto.",
-    left,
-    y,
-    7,
-    false,
-    MUTED,
-  );
-  y += 5;
-  write(
-    "Zero é uma quantidade divulgada; sem dados não significa zero votos.",
-    left,
-    y,
-    7,
-    false,
-    MUTED,
-  );
-  y += 5;
-  if (summary.stale) {
-    write(
-      "Há resultados preservados após falha de atualização, indicados na tabela.",
-      left,
-      y,
-      7,
-      false,
-      MUTED,
-    );
-    y += 5;
-  }
-  if (summary.lastUpdate)
-    write(
-      `Resultados municipais: ${timestamp(summary.firstUpdate!)} até ${timestamp(summary.lastUpdate)} (Brasília).`,
-      left,
-      y,
-      7,
-      false,
-      MUTED,
-    );
-  if (profile?.meta.updatedAt) {
-    y += 5;
-    write(
-      `Resultado estadual: ${timestamp(profile.meta.updatedAt)} (Brasília).`,
-      left,
-      y,
-      7,
-      false,
-      MUTED,
-    );
-  }
+  if (input.uf === "sc" && input.separateAssociations && !profile) {
+    for (const [index, group] of groupAssociationRows(input.rows).entries()) {
+      if (index > 0) doc.addPage();
+      activeRegion = group.id;
+      activeRegionName = group.name;
+      summary = municipalPdfSummary({ ...input, rows: group.rows });
+      renderSection();
+    }
+  } else renderSection();
   const pages = doc.getNumberOfPages();
   for (let page = 1; page <= pages; page++) {
     doc.setPage(page);

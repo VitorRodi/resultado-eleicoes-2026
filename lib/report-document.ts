@@ -1,6 +1,7 @@
 import { candidateReportHtml, type CandidateReport } from "./candidate-report";
 import type { HistoricalCandidate } from "./historical-election";
 import { voteChange } from "./historical-election";
+import { groupAssociationRows } from "./sc-associations";
 import { number, percentage } from "./formatting";
 import { officeLabel } from "./config";
 import {
@@ -13,6 +14,7 @@ export type PreparedReport = CandidateReport & {
   type: ReportType;
   personalization: ReportPersonalization;
   historical?: HistoricalCandidate;
+  separateAssociations?: boolean;
 };
 const escape = (value: unknown) =>
   String(value ?? "").replace(
@@ -36,9 +38,19 @@ export function preparedReportHtml(
   report: PreparedReport,
   toolbar = false,
   display?: { largeText: boolean; highContrast: boolean },
-) {
+): string {
   if (report.type === "state")
     return candidateReportHtml(report, toolbar, display);
+  if (report.uf === "sc" && report.separateAssociations) {
+    const documents = groupAssociationRows(report.rows).map(group => preparedReportHtml({
+      ...report,
+      separateAssociations: false,
+      rows: group.rows,
+      personalization: { ...report.personalization, title: [report.personalization.title, `${group.id} · ${group.name}`].filter(Boolean).join(" / ") },
+    }, false, display));
+    const sections = documents.map(html => html.match(/<main>[\s\S]*<\/main>/)![0].replace("<main>", '<main class="region-report">')).join("");
+    return documents[0].replace(/<main>[\s\S]*<\/main>/, sections).replace("</style>", ".region-report + .region-report{break-before:page}</style>");
+  }
   const history = report.historical;
   const known = report.rows.filter((row) => row.votes !== null);
   const totals = history ? reportComparisonTotals(report.rows, history) : null;

@@ -15,3 +15,14 @@ export function associationCities(cities: Municipality[], region: string): Munic
   if (!SC_ASSOCIATIONS.some(association => association.id === region)) return [];
   return cities.filter(city => municipalityAssociation(city) === region);
 }
+
+export function groupAssociationRows<T extends { name: string; ibgeCode?: string }>(rows: T[]) {
+  const groups = SC_ASSOCIATIONS.map(region => ({
+    id: region.id,
+    name: region.name,
+    rows: rows.filter(row => municipalityAssociation(row) === region.id),
+  })).filter(group => group.rows.length > 0);
+  const unknown = rows.filter(row => !municipalityAssociation(row));
+  if (unknown.length) groups.push({ id: "SEM REGIÃO", name: "Região não identificada", rows: unknown });
+  return groups;
+}
