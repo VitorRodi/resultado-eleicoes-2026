@@ -1,4 +1,5 @@
 import ExcelJS from "exceljs";
+import { municipalityAssociation, SC_ASSOCIATIONS } from "./sc-associations";
 import { officeLabel } from "./config";
 import { municipalDownloadName } from "./export-filenames";
 import {
@@ -123,7 +124,8 @@ export async function municipalWorkbook(
   workbook.created = generatedAt;
   workbook.calcProperties.fullCalcOnLoad = true;
   const identity = `${data.candidate.name} (${data.candidate.number} · ${data.candidate.party}) · ${officeLabel(data.candidate.office, data.uf)} · ${data.uf.toUpperCase()}`;
-  const columns = history ? 5 : 2;
+  const withRegions = data.uf === "sc" && data.includeAssociations === true;
+  const columns = (history ? 5 : 2) + (withRegions ? 1 : 0);
   const note = [
     "Primeiro turno. Células vazias indicam votos indisponíveis; zero é um resultado divulgado.",
     rows.some((row) => row.stale)
@@ -133,7 +135,7 @@ export async function municipalWorkbook(
   const sheet = setup(
     workbook,
     "Votos por cidade",
-    history ? [38, 28, 28, 28, 24] : [44, 28],
+    [...(history ? [38, 28, 28, 28, 24] : [44, 28]), ...(withRegions ? [24] : [])],
     history
       ? "Votos por município · 2022 x 2026"
       : "Votos por município · 2026",
@@ -148,6 +150,7 @@ export async function municipalWorkbook(
     ...(history
       ? ["Votos do candidato em 2022", "Diferença de votos", "Variação (%)"]
       : []),
+    ...(withRegions ? ["Região"] : []),
   ];
   tableHeader(sheet, headers, rows.length);
   for (const [i, row] of rows.entries()) {
@@ -173,8 +176,10 @@ export async function municipalWorkbook(
             },
           ]
         : []),
+      ...(withRegions ? [municipalityAssociation(row) || "Não identificada"] : []),
     ];
     rowStyle(sheet, at, columns);
+    if (withRegions) sheet.getCell(at, columns).alignment = { vertical: "middle", horizontal: "left" };
     sheet.getCell(at, 2).numFmt = "#,##0";
     if (history) {
       sheet.getCell(at, 3).numFmt = "#,##0";
@@ -224,6 +229,31 @@ export async function municipalWorkbook(
     underline: true,
   };
   sheet.getRow(footer).height = 25;
+  if (withRegions) {
+    const groups = SC_ASSOCIATIONS.map(region => ({ region, cities: rows.filter(row => municipalityAssociation(row) === region.id) })).filter(group => group.cities.length);
+    const regionSheet = setup(workbook, "Regiões", history ? [24, 22, 26, 26, 26, 22] : [24, 22, 26], history ? "Votos por região · 2022 x 2026" : "Votos por região · 2026", identity, "Associações de municípios de Santa Catarina. Totais consideram as cidades selecionadas; se faltar votação em alguma cidade, o total daquele ano fica vazio.");
+    const regionHeaders = ["Região", "Municípios selecionados", "Votos em 2026", ...(history ? ["Votos em 2022", "Diferença de votos", "Variação (%)"] : [])];
+    tableHeader(regionSheet, regionHeaders, groups.length);
+    for (const [index, group] of groups.entries()) {
+      const at = index + 8;
+      const current = group.cities.every(city => city.votes !== null) ? group.cities.reduce((sum, city) => sum + city.votes!, 0) : null;
+      const previous = history && group.cities.every(city => Object.hasOwn(history.votes, city.code)) ? group.cities.reduce((sum, city) => sum + history.votes[city.code], 0) : null;
+      const change = voteChange(previous, current);
+      regionSheet.getRow(at).values = [group.region.id, group.cities.length, current, ...(history ? [previous,
+        { formula: `IF(COUNT(C${at}:D${at})=2,C${at}-D${at},"")`, result: current !== null && previous !== null ? current - previous : "" },
+        { formula: `IF(OR(COUNT(C${at}:D${at})<2,D${at}=0),"",E${at}/D${at})`, result: change.relative ?? "" }] : [])];
+      rowStyle(regionSheet, at, regionHeaders.length);
+      for (let column = 2; column <= 4; column++) if (column <= regionHeaders.length) regionSheet.getCell(at, column).numFmt = "#,##0";
+      if (history) {
+        regionSheet.getCell(at, 5).numFmt = "+#,##0;-#,##0;0";
+        regionSheet.getCell(at, 6).numFmt = "+0.00%;-0.00%;0.00%";
+      }
+    }
+    const at = groups.length + 10;
+    regionSheet.mergeCells(at, 1, at, regionHeaders.length);
+    regionSheet.getCell(at, 1).value = { text: "Feito por Vitor Rodi · LinkedIn: linkedin.com/in/vitor-rodi", hyperlink: "https://br.linkedin.com/in/vitor-rodi" };
+    regionSheet.getCell(at, 1).font = { name: "Arial", size: 10, color: { argb: GREEN }, underline: true };
+  }
   return new Uint8Array(await workbook.xlsx.writeBuffer());
 }
 export function municipalWorkbookName(data: MunicipalExport) {

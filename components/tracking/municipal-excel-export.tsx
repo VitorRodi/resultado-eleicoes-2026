@@ -21,6 +21,8 @@ import {
   type HistoricalChoice,
 } from "@/lib/historical-election";
 import type { OfficeFilter } from "@/components/layout/panel-filters";
+import AssociationPicker from "./association-picker";
+import { associationCities } from "@/lib/sc-associations";
 
 export default function MunicipalExcelExport({
   uf,
@@ -41,6 +43,7 @@ export default function MunicipalExcelExport({
     [downloading, setDownloading] = useState(false),
     [message, setMessage] = useState(""),
     [done, setDone] = useState(0);
+  const [association, setAssociation] = useState("all");
   const [compare, setCompare] = useState(true),
     [choices, setChoices] = useState<HistoricalChoice[]>([]),
     [historyId, setHistoryId] = useState(""),
@@ -126,7 +129,7 @@ export default function MunicipalExcelExport({
       .filter((c) => matchesCandidate(c, query))
       .sort((a, b) => a.name.localeCompare(b.name, "pt-BR"));
   const candidate = all.find((c) => c.id === candidateId),
-    cities = snapshot?.municipalities || [];
+    cities = uf === "sc" ? associationCities(snapshot?.municipalities || [], association) : snapshot?.municipalities || [];
   const filteredHistory = choices.filter((candidate) =>
     canonical(
       `${candidate.name} ${candidate.fullName} ${candidate.number} ${candidate.party}`,
@@ -246,6 +249,7 @@ export default function MunicipalExcelExport({
         office,
       },
       rows: initialExportRows(cities),
+      includeAssociations: uf === "sc",
       ...(compare && history ? { historyCandidateId: history.id } : {}),
     };
     setResult(data);
@@ -335,11 +339,15 @@ export default function MunicipalExcelExport({
             Excel de um candidato por município
           </h2>
           <p className="small muted">
-            Votos nas {cities.length || "—"} cidades do estado. Inclua a
+            Votos nas {cities.length || "—"} cidades selecionadas. Inclua a
             comparação com 2022 para ver onde a votação aumentou ou diminuiu.
           </p>
         </div>
       </header>
+      {uf === "sc" && <AssociationPicker value={association} manual={false} disabled={busy || downloading} onChange={region => {
+        clearResult();
+        setAssociation(region);
+      }} />}
       <div className="municipal-excel-fields">
         <label>
           Cargo em 2026

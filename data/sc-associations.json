@@ -1,0 +1,1609 @@
+{
+  "source": "https://www.egem.org.br/a-egem/associados/",
+  "checkedAt": "2026-10-05",
+  "associations": [
+    {
+      "id": "AMAI",
+      "name": "Associação dos Municípios do Alto Irani",
+      "municipalities": [
+        "4200101",
+        "4202537",
+        "4205175",
+        "4205308",
+        "4207684",
+        "4209458",
+        "4210555",
+        "4211850",
+        "4212270",
+        "4213401",
+        "4216107",
+        "4219101",
+        "4219507",
+        "4219705"
+      ]
+    },
+    {
+      "id": "AMARP",
+      "name": "Associação dos Municípios do Alto Vale do Rio do Peixe",
+      "municipalities": [
+        "4201604",
+        "4203006",
+        "4203154",
+        "4205506",
+        "4206751",
+        "4207577",
+        "4209706",
+        "4210050",
+        "4210704",
+        "4213005",
+        "4214409",
+        "4215406",
+        "4217907",
+        "4218251",
+        "4219309"
+      ]
+    },
+    {
+      "id": "AMAUC",
+      "name": "Associação dos Municípios do Alto Uruguai Catarinense",
+      "municipalities": [
+        "4200754",
+        "4201273",
+        "4204301",
+        "4207601",
+        "4207700",
+        "4207809",
+        "4208005",
+        "4208609",
+        "4209854",
+        "4212601",
+        "4213104",
+        "4213906",
+        "4217501",
+        "4219606"
+      ]
+    },
+    {
+      "id": "AMAVI",
+      "name": "Associação dos Municípios do Alto Vale do Itajaí",
+      "municipalities": [
+        "4200200",
+        "4200309",
+        "4201802",
+        "4201901",
+        "4202859",
+        "4204194",
+        "4205100",
+        "4206900",
+        "4207403",
+        "4208500",
+        "4209151",
+        "4209508",
+        "4209904",
+        "4210852",
+        "4212700",
+        "4213708",
+        "4214003",
+        "4214102",
+        "4214508",
+        "4214607",
+        "4214805",
+        "4215307",
+        "4215679",
+        "4217808",
+        "4218608",
+        "4219200",
+        "4219358",
+        "4219408"
+      ]
+    },
+    {
+      "id": "AMEOSC",
+      "name": "Associação dos Municípios do Extremo Oeste de Santa Catarina",
+      "municipalities": [
+        "4200804",
+        "4202081",
+        "4202099",
+        "4202156",
+        "4204905",
+        "4205001",
+        "4206405",
+        "4206603",
+        "4207650",
+        "4208401",
+        "4211009",
+        "4212007",
+        "4212239",
+        "4214151",
+        "4215554",
+        "4216255",
+        "4216701",
+        "4217204",
+        "4218756"
+      ]
+    },
+    {
+      "id": "AMERIOS",
+      "name": "Associação dos Municípios do Entre Rios",
+      "municipalities": [
+        "4202578",
+        "4203105",
+        "4203501",
+        "4204707",
+        "4204756",
+        "4205357",
+        "4207759",
+        "4210506",
+        "4210902",
+        "4212106",
+        "4215075",
+        "4215208",
+        "4215356",
+        "4215687",
+        "4217154",
+        "4217303",
+        "4217956"
+      ]
+    },
+    {
+      "id": "AMESC",
+      "name": "Associação dos Municípios do Extremo Sul Catarinense",
+      "municipalities": [
+        "4201406",
+        "4201950",
+        "4202073",
+        "4205191",
+        "4208708",
+        "4210407",
+        "4210803",
+        "4211256",
+        "4212254",
+        "4213807",
+        "4215653",
+        "4216404",
+        "4217709",
+        "4218103",
+        "4218806"
+      ]
+    },
+    {
+      "id": "AMFRI",
+      "name": "Associação dos Municípios da Foz do Rio Itajaí",
+      "municipalities": [
+        "4202008",
+        "4212809",
+        "4202453",
+        "4203204",
+        "4207106",
+        "4208203",
+        "4208302",
+        "4210001",
+        "4211306",
+        "4212502",
+        "4213500"
+      ]
+    },
+    {
+      "id": "AMMOC",
+      "name": "Associação dos Municípios do Meio Oeste Catarinense",
+      "municipalities": [
+        "4200408",
+        "4203907",
+        "4204004",
+        "4205209",
+        "4206702",
+        "4206801",
+        "4209003",
+        "4209201",
+        "4210035",
+        "4211801",
+        "4218509",
+        "4219176"
+      ]
+    },
+    {
+      "id": "AMNOROESTE",
+      "name": "Associação dos Municípios do Noroeste Catarinense",
+      "municipalities": [
+        "4204459",
+        "4205605",
+        "4209177",
+        "4211652",
+        "4215752",
+        "4216909"
+      ]
+    },
+    {
+      "id": "AMOSC",
+      "name": "Associação dos Municípios do Oeste de Santa Catarina",
+      "municipalities": [
+        "4200507",
+        "4200556",
+        "4201653",
+        "4204103",
+        "4204202",
+        "4204350",
+        "4204400",
+        "4205431",
+        "4206652",
+        "4207858",
+        "4208955",
+        "4211405",
+        "4211454",
+        "4211876",
+        "4212908",
+        "4213153",
+        "4214201",
+        "4215695",
+        "4216008",
+        "4217550",
+        "4217758",
+        "4218855"
+      ]
+    },
+    {
+      "id": "AMPLANORTE",
+      "name": "Associação dos Municípios do Planalto Norte Catarinense",
+      "municipalities": [
+        "4202131",
+        "4203808",
+        "4207908",
+        "4208104",
+        "4210100",
+        "4210308",
+        "4211108",
+        "4212205",
+        "4213609",
+        "4218301"
+      ]
+    },
+    {
+      "id": "AMPLASC",
+      "name": "Associação dos Municípios do Planalto Sul de Santa Catarina",
+      "municipalities": [
+        "4200051",
+        "4202875",
+        "4203600",
+        "4204152",
+        "4211058",
+        "4219150",
+        "4219853"
+      ]
+    },
+    {
+      "id": "AMREC",
+      "name": "Associação dos Municípios da Região Carbonífera",
+      "municipalities": [
+        "4220000",
+        "4204251",
+        "4204608",
+        "4205456",
+        "4207007",
+        "4209607",
+        "4211207",
+        "4211603",
+        "4211702",
+        "4217600",
+        "4218350",
+        "4219002"
+      ]
+    },
+    {
+      "id": "AMUNESC",
+      "name": "Associação dos Municípios de Nordeste de Santa Catarina",
+      "municipalities": [
+        "4201307",
+        "4202057",
+        "4203303",
+        "4205803",
+        "4208450",
+        "4209102",
+        "4215000",
+        "4215802",
+        "4216206"
+      ]
+    },
+    {
+      "id": "AMURC",
+      "name": "Associação dos Municípios da Região do Contestado",
+      "municipalities": [
+        "4204806",
+        "4205555",
+        "4213351",
+        "4215505",
+        "4216057"
+      ]
+    },
+    {
+      "id": "AMUREL",
+      "name": "Associação dos Municípios da Região de Laguna",
+      "municipalities": [
+        "4201505",
+        "4202800",
+        "4203956",
+        "4206108",
+        "4206207",
+        "4207205",
+        "4207304",
+        "4208807",
+        "4209409",
+        "4212403",
+        "4212650",
+        "4214904",
+        "4215455",
+        "4215604",
+        "4217006",
+        "4217105",
+        "4218400",
+        "4218707"
+      ]
+    },
+    {
+      "id": "AMURES",
+      "name": "Associação dos Municípios da Região Serrana",
+      "municipalities": [
+        "4201000",
+        "4202438",
+        "4202503",
+        "4202602",
+        "4203402",
+        "4203253",
+        "4204178",
+        "4204558",
+        "4209300",
+        "4211751",
+        "4211892",
+        "4212056",
+        "4213302",
+        "4215059",
+        "4216503",
+        "4216800",
+        "4218905",
+        "4218954"
+      ]
+    },
+    {
+      "id": "AMVALI",
+      "name": "Associação dos Municípios do Vale do Itapocu",
+      "municipalities": [
+        "4202107",
+        "4204509",
+        "4206504",
+        "4208906",
+        "4210605",
+        "4216354",
+        "4217402"
+      ]
+    },
+    {
+      "id": "AMVE",
+      "name": "Associação dos Municípios do Vale Europeu",
+      "municipalities": [
+        "4201257",
+        "4201703",
+        "4202206",
+        "4202404",
+        "4202701",
+        "4202909",
+        "4205159",
+        "4205902",
+        "4206306",
+        "4207502",
+        "4213203",
+        "4214706",
+        "4215109",
+        "4218202"
+      ]
+    },
+    {
+      "id": "GRANFPOLIS",
+      "name": "Associação dos Municípios da Grande Florianópolis",
+      "municipalities": [
+        "4200606",
+        "4200705",
+        "4200903",
+        "4201109",
+        "4201208",
+        "4202305",
+        "4203709",
+        "4205407",
+        "4205704",
+        "4206009",
+        "4209805",
+        "4210209",
+        "4211504",
+        "4211900",
+        "4212304",
+        "4214300",
+        "4215703",
+        "4215901",
+        "4216305",
+        "4216602",
+        "4217253",
+        "4218004"
+      ]
+    }
+  ],
+  "municipalities": {
+    "4200101": {
+      "name": "Abelardo Luz",
+      "association": "AMAI"
+    },
+    "4202537": {
+      "name": "Bom Jesus",
+      "association": "AMAI"
+    },
+    "4205175": {
+      "name": "Entre Rios",
+      "association": "AMAI"
+    },
+    "4205308": {
+      "name": "Faxinal dos Guedes",
+      "association": "AMAI"
+    },
+    "4207684": {
+      "name": "Ipuaçu",
+      "association": "AMAI"
+    },
+    "4209458": {
+      "name": "Lajeado Grande",
+      "association": "AMAI"
+    },
+    "4210555": {
+      "name": "Marema",
+      "association": "AMAI"
+    },
+    "4211850": {
+      "name": "Ouro Verde",
+      "association": "AMAI"
+    },
+    "4212270": {
+      "name": "Passos Maia",
+      "association": "AMAI"
+    },
+    "4213401": {
+      "name": "Ponte Serrada",
+      "association": "AMAI"
+    },
+    "4216107": {
+      "name": "São Domingos",
+      "association": "AMAI"
+    },
+    "4219101": {
+      "name": "Vargeão",
+      "association": "AMAI"
+    },
+    "4219507": {
+      "name": "Xanxerê",
+      "association": "AMAI"
+    },
+    "4219705": {
+      "name": "Xaxim",
+      "association": "AMAI"
+    },
+    "4201604": {
+      "name": "Arroio Trinta",
+      "association": "AMARP"
+    },
+    "4203006": {
+      "name": "Caçador",
+      "association": "AMARP"
+    },
+    "4203154": {
+      "name": "Calmon",
+      "association": "AMARP"
+    },
+    "4205506": {
+      "name": "Fraiburgo",
+      "association": "AMARP"
+    },
+    "4206751": {
+      "name": "Ibiam",
+      "association": "AMARP"
+    },
+    "4207577": {
+      "name": "Iomerê",
+      "association": "AMARP"
+    },
+    "4209706": {
+      "name": "Lebon Régis",
+      "association": "AMARP"
+    },
+    "4210050": {
+      "name": "Macieira",
+      "association": "AMARP"
+    },
+    "4210704": {
+      "name": "Matos Costa",
+      "association": "AMARP"
+    },
+    "4213005": {
+      "name": "Pinheiro Preto",
+      "association": "AMARP"
+    },
+    "4214409": {
+      "name": "Rio das Antas",
+      "association": "AMARP"
+    },
+    "4215406": {
+      "name": "Salto Veloso",
+      "association": "AMARP"
+    },
+    "4217907": {
+      "name": "Tangará",
+      "association": "AMARP"
+    },
+    "4218251": {
+      "name": "Timbó Grande",
+      "association": "AMARP"
+    },
+    "4219309": {
+      "name": "Videira",
+      "association": "AMARP"
+    },
+    "4200754": {
+      "name": "Alto Bela Vista",
+      "association": "AMAUC"
+    },
+    "4201273": {
+      "name": "Arabutã",
+      "association": "AMAUC"
+    },
+    "4204301": {
+      "name": "Concórdia",
+      "association": "AMAUC"
+    },
+    "4207601": {
+      "name": "Ipira",
+      "association": "AMAUC"
+    },
+    "4207700": {
+      "name": "Ipumirim",
+      "association": "AMAUC"
+    },
+    "4207809": {
+      "name": "Irani",
+      "association": "AMAUC"
+    },
+    "4208005": {
+      "name": "Itá",
+      "association": "AMAUC"
+    },
+    "4208609": {
+      "name": "Jaborá",
+      "association": "AMAUC"
+    },
+    "4209854": {
+      "name": "Lindóia do Sul",
+      "association": "AMAUC"
+    },
+    "4212601": {
+      "name": "Peritiba",
+      "association": "AMAUC"
+    },
+    "4213104": {
+      "name": "Piratuba",
+      "association": "AMAUC"
+    },
+    "4213906": {
+      "name": "Presidente Castello Branco",
+      "association": "AMAUC"
+    },
+    "4217501": {
+      "name": "Seara",
+      "association": "AMAUC"
+    },
+    "4219606": {
+      "name": "Xavantina",
+      "association": "AMAUC"
+    },
+    "4200200": {
+      "name": "Agrolândia",
+      "association": "AMAVI"
+    },
+    "4200309": {
+      "name": "Agronômica",
+      "association": "AMAVI"
+    },
+    "4201802": {
+      "name": "Atalanta",
+      "association": "AMAVI"
+    },
+    "4201901": {
+      "name": "Aurora",
+      "association": "AMAVI"
+    },
+    "4202859": {
+      "name": "Braço do Trombudo",
+      "association": "AMAVI"
+    },
+    "4204194": {
+      "name": "Chapadão do Lageado",
+      "association": "AMAVI"
+    },
+    "4205100": {
+      "name": "Dona Emma",
+      "association": "AMAVI"
+    },
+    "4206900": {
+      "name": "Ibirama",
+      "association": "AMAVI"
+    },
+    "4207403": {
+      "name": "Imbuia",
+      "association": "AMAVI"
+    },
+    "4208500": {
+      "name": "Ituporanga",
+      "association": "AMAVI"
+    },
+    "4209151": {
+      "name": "José Boiteux",
+      "association": "AMAVI"
+    },
+    "4209508": {
+      "name": "Laurentino",
+      "association": "AMAVI"
+    },
+    "4209904": {
+      "name": "Lontras",
+      "association": "AMAVI"
+    },
+    "4210852": {
+      "name": "Mirim Doce",
+      "association": "AMAVI"
+    },
+    "4212700": {
+      "name": "Petrolândia",
+      "association": "AMAVI"
+    },
+    "4213708": {
+      "name": "Pouso Redondo",
+      "association": "AMAVI"
+    },
+    "4214003": {
+      "name": "Presidente Getúlio",
+      "association": "AMAVI"
+    },
+    "4214102": {
+      "name": "Presidente Nereu",
+      "association": "AMAVI"
+    },
+    "4214508": {
+      "name": "Rio do Campo",
+      "association": "AMAVI"
+    },
+    "4214607": {
+      "name": "Rio do Oeste",
+      "association": "AMAVI"
+    },
+    "4214805": {
+      "name": "Rio do Sul",
+      "association": "AMAVI"
+    },
+    "4215307": {
+      "name": "Salete",
+      "association": "AMAVI"
+    },
+    "4215679": {
+      "name": "Santa Terezinha",
+      "association": "AMAVI"
+    },
+    "4217808": {
+      "name": "Taió",
+      "association": "AMAVI"
+    },
+    "4218608": {
+      "name": "Trombudo Central",
+      "association": "AMAVI"
+    },
+    "4219200": {
+      "name": "Vidal Ramos",
+      "association": "AMAVI"
+    },
+    "4219358": {
+      "name": "Vitor Meireles",
+      "association": "AMAVI"
+    },
+    "4219408": {
+      "name": "Witmarsum",
+      "association": "AMAVI"
+    },
+    "4200804": {
+      "name": "Anchieta",
+      "association": "AMEOSC"
+    },
+    "4202081": {
+      "name": "Bandeirante",
+      "association": "AMEOSC"
+    },
+    "4202099": {
+      "name": "Barra Bonita",
+      "association": "AMEOSC"
+    },
+    "4202156": {
+      "name": "Belmonte",
+      "association": "AMEOSC"
+    },
+    "4204905": {
+      "name": "Descanso",
+      "association": "AMEOSC"
+    },
+    "4205001": {
+      "name": "Dionísio Cerqueira",
+      "association": "AMEOSC"
+    },
+    "4206405": {
+      "name": "Guaraciaba",
+      "association": "AMEOSC"
+    },
+    "4206603": {
+      "name": "Guarujá do Sul",
+      "association": "AMEOSC"
+    },
+    "4207650": {
+      "name": "Iporã do Oeste",
+      "association": "AMEOSC"
+    },
+    "4208401": {
+      "name": "Itapiranga",
+      "association": "AMEOSC"
+    },
+    "4211009": {
+      "name": "Mondaí",
+      "association": "AMEOSC"
+    },
+    "4212007": {
+      "name": "Palma Sola",
+      "association": "AMEOSC"
+    },
+    "4212239": {
+      "name": "Paraíso",
+      "association": "AMEOSC"
+    },
+    "4214151": {
+      "name": "Princesa",
+      "association": "AMEOSC"
+    },
+    "4215554": {
+      "name": "Santa Helena",
+      "association": "AMEOSC"
+    },
+    "4216255": {
+      "name": "São João do Oeste",
+      "association": "AMEOSC"
+    },
+    "4216701": {
+      "name": "São José do Cedro",
+      "association": "AMEOSC"
+    },
+    "4217204": {
+      "name": "São Miguel do Oeste",
+      "association": "AMEOSC"
+    },
+    "4218756": {
+      "name": "Tunápolis",
+      "association": "AMEOSC"
+    },
+    "4202578": {
+      "name": "Bom Jesus do Oeste",
+      "association": "AMERIOS"
+    },
+    "4203105": {
+      "name": "Caibi",
+      "association": "AMERIOS"
+    },
+    "4203501": {
+      "name": "Campo Erê",
+      "association": "AMERIOS"
+    },
+    "4204707": {
+      "name": "Cunha Porã",
+      "association": "AMERIOS"
+    },
+    "4204756": {
+      "name": "Cunhataí",
+      "association": "AMERIOS"
+    },
+    "4205357": {
+      "name": "Flor do Sertão",
+      "association": "AMERIOS"
+    },
+    "4207759": {
+      "name": "Iraceminha",
+      "association": "AMERIOS"
+    },
+    "4210506": {
+      "name": "Maravilha",
+      "association": "AMERIOS"
+    },
+    "4210902": {
+      "name": "Modelo",
+      "association": "AMERIOS"
+    },
+    "4212106": {
+      "name": "Palmitos",
+      "association": "AMERIOS"
+    },
+    "4215075": {
+      "name": "Riqueza",
+      "association": "AMERIOS"
+    },
+    "4215208": {
+      "name": "Romelândia",
+      "association": "AMERIOS"
+    },
+    "4215356": {
+      "name": "Saltinho",
+      "association": "AMERIOS"
+    },
+    "4215687": {
+      "name": "Santa Terezinha do Progresso",
+      "association": "AMERIOS"
+    },
+    "4217154": {
+      "name": "São Miguel da Boa Vista",
+      "association": "AMERIOS"
+    },
+    "4217303": {
+      "name": "Saudades",
+      "association": "AMERIOS"
+    },
+    "4217956": {
+      "name": "Tigrinhos",
+      "association": "AMERIOS"
+    },
+    "4201406": {
+      "name": "Araranguá",
+      "association": "AMESC"
+    },
+    "4201950": {
+      "name": "Balneário Arroio do Silva",
+      "association": "AMESC"
+    },
+    "4202073": {
+      "name": "Balneário Gaivota",
+      "association": "AMESC"
+    },
+    "4205191": {
+      "name": "Ermo",
+      "association": "AMESC"
+    },
+    "4208708": {
+      "name": "Jacinto Machado",
+      "association": "AMESC"
+    },
+    "4210407": {
+      "name": "Maracajá",
+      "association": "AMESC"
+    },
+    "4210803": {
+      "name": "Meleiro",
+      "association": "AMESC"
+    },
+    "4211256": {
+      "name": "Morro Grande",
+      "association": "AMESC"
+    },
+    "4212254": {
+      "name": "Passo de Torres",
+      "association": "AMESC"
+    },
+    "4213807": {
+      "name": "Praia Grande",
+      "association": "AMESC"
+    },
+    "4215653": {
+      "name": "Santa Rosa do Sul",
+      "association": "AMESC"
+    },
+    "4216404": {
+      "name": "São João do Sul",
+      "association": "AMESC"
+    },
+    "4217709": {
+      "name": "Sombrio",
+      "association": "AMESC"
+    },
+    "4218103": {
+      "name": "Timbé do Sul",
+      "association": "AMESC"
+    },
+    "4218806": {
+      "name": "Turvo",
+      "association": "AMESC"
+    },
+    "4202008": {
+      "name": "Balneário Camboriú",
+      "association": "AMFRI"
+    },
+    "4212809": {
+      "name": "Balneário Piçarras",
+      "association": "AMFRI"
+    },
+    "4202453": {
+      "name": "Bombinhas",
+      "association": "AMFRI"
+    },
+    "4203204": {
+      "name": "Camboriú",
+      "association": "AMFRI"
+    },
+    "4207106": {
+      "name": "Ilhota",
+      "association": "AMFRI"
+    },
+    "4208203": {
+      "name": "Itajaí",
+      "association": "AMFRI"
+    },
+    "4208302": {
+      "name": "Itapema",
+      "association": "AMFRI"
+    },
+    "4210001": {
+      "name": "Luiz Alves",
+      "association": "AMFRI"
+    },
+    "4211306": {
+      "name": "Navegantes",
+      "association": "AMFRI"
+    },
+    "4212502": {
+      "name": "Penha",
+      "association": "AMFRI"
+    },
+    "4213500": {
+      "name": "Porto Belo",
+      "association": "AMFRI"
+    },
+    "4200408": {
+      "name": "Água Doce",
+      "association": "AMMOC"
+    },
+    "4203907": {
+      "name": "Capinzal",
+      "association": "AMMOC"
+    },
+    "4204004": {
+      "name": "Catanduvas",
+      "association": "AMMOC"
+    },
+    "4205209": {
+      "name": "Erval Velho",
+      "association": "AMMOC"
+    },
+    "4206702": {
+      "name": "Herval d'Oeste",
+      "association": "AMMOC"
+    },
+    "4206801": {
+      "name": "Ibicaré",
+      "association": "AMMOC"
+    },
+    "4209003": {
+      "name": "Joaçaba",
+      "association": "AMMOC"
+    },
+    "4209201": {
+      "name": "Lacerdópolis",
+      "association": "AMMOC"
+    },
+    "4210035": {
+      "name": "Luzerna",
+      "association": "AMMOC"
+    },
+    "4211801": {
+      "name": "Ouro",
+      "association": "AMMOC"
+    },
+    "4218509": {
+      "name": "Treze Tílias",
+      "association": "AMMOC"
+    },
+    "4219176": {
+      "name": "Vargem Bonita",
+      "association": "AMMOC"
+    },
+    "4204459": {
+      "name": "Coronel Martins",
+      "association": "AMNOROESTE"
+    },
+    "4205605": {
+      "name": "Galvão",
+      "association": "AMNOROESTE"
+    },
+    "4209177": {
+      "name": "Jupiá",
+      "association": "AMNOROESTE"
+    },
+    "4211652": {
+      "name": "Novo Horizonte",
+      "association": "AMNOROESTE"
+    },
+    "4215752": {
+      "name": "São Bernardino",
+      "association": "AMNOROESTE"
+    },
+    "4216909": {
+      "name": "São Lourenço do Oeste",
+      "association": "AMNOROESTE"
+    },
+    "4200507": {
+      "name": "Águas de Chapecó",
+      "association": "AMOSC"
+    },
+    "4200556": {
+      "name": "Águas Frias",
+      "association": "AMOSC"
+    },
+    "4201653": {
+      "name": "Arvoredo",
+      "association": "AMOSC"
+    },
+    "4204103": {
+      "name": "Caxambu do Sul",
+      "association": "AMOSC"
+    },
+    "4204202": {
+      "name": "Chapecó",
+      "association": "AMOSC"
+    },
+    "4204350": {
+      "name": "Cordilheira Alta",
+      "association": "AMOSC"
+    },
+    "4204400": {
+      "name": "Coronel Freitas",
+      "association": "AMOSC"
+    },
+    "4205431": {
+      "name": "Formosa do Sul",
+      "association": "AMOSC"
+    },
+    "4206652": {
+      "name": "Guatambú",
+      "association": "AMOSC"
+    },
+    "4207858": {
+      "name": "Irati",
+      "association": "AMOSC"
+    },
+    "4208955": {
+      "name": "Jardinópolis",
+      "association": "AMOSC"
+    },
+    "4211405": {
+      "name": "Nova Erechim",
+      "association": "AMOSC"
+    },
+    "4211454": {
+      "name": "Nova Itaberaba",
+      "association": "AMOSC"
+    },
+    "4211876": {
+      "name": "Paial",
+      "association": "AMOSC"
+    },
+    "4212908": {
+      "name": "Pinhalzinho",
+      "association": "AMOSC"
+    },
+    "4213153": {
+      "name": "Planalto Alegre",
+      "association": "AMOSC"
+    },
+    "4214201": {
+      "name": "Quilombo",
+      "association": "AMOSC"
+    },
+    "4215695": {
+      "name": "Santiago do Sul",
+      "association": "AMOSC"
+    },
+    "4216008": {
+      "name": "São Carlos",
+      "association": "AMOSC"
+    },
+    "4217550": {
+      "name": "Serra Alta",
+      "association": "AMOSC"
+    },
+    "4217758": {
+      "name": "Sul Brasil",
+      "association": "AMOSC"
+    },
+    "4218855": {
+      "name": "União do Oeste",
+      "association": "AMOSC"
+    },
+    "4202131": {
+      "name": "Bela Vista do Toldo",
+      "association": "AMPLANORTE"
+    },
+    "4203808": {
+      "name": "Canoinhas",
+      "association": "AMPLANORTE"
+    },
+    "4207908": {
+      "name": "Irineópolis",
+      "association": "AMPLANORTE"
+    },
+    "4208104": {
+      "name": "Itaiópolis",
+      "association": "AMPLANORTE"
+    },
+    "4210100": {
+      "name": "Mafra",
+      "association": "AMPLANORTE"
+    },
+    "4210308": {
+      "name": "Major Vieira",
+      "association": "AMPLANORTE"
+    },
+    "4211108": {
+      "name": "Monte Castelo",
+      "association": "AMPLANORTE"
+    },
+    "4212205": {
+      "name": "Papanduva",
+      "association": "AMPLANORTE"
+    },
+    "4213609": {
+      "name": "Porto União",
+      "association": "AMPLANORTE"
+    },
+    "4218301": {
+      "name": "Três Barras",
+      "association": "AMPLANORTE"
+    },
+    "4200051": {
+      "name": "Abdon Batista",
+      "association": "AMPLASC"
+    },
+    "4202875": {
+      "name": "Brunópolis",
+      "association": "AMPLASC"
+    },
+    "4203600": {
+      "name": "Campos Novos",
+      "association": "AMPLASC"
+    },
+    "4204152": {
+      "name": "Celso Ramos",
+      "association": "AMPLASC"
+    },
+    "4211058": {
+      "name": "Monte Carlo",
+      "association": "AMPLASC"
+    },
+    "4219150": {
+      "name": "Vargem",
+      "association": "AMPLASC"
+    },
+    "4219853": {
+      "name": "Zortéa",
+      "association": "AMPLASC"
+    },
+    "4220000": {
+      "name": "Balneário Rincão",
+      "association": "AMREC"
+    },
+    "4204251": {
+      "name": "Cocal do Sul",
+      "association": "AMREC"
+    },
+    "4204608": {
+      "name": "Criciúma",
+      "association": "AMREC"
+    },
+    "4205456": {
+      "name": "Forquilhinha",
+      "association": "AMREC"
+    },
+    "4207007": {
+      "name": "Içara",
+      "association": "AMREC"
+    },
+    "4209607": {
+      "name": "Lauro Müller",
+      "association": "AMREC"
+    },
+    "4211207": {
+      "name": "Morro da Fumaça",
+      "association": "AMREC"
+    },
+    "4211603": {
+      "name": "Nova Veneza",
+      "association": "AMREC"
+    },
+    "4211702": {
+      "name": "Orleans",
+      "association": "AMREC"
+    },
+    "4217600": {
+      "name": "Siderópolis",
+      "association": "AMREC"
+    },
+    "4218350": {
+      "name": "Treviso",
+      "association": "AMREC"
+    },
+    "4219002": {
+      "name": "Urussanga",
+      "association": "AMREC"
+    },
+    "4201307": {
+      "name": "Araquari",
+      "association": "AMUNESC"
+    },
+    "4202057": {
+      "name": "Balneário Barra do Sul",
+      "association": "AMUNESC"
+    },
+    "4203303": {
+      "name": "Campo Alegre",
+      "association": "AMUNESC"
+    },
+    "4205803": {
+      "name": "Garuva",
+      "association": "AMUNESC"
+    },
+    "4208450": {
+      "name": "Itapoá",
+      "association": "AMUNESC"
+    },
+    "4209102": {
+      "name": "Joinville",
+      "association": "AMUNESC"
+    },
+    "4215000": {
+      "name": "Rio Negrinho",
+      "association": "AMUNESC"
+    },
+    "4215802": {
+      "name": "São Bento do Sul",
+      "association": "AMUNESC"
+    },
+    "4216206": {
+      "name": "São Francisco do Sul",
+      "association": "AMUNESC"
+    },
+    "4204806": {
+      "name": "Curitibanos",
+      "association": "AMURC"
+    },
+    "4205555": {
+      "name": "Frei Rogério",
+      "association": "AMURC"
+    },
+    "4213351": {
+      "name": "Ponte Alta do Norte",
+      "association": "AMURC"
+    },
+    "4215505": {
+      "name": "Santa Cecília",
+      "association": "AMURC"
+    },
+    "4216057": {
+      "name": "São Cristóvão do Sul",
+      "association": "AMURC"
+    },
+    "4201505": {
+      "name": "Armazém",
+      "association": "AMUREL"
+    },
+    "4202800": {
+      "name": "Braço do Norte",
+      "association": "AMUREL"
+    },
+    "4203956": {
+      "name": "Capivari de Baixo",
+      "association": "AMUREL"
+    },
+    "4206108": {
+      "name": "Grão-Pará",
+      "association": "AMUREL"
+    },
+    "4206207": {
+      "name": "Gravatal",
+      "association": "AMUREL"
+    },
+    "4207205": {
+      "name": "Imaruí",
+      "association": "AMUREL"
+    },
+    "4207304": {
+      "name": "Imbituba",
+      "association": "AMUREL"
+    },
+    "4208807": {
+      "name": "Jaguaruna",
+      "association": "AMUREL"
+    },
+    "4209409": {
+      "name": "Laguna",
+      "association": "AMUREL"
+    },
+    "4212403": {
+      "name": "Pedras Grandes",
+      "association": "AMUREL"
+    },
+    "4212650": {
+      "name": "Pescaria Brava",
+      "association": "AMUREL"
+    },
+    "4214904": {
+      "name": "Rio Fortuna",
+      "association": "AMUREL"
+    },
+    "4215455": {
+      "name": "Sangão",
+      "association": "AMUREL"
+    },
+    "4215604": {
+      "name": "Santa Rosa de Lima",
+      "association": "AMUREL"
+    },
+    "4217006": {
+      "name": "São Ludgero",
+      "association": "AMUREL"
+    },
+    "4217105": {
+      "name": "São Martinho",
+      "association": "AMUREL"
+    },
+    "4218400": {
+      "name": "Treze de Maio",
+      "association": "AMUREL"
+    },
+    "4218707": {
+      "name": "Tubarão",
+      "association": "AMUREL"
+    },
+    "4201000": {
+      "name": "Anita Garibaldi",
+      "association": "AMURES"
+    },
+    "4202438": {
+      "name": "Bocaina do Sul",
+      "association": "AMURES"
+    },
+    "4202503": {
+      "name": "Bom Jardim da Serra",
+      "association": "AMURES"
+    },
+    "4202602": {
+      "name": "Bom Retiro",
+      "association": "AMURES"
+    },
+    "4203402": {
+      "name": "Campo Belo do Sul",
+      "association": "AMURES"
+    },
+    "4203253": {
+      "name": "Capão Alto",
+      "association": "AMURES"
+    },
+    "4204178": {
+      "name": "Cerro Negro",
+      "association": "AMURES"
+    },
+    "4204558": {
+      "name": "Correia Pinto",
+      "association": "AMURES"
+    },
+    "4209300": {
+      "name": "Lages",
+      "association": "AMURES"
+    },
+    "4211751": {
+      "name": "Otacílio Costa",
+      "association": "AMURES"
+    },
+    "4211892": {
+      "name": "Painel",
+      "association": "AMURES"
+    },
+    "4212056": {
+      "name": "Palmeira",
+      "association": "AMURES"
+    },
+    "4213302": {
+      "name": "Ponte Alta",
+      "association": "AMURES"
+    },
+    "4215059": {
+      "name": "Rio Rufino",
+      "association": "AMURES"
+    },
+    "4216503": {
+      "name": "São Joaquim",
+      "association": "AMURES"
+    },
+    "4216800": {
+      "name": "São José do Cerrito",
+      "association": "AMURES"
+    },
+    "4218905": {
+      "name": "Urubici",
+      "association": "AMURES"
+    },
+    "4218954": {
+      "name": "Urupema",
+      "association": "AMURES"
+    },
+    "4202107": {
+      "name": "Barra Velha",
+      "association": "AMVALI"
+    },
+    "4204509": {
+      "name": "Corupá",
+      "association": "AMVALI"
+    },
+    "4206504": {
+      "name": "Guaramirim",
+      "association": "AMVALI"
+    },
+    "4208906": {
+      "name": "Jaraguá do Sul",
+      "association": "AMVALI"
+    },
+    "4210605": {
+      "name": "Massaranduba",
+      "association": "AMVALI"
+    },
+    "4216354": {
+      "name": "São João do Itaperiú",
+      "association": "AMVALI"
+    },
+    "4217402": {
+      "name": "Schroeder",
+      "association": "AMVALI"
+    },
+    "4201257": {
+      "name": "Apiúna",
+      "association": "AMVE"
+    },
+    "4201703": {
+      "name": "Ascurra",
+      "association": "AMVE"
+    },
+    "4202206": {
+      "name": "Benedito Novo",
+      "association": "AMVE"
+    },
+    "4202404": {
+      "name": "Blumenau",
+      "association": "AMVE"
+    },
+    "4202701": {
+      "name": "Botuverá",
+      "association": "AMVE"
+    },
+    "4202909": {
+      "name": "Brusque",
+      "association": "AMVE"
+    },
+    "4205159": {
+      "name": "Doutor Pedrinho",
+      "association": "AMVE"
+    },
+    "4205902": {
+      "name": "Gaspar",
+      "association": "AMVE"
+    },
+    "4206306": {
+      "name": "Guabiruba",
+      "association": "AMVE"
+    },
+    "4207502": {
+      "name": "Indaial",
+      "association": "AMVE"
+    },
+    "4213203": {
+      "name": "Pomerode",
+      "association": "AMVE"
+    },
+    "4214706": {
+      "name": "Rio dos Cedros",
+      "association": "AMVE"
+    },
+    "4215109": {
+      "name": "Rodeio",
+      "association": "AMVE"
+    },
+    "4218202": {
+      "name": "Timbó",
+      "association": "AMVE"
+    },
+    "4200606": {
+      "name": "Águas Mornas",
+      "association": "GRANFPOLIS"
+    },
+    "4200705": {
+      "name": "Alfredo Wagner",
+      "association": "GRANFPOLIS"
+    },
+    "4200903": {
+      "name": "Angelina",
+      "association": "GRANFPOLIS"
+    },
+    "4201109": {
+      "name": "Anitápolis",
+      "association": "GRANFPOLIS"
+    },
+    "4201208": {
+      "name": "Antônio Carlos",
+      "association": "GRANFPOLIS"
+    },
+    "4202305": {
+      "name": "Biguaçu",
+      "association": "GRANFPOLIS"
+    },
+    "4203709": {
+      "name": "Canelinha",
+      "association": "GRANFPOLIS"
+    },
+    "4205407": {
+      "name": "Florianópolis",
+      "association": "GRANFPOLIS"
+    },
+    "4205704": {
+      "name": "Garopaba",
+      "association": "GRANFPOLIS"
+    },
+    "4206009": {
+      "name": "Governador Celso Ramos",
+      "association": "GRANFPOLIS"
+    },
+    "4209805": {
+      "name": "Leoberto Leal",
+      "association": "GRANFPOLIS"
+    },
+    "4210209": {
+      "name": "Major Gercino",
+      "association": "GRANFPOLIS"
+    },
+    "4211504": {
+      "name": "Nova Trento",
+      "association": "GRANFPOLIS"
+    },
+    "4211900": {
+      "name": "Palhoça",
+      "association": "GRANFPOLIS"
+    },
+    "4212304": {
+      "name": "Paulo Lopes",
+      "association": "GRANFPOLIS"
+    },
+    "4214300": {
+      "name": "Rancho Queimado",
+      "association": "GRANFPOLIS"
+    },
+    "4215703": {
+      "name": "Santo Amaro da Imperatriz",
+      "association": "GRANFPOLIS"
+    },
+    "4215901": {
+      "name": "São Bonifácio",
+      "association": "GRANFPOLIS"
+    },
+    "4216305": {
+      "name": "São João Batista",
+      "association": "GRANFPOLIS"
+    },
+    "4216602": {
+      "name": "São José",
+      "association": "GRANFPOLIS"
+    },
+    "4217253": {
+      "name": "São Pedro de Alcântara",
+      "association": "GRANFPOLIS"
+    },
+    "4218004": {
+      "name": "Tijucas",
+      "association": "GRANFPOLIS"
+    }
+  }
+}

@@ -51,6 +51,7 @@ export const municipalExportSchema = z
       .string()
       .regex(/^\d{1,20}$/)
       .optional(),
+    includeAssociations: z.boolean().optional(),
   })
   .superRefine((data, ctx) => {
     if (new Set(data.rows.map((r) => r.code)).size !== data.rows.length)

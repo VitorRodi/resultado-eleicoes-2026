@@ -478,6 +478,9 @@
   }
 }
 /* A city is selected directly from the search, without a second long select. */
+.association-picker { margin: 20px 0; }
+.association-picker select { width: 100%; min-height: 44px; padding: 10px; border: 1px solid var(--border-strong); border-radius: 5px; background: var(--panel); color: var(--text); }
+.association-picker p { line-height: 1.6; }
 .city-vote-fields {
   display: grid;
   grid-template-columns: minmax(0, 2fr) minmax(180px, 1fr);

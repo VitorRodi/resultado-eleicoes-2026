@@ -39,6 +39,8 @@ import {
 import { municipalDownloadName } from "@/lib/export-filenames";
 import { downloadBlob } from "@/lib/download";
 import { useDisplaySettings } from "@/components/layout/display-settings";
+import AssociationPicker from "./association-picker";
+import { associationCities, SC_ASSOCIATIONS } from "@/lib/sc-associations";
 
 const searchable = (text: string) =>
   text
@@ -66,6 +68,7 @@ export default function CandidateReportPanel({
   const [query, setQuery] = useState("");
   const [type, setType] = useState<ReportType | "">("");
   const [codes, setCodes] = useState<string[]>([]);
+  const [association, setAssociation] = useState("");
   const [cityQuery, setCityQuery] = useState("");
   const [personalization, setPersonalization] = useState(
     defaultReportPersonalization,
@@ -98,7 +101,7 @@ export default function CandidateReportPanel({
     a.name.localeCompare(b.name, "pt-BR"),
   );
   const selected = municipalities.filter((city) => codes.includes(city.code));
-  const visibleCities = municipalities.filter((city) =>
+  const visibleCities = (uf === "sc" && association ? associationCities(municipalities, association) : municipalities).filter((city) =>
     searchable(city.name).includes(searchable(cityQuery)),
   );
   const savedCodes =
@@ -191,7 +194,10 @@ export default function CandidateReportPanel({
     );
     let data: PreparedReport = {
       type,
-      personalization: reportPersonalizationSchema.parse(personalization),
+      personalization: reportPersonalizationSchema.parse({
+        ...personalization,
+        title: personalization.title || (uf === "sc" && association && association !== "all" ? `${association} · ${SC_ASSOCIATIONS.find(region => region.id === association)?.name || ""}` : ""),
+      }),
       uf,
       stateName: pinned.state.name,
       candidate: picked,
@@ -323,6 +329,7 @@ export default function CandidateReportPanel({
           candidate: report.candidate,
           rows: report.rows,
           historyCandidateId: report.historical?.id,
+          includeAssociations: report.uf === "sc",
         });
         const response = await fetch("/api/elections/municipal/export", {
           method: "POST",
@@ -387,6 +394,7 @@ export default function CandidateReportPanel({
                     setQuery("");
                     setCodes([]);
                     setCityQuery("");
+                    setAssociation("");
                   }}
                 >
                   <option value="">Selecione um cargo</option>
@@ -421,6 +429,7 @@ export default function CandidateReportPanel({
                     setCandidateId(e.target.value);
                     setCodes([]);
                     setCityQuery("");
+                    setAssociation("");
                   }}
                 >
                   <option value="">Selecione um candidato</option>
@@ -463,6 +472,11 @@ export default function CandidateReportPanel({
                     onChange={() => {
                       reset();
                       setType(option.id);
+                      if (option.id === "state") setAssociation("all");
+                      else if (type === "state") {
+                        setAssociation("");
+                        setCodes([]);
+                      }
                     }}
                   />
                   <span>
@@ -581,6 +595,13 @@ export default function CandidateReportPanel({
               <span aria-hidden="true">3</span> Quais cidades entram no
               documento?
             </legend>
+            {uf === "sc" && <AssociationPicker value={association} disabled={locked} onChange={region => {
+              reset();
+              setAssociation(region);
+              setCityQuery("");
+              setCodes(associationCities(municipalities, region).map(city => city.code));
+              if (type === "state" && region !== "all") setType("cities");
+            }} />}
             {type === "state" ? (
               <div className="report-state-scope">
                 <Check size={18} aria-hidden="true" />
@@ -617,6 +638,7 @@ export default function CandidateReportPanel({
                       onClick={() => {
                         reset();
                         setCodes(municipalities.map((city) => city.code));
+                        setAssociation("all");
                       }}
                     >
                       Selecionar todas da UF
@@ -628,6 +650,7 @@ export default function CandidateReportPanel({
                       onClick={() => {
                         reset();
                         setCodes([]);
+                        setAssociation("");
                       }}
                     >
                       Limpar seleção
@@ -639,6 +662,7 @@ export default function CandidateReportPanel({
                       onClick={() => {
                         reset();
                         setCodes(savedCodes);
+                        setAssociation("");
                       }}
                     >
                       Usar cidades do meu painel
@@ -654,6 +678,7 @@ export default function CandidateReportPanel({
                         checked={codes.includes(city.code)}
                         onChange={(e) => {
                           reset();
+                          setAssociation("");
                           setCodes(
                             e.target.checked
                               ? [...codes, city.code]
@@ -791,6 +816,7 @@ export default function CandidateReportPanel({
               <dd>
                 {snapshot?.state.name || uf.toUpperCase()} · {cityCount}{" "}
                 municípios
+                {uf === "sc" && association && <small>{association === "all" ? "Todas as regiões" : association}</small>}
                 {type !== "state" && selected.length > 0 && (
                   <details>
                     <summary>Conferir cidades selecionadas</summary>
