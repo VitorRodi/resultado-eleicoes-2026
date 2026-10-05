@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import Avatar from "@/components/cards/avatar";
 import NationalPresident from "@/components/cards/national-president";
+import StateResultsSummary from "@/components/cards/state-results-summary";
 import PositionPanel from "@/components/cards/position-panel";
 import ProjectFooter from "./project-footer";
 import ElectionHeader from "./election-header";
@@ -719,6 +720,17 @@ function StateDashboard({
         {(view === "overview" ||
           (showResults && selectedOffice("president"))) && (
           <NationalPresident data={snapshot?.nationalPresident} />
+        )}
+        {view === "overview" && (
+          <StateResultsSummary
+            uf={uf}
+            stateName={stateDefinition.name}
+            snapshot={snapshot}
+            onSeeResults={() => {
+              setView("results");
+              showFilters();
+            }}
+          />
         )}
         {["all", "results", "turnout"].includes(view) &&
           (!pendingOnly ||
