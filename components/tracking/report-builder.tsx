@@ -14,7 +14,7 @@ import {
   type ElectionSnapshot,
   type WatchPreferences,
 } from "@/types/election";
-import { officeLabel } from "@/lib/config";
+import { canonical, officeLabel } from "@/lib/config";
 import { matchesCandidate } from "@/lib/panel-tools";
 import {
   initialExportRows,
@@ -83,7 +83,13 @@ export default function CandidateReportPanel({
   const controller = useRef<AbortController | null>(null);
   const preview = useRef<HTMLIFrameElement | null>(null);
   const resultHeading = useRef<HTMLHeadingElement | null>(null);
-  const all = office ? snapshot?.[office] || [] : [];
+  const all = (office ? snapshot?.[office] || [] : []).filter(
+    (candidate) =>
+      uf.toLowerCase() !== "sc" ||
+      (candidate.office === "federalDeputy" &&
+        candidate.number === "2210" &&
+        canonical(candidate.name) === "daniela reinehr"),
+  );
   const candidate = all.find((c) => c.id === candidateId);
   const choices = all
     .filter((c) => matchesCandidate(c, query))
@@ -433,7 +439,9 @@ export default function CandidateReportPanel({
             </div>
             {office && !choices.length && (
               <p className="small muted">
-                Nenhum candidato encontrado para esta busca.
+                {uf.toLowerCase() === "sc" && office !== "federalDeputy"
+                  ? "Daniela Reinehr está disponível no cargo de deputado federal."
+                  : "Nenhum candidato encontrado para esta busca."}
               </p>
             )}
           </fieldset>
