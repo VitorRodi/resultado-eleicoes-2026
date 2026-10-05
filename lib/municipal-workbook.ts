@@ -7,6 +7,7 @@ import {
 } from "./municipal-export";
 import {
   historicalCandidateSchema,
+  voteChange,
   type HistoricalCandidate,
 } from "./historical-election";
 
@@ -122,7 +123,7 @@ export async function municipalWorkbook(
   workbook.created = generatedAt;
   workbook.calcProperties.fullCalcOnLoad = true;
   const identity = `${data.candidate.name} (${data.candidate.number} · ${data.candidate.party}) · ${officeLabel(data.candidate.office, data.uf)} · ${data.uf.toUpperCase()}`;
-  const columns = history ? 4 : 2;
+  const columns = history ? 5 : 2;
   const note = [
     "Primeiro turno. Células vazias indicam votos indisponíveis; zero é um resultado divulgado.",
     rows.some((row) => row.stale)
@@ -132,7 +133,7 @@ export async function municipalWorkbook(
   const sheet = setup(
     workbook,
     "Votos por cidade",
-    history ? [38, 28, 28, 28] : [44, 28],
+    history ? [38, 28, 28, 28, 24] : [44, 28],
     history
       ? "Votos por município · 2022 x 2026"
       : "Votos por município · 2026",
@@ -144,12 +145,15 @@ export async function municipalWorkbook(
   const headers = [
     "Município",
     "Votos do candidato em 2026",
-    ...(history ? ["Votos do candidato em 2022", "Diferença de votos"] : []),
+    ...(history
+      ? ["Votos do candidato em 2022", "Diferença de votos", "Variação (%)"]
+      : []),
   ];
   tableHeader(sheet, headers, rows.length);
   for (const [i, row] of rows.entries()) {
     const at = i + 8;
     const previous = history?.votes[row.code] ?? null;
+    const change = voteChange(previous, row.votes);
     sheet.getRow(at).values = [
       row.name,
       row.votes,
@@ -163,6 +167,10 @@ export async function municipalWorkbook(
                   ? row.votes - previous
                   : "",
             },
+            {
+              formula: `IF(OR(COUNT(B${at}:C${at})<2,C${at}=0),"",D${at}/C${at})`,
+              result: change.relative ?? "",
+            },
           ]
         : []),
     ];
@@ -171,18 +179,20 @@ export async function municipalWorkbook(
     if (history) {
       sheet.getCell(at, 3).numFmt = "#,##0";
       sheet.getCell(at, 4).numFmt = "+#,##0;-#,##0;0";
+      sheet.getCell(at, 5).numFmt = "+0.00%;-0.00%;0.00%";
     }
   }
   if (history) {
     sheet.mergeCells(5, 1, 5, columns);
-    sheet.getCell("A5").value = "Diferença = votos de 2026 − votos de 2022";
+    sheet.getCell("A5").value =
+      "Diferença = 2026 − 2022. Variação = diferença ÷ 2022; base zero fica sem percentual.";
     sheet.getCell("A5").font = {
       name: "Arial",
       size: 11,
       color: { argb: GREEN },
     };
     sheet.addConditionalFormatting({
-      ref: `D8:D${7 + rows.length}`,
+      ref: `D8:E${7 + rows.length}`,
       rules: [
         {
           type: "cellIs",

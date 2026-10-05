@@ -120,15 +120,26 @@ test("Excel compara anos com fórmulas, sinais, base zero e ausência sem coluna
     ["Votos por cidade"],
   );
   const sheet = book.getWorksheet(1)!;
-  assert.equal(sheet.columnCount, 4);
+  assert.equal(sheet.columnCount, 5);
   assert.deepEqual((sheet.getRow(7).values as unknown[]).slice(1), [
     "Município",
     "Votos do candidato em 2026",
     "Votos do candidato em 2022",
     "Diferença de votos",
+    "Variação (%)",
   ]);
   assert.equal(sheet.getCell("D8").formula, 'IF(COUNT(B8:C8)=2,B8-C8,"")');
   assert.equal(sheet.getCell("D8").result, 30);
+  assert.equal(sheet.getCell("E8").result, 0.3);
+  assert.equal(
+    sheet.getCell("E8").formula,
+    'IF(OR(COUNT(B8:C8)<2,C8=0),"",D8/C8)',
+  );
+  assert.equal(sheet.getCell("E9").result, -0.3);
+  assert.ok(!sheet.getCell("E10").result);
+  assert.ok(!sheet.getCell("E11").result);
+  assert.ok(!sheet.getCell("E12").result);
+  assert.match(sheet.getCell("E8").numFmt, /%/);
   assert.equal(sheet.getCell("D9").result, -30);
   assert.equal(sheet.getCell("C10").value, 0);
   assert.equal(sheet.getCell("D10").result, 30);

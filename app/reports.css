@@ -1,5 +1,8 @@
 /* Reports use a document layout: forms above a readable, exportable sheet. */
 .regional-pdf-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
   border-top: 1px solid var(--border);
   padding-top: 16px;
   margin-top: 16px;
@@ -11,7 +14,8 @@
   text-align: center;
 }
 .regional-pdf-actions p {
-  margin: 8px 0 0;
+  flex-basis: 100%;
+  margin: 0;
 }
 .report-picker {
   display: grid;

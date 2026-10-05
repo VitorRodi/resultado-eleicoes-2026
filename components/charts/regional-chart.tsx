@@ -37,8 +37,36 @@ export default function RegionalChart({
   const aggregate = sumRegional(data);
   const [exporting, setExporting] = useState(false),
     [exportMessage, setExportMessage] = useState("");
+  const [comparing, setComparing] = useState(false);
+  async function exportComparison() {
+    if (!candidate || comparing || exporting) return;
+    const selection = {
+      uf,
+      candidate: structuredClone(candidate),
+      codes: rows.map((row) => row.code || ""),
+    };
+    setComparing(true);
+    setExportMessage("Consultando 2022 e 2026 nas cidades selecionadas…");
+    try {
+      const { selectedMunicipalComparison } =
+        await import("@/lib/selected-municipal-export");
+      const { data, blob } = await selectedMunicipalComparison(selection);
+      downloadBlob(blob, municipalDownloadName(data, "xlsx"));
+      setExportMessage(
+        `Excel baixado com ${data.rows.length} cidades: votos de 2022 e 2026, diferença e variação percentual.${data.rows.some((row) => row.votes === null || row.stale) ? " Parte dos dados está indisponível ou preservada após falha de atualização." : ""}`,
+      );
+    } catch (error) {
+      setExportMessage(
+        error instanceof Error
+          ? error.message
+          : "Não foi possível gerar a comparação. Tente novamente.",
+      );
+    } finally {
+      setComparing(false);
+    }
+  }
   async function exportPdf() {
-    if (!candidate || exporting || !aggregate.available) return;
+    if (!candidate || exporting || comparing || !aggregate.available) return;
     const input = {
       uf,
       candidate: structuredClone(candidate),
@@ -207,11 +235,23 @@ export default function RegionalChart({
       <div className="regional-pdf-actions">
         <button
           className="secondary-button"
-          disabled={!candidate || !aggregate.available || exporting}
+          disabled={
+            !candidate || !aggregate.available || exporting || comparing
+          }
           onClick={() => void exportPdf()}
         >
           <Download size={16} aria-hidden="true" />
           {exporting ? "Gerando PDF…" : "Baixar PDF dos municípios"}
+        </button>
+        <button
+          className="secondary-button"
+          disabled={
+            !candidate || !aggregate.available || exporting || comparing
+          }
+          onClick={() => void exportComparison()}
+        >
+          <Download size={16} aria-hidden="true" />
+          {comparing ? "Comparando cidades…" : "Excel: comparar 2022 e 2026"}
         </button>
         <p className="small muted" role="status">
           {exportMessage ||

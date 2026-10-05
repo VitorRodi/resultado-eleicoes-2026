@@ -4,7 +4,7 @@ import { Download, FileSpreadsheet, Search } from "lucide-react";
 import { OFFICES, type ElectionSnapshot, type Office } from "@/types/election";
 import { officeLabel, canonical } from "@/lib/config";
 import { matchesCandidate } from "@/lib/panel-tools";
-import { number } from "@/lib/formatting";
+import { number, percentage } from "@/lib/formatting";
 import { downloadBlob } from "@/lib/download";
 import { municipalDownloadName } from "@/lib/export-filenames";
 import {
@@ -222,7 +222,7 @@ export default function MunicipalExcelExport({
       downloadBlob(await response.blob(), municipalDownloadName(data, "xlsx"));
       if (!signal?.aborted)
         setMessage(
-          `Excel gerado: ${data.rows.length} cidades, ${data.rows.filter((r) => r.votes !== null).length} com votos disponíveis.${data.historyCandidateId ? " A mesma planilha inclui votos de 2026, votos de 2022 e a diferença de votos." : " Arquivo com votos de 2026."}`,
+          `Excel gerado: ${data.rows.length} cidades, ${data.rows.filter((r) => r.votes !== null).length} com votos disponíveis.${data.historyCandidateId ? " A mesma planilha inclui votos de 2026, votos de 2022, diferença de votos e variação percentual." : " Arquivo com votos de 2026."}`,
         );
     } finally {
       setDownloading(false);
@@ -476,7 +476,8 @@ export default function MunicipalExcelExport({
         )}
         <p className="small muted">
           Primeiro turno nos dois anos. Os votos de 2026 podem estar parciais.
-          Diferença = votos de 2026 − votos de 2022.
+          Diferença = votos de 2026 − votos de 2022. Variação percentual =
+          diferença ÷ votos de 2022; base zero fica sem percentual.
         </p>
       </div>
       <div className="tool-actions">
@@ -556,7 +557,12 @@ export default function MunicipalExcelExport({
                 {result.historyCandidateId && (
                   <th>Votos do candidato em 2022</th>
                 )}
-                {result.historyCandidateId && <th>Diferença de votos</th>}
+                {result.historyCandidateId && (
+                  <>
+                    <th>Diferença de votos</th>
+                    <th>Variação (%)</th>
+                  </>
+                )}
               </tr>
             </thead>
             <tbody>
@@ -583,6 +589,11 @@ export default function MunicipalExcelExport({
                           {change.difference === null
                             ? "—"
                             : `${change.difference > 0 ? "+" : ""}${number(change.difference)}`}
+                        </td>
+                        <td>
+                          {change.relative === null
+                            ? "—"
+                            : `${change.relative > 0 ? "+" : ""}${percentage(change.relative * 100)}`}
                         </td>
                       </>
                     )}
