@@ -5,3 +5,5 @@ Arquivos JWS baixados diretamente de `https://resultados.tse.jus.br/oficial/` em
 Estas fixtures **nunca são importadas pela aplicação ou pela API de produção**. Cenários com votos nos testes são mutações sintéticas locais da estrutura oficial, identificadas no código de teste.
 
 Os arquivos estaduais de SP e DF foram capturados e validados em 04/10/2026 para testar a separação por UF e o cargo 8 de deputado distrital. Não são usados pela produção.
+
+`sc-e006257-ab.jws` é o EA15 de acompanhamento dos 295 municípios de SC; `sc80594-c0001-e006257-u.jws` contém o resultado presidencial municipal de Caibi. Ambos foram capturados e tiveram a assinatura verificada em 04/10/2026 para testar o mapa municipal, preservação de dados em falhas e os limites das consultas.

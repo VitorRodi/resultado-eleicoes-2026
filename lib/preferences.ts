@@ -4,7 +4,7 @@ export const STORAGE_KEY = 'eleicoes-sc-2026:preferences:v1';
 export const MAX_MUNICIPAL_REQUESTS = 30;
 const candidateSchema = z.object({ candidateId:z.string().regex(/^\d+$/), office:z.enum(OFFICES) });
 const regionalSchema = candidateSchema.extend({ municipalityCodes:z.array(z.string().regex(/^\d{5}$/)).max(30) });
-const preferencesSchema = z.object({ version:z.literal(1), candidates:z.array(candidateSchema).max(50), regional:z.array(regionalSchema).max(50) });
+export const preferencesSchema = z.object({ version:z.literal(1), candidates:z.array(candidateSchema).max(50), regional:z.array(regionalSchema).max(50) });
 export const emptyPreferences = (): WatchPreferences => ({ version:1,candidates:[],regional:[] });
 export const selectionKey = (s:CandidateSelection) => `${s.office}:${s.candidateId}`;
 export const municipalKey = (s:MunicipalRequest) => `${s.office}:${s.code}`;

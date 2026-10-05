@@ -3,6 +3,7 @@ import { configurationSchema, municipalitySchema, type TseConfiguration } from '
 import { parseResult, parseNationalPresident } from './parser';
 import { normalizeResult } from './normalize';
 import { parseBrazilProgress, emptyBrazilProgress, type BrazilProgress } from './progress';
+import {parseMunicipalProgress,type MunicipalProgressSnapshot,type MunicipalLeader} from './municipal-progress';
 import { OFFICE_CONFIG, officeCode } from '../../lib/config';
 import { BRAZIL_STATES } from '../../lib/brazil-states';
 import { SnapshotCache } from '../../lib/cache';
@@ -43,7 +44,7 @@ async function getContext(uf='sc'):Promise<Context> {
     const municipalityConfig=municipalitySchema.parse(await fetchOfficial(url,300_000));
     const state=municipalityConfig.abr.find(a=>a.cd.toLowerCase()===uf);
     if (!state) throw new Error('UF ausente na configuração municipal.');
-    const municipalities=state.mu.map(m=>({name:m.nm,code:String(m.cd).padStart(5,'0')})).sort((a,b)=>a.name.localeCompare(b.name,'pt-BR'));
+    const municipalities=state.mu.map(m=>({name:m.nm,code:String(m.cd).padStart(5,'0'),...(/^\d{7}$/.test(String(m.cdi??m.cdmi))?{ibgeCode:String(m.cdi??m.cdmi)}:{})})).sort((a,b)=>a.name.localeCompare(b.name,'pt-BR'));
     if (municipalities.some(m=>!/^\d{5}$/.test(m.code)) || new Set(municipalities.map(m=>m.code)).size!==municipalities.length)
       throw new Error('Configuração municipal inválida ou duplicada.');
     return {...partial,municipalities,sources:[CONFIG_URL,url]};
@@ -111,7 +112,7 @@ async function loadSnapshot(previous:ElectionSnapshot|undefined,uf='sc'):Promise
       if(result.dv!=='s')snapshot.warnings.push(`${OFFICE_CONFIG[office].label}: divulgação suspensa pelo TSE.`);
     }catch{
       snapshot.stale=true;
-      if(previous?.offices[office].generation){snapshot[office]=previous[office];snapshot.offices[office]=previous.offices[office];snapshot.partyResults![office]=previous.partyResults?.[office]||[];if(previous.statistics?.[office])snapshot.statistics![office]=previous.statistics[office];}
+      if(previous?.offices[office].generation){snapshot[office]=previous[office];snapshot.offices[office]={...previous.offices[office],stale:true};snapshot.partyResults![office]=previous.partyResults?.[office]||[];if(previous.statistics?.[office])snapshot.statistics![office]=previous.statistics[office];}
       snapshot.warnings.push(`${OFFICE_CONFIG[office].label}: atualização indisponível${previous?.offices[office].generation?'; dados anteriores preservados':''}.`);
     }
   });
@@ -153,6 +154,33 @@ export async function getBrazilProgress():Promise<BrazilProgress>{
   });
 }
 export class UnknownMunicipalityError extends Error {}
+const municipalProgressCaches=new Map<string,SnapshotCache<MunicipalProgressSnapshot>>();
+export async function getMunicipalProgress(uf:string):Promise<MunicipalProgressSnapshot>{
+  if(!BRAZIL_STATES.some(s=>s.uf.toLowerCase()===uf))throw new UnknownMunicipalityError('UF inválida.');
+  if(!municipalProgressCaches.has(uf))municipalProgressCaches.set(uf,new SnapshotCache<MunicipalProgressSnapshot>(30_000,last=>({...last||{uf,municipalities:[],updatedAt:null,source:'',verifiedSignatures:false},stale:true})));
+  return municipalProgressCaches.get(uf)!.get(async previous=>{
+    const ctx=await getContext(uf),url=`${directory(ctx,'ab','president')}/${uf}-e${ctx.elections.president.padStart(6,'0')}-ab.jws`;
+    const result=parseMunicipalProgress(await fetchOfficial(url,30_000),ctx.elections.president,uf,ctx.municipalities,url);
+    if(previous?.updatedAt&&result.updatedAt&&result.updatedAt<previous.updatedAt)throw new Error('Geração municipal anterior.');
+    return result;
+  });
+}
+const municipalLeaderCaches=new Map<string,SnapshotCache<MunicipalLeader>>();
+export async function getMunicipalLeaders(uf:string,codes:string[]){
+  const unique=[...new Set(codes)];
+  if(!unique.length||unique.length>30||unique.some(c=>!/^\d{5}$/.test(c)))throw new UnknownMunicipalityError('Selecione de 1 a 30 municípios.');
+  const ctx=await getContext(uf);
+  if(unique.some(c=>!ctx.municipalities.some(m=>m.code===c)))throw new UnknownMunicipalityError('Município fora da UF.');
+  const municipalities=await mapLimited(unique,async code=>{
+    const key=`${uf}:${code}`,municipality=ctx.municipalities.find(m=>m.code===code)!,url=resultUrl(ctx,'president',code);
+    if(!municipalLeaderCaches.has(key)){if(municipalLeaderCaches.size>=500)municipalLeaderCaches.delete(municipalLeaderCaches.keys().next().value!);municipalLeaderCaches.set(key,new SnapshotCache<MunicipalLeader>(30_000,last=>last?{...last,stale:true}:{municipality,candidates:[],meta:emptyOffice(),stale:true,source:url,verifiedSignatures:false}));}
+    return municipalLeaderCaches.get(key)!.get(async previous=>{
+      const result=normalizeResult(parseResult(await fetchOfficial(url,30_000),'president',ctx.elections.president,code,uf),'president',directory(ctx,'ft','president'));
+      if(previous?.meta.updatedAt&&result.meta.updatedAt&&result.meta.updatedAt<previous.meta.updatedAt)throw new Error('Geração de votos anterior.');
+      return {municipality,candidates:result.candidates.filter(c=>c.rank!==null).slice(0,2),meta:result.meta,stale:false,source:url,verifiedSignatures:true};
+    });
+  });return {uf,municipalities,stale:municipalities.some(m=>m.stale),checkedAt:new Date().toISOString()};
+}
 export async function getElectionSnapshot(requests:MunicipalRequest[]=[],uf='sc'):Promise<ElectionSnapshot> {
   if(!BRAZIL_STATES.some(s=>s.uf.toLowerCase()===uf))throw new UnknownMunicipalityError('UF inválida.');
   const base=await snapshotCacheFor(uf).get(previous=>loadSnapshot(previous,uf));

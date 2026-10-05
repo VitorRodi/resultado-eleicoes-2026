@@ -19,6 +19,7 @@ export type VoteStatistics={
   annulledVotes:number|null; annulledSubJudiceVotes:number|null; noCandidateVotes:number|null;
 };
 export type OfficeMeta = {
+  stale?:boolean;
   status: 'waiting' | 'counting' | 'finished' | 'unavailable';
   percentage: number | null; sections: number | null; totalSections: number | null;
   updatedAt: string | null; generation: string | null; seats: number | null;
@@ -31,7 +32,7 @@ export type MunicipalVote = {
   name: string; code: string | null; votes: number | null; percentage: number | null;
   status: 'waiting' | 'counting' | 'finished' | 'unavailable'; updatedAt: string | null;
 };
-export type Municipality = { name: string; code: string };
+export type Municipality = { name: string; code: string; ibgeCode?:string };
 export type CandidateSelection = { candidateId: string; office: Office };
 export type RegionalSelection = CandidateSelection & { municipalityCodes: string[] };
 export type WatchPreferences = { version: 1; candidates: CandidateSelection[]; regional: RegionalSelection[] };

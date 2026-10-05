@@ -1,0 +1,15 @@
+'use client';
+import {LineChart,Line,XAxis,YAxis,Tooltip,ResponsiveContainer,CartesianGrid} from 'recharts';
+import {clock,number,percentage} from '@/lib/formatting';
+import {csvCell} from '@/lib/panel-tools';
+import {downloadBlob} from '@/lib/download';
+import type {ProgressSample} from '@/lib/live-features';
+export default function ProgressHistory({points,uf,name,warning}:{points:ProgressSample[];uf:string;name:string;warning:string|null}){
+  function download(){const rows=[['UF','Horário TSE UTC','Seções apuradas','Total de seções','Percentual'],...points.map(p=>[uf,p.at,p.sections,p.totalSections,p.percentage])];downloadBlob(new Blob(['\uFEFF'+rows.map(r=>r.map(csvCell).join(';')).join('\r\n')],{type:'text/csv;charset=utf-8'}),`apuracao-${uf.toLowerCase()}.csv`);}
+  return <section className="progress-history panel" aria-label={`Histórico de apuração de ${name}`}><header><div><span className="section-tag">EVOLUÇÃO · {uf}</span><h3>Como avançou a apuração?</h3></div><button className="text-link small" disabled={!points.length} onClick={download}>Baixar CSV</button></header>
+    {warning&&<p className="warning-text small">{warning}</p>}
+    {points.length<2?<p className="analysis-empty muted small">{points.length?`Primeiro registro às ${clock(points[0].at)}. O gráfico aparecerá quando a contagem mudar.`:'Aguardando o primeiro registro oficial.'}</p>:<div className="progress-history-chart" role="img" aria-label={`Percentual apurado em ${name} ao longo do tempo; tabela abaixo`}><ResponsiveContainer width="100%" height={220} minWidth={0}><LineChart data={points.map(p=>({...p,time:Date.parse(p.at)}))} margin={{top:15,right:12,left:0,bottom:8}}><CartesianGrid stroke="#2e4054" strokeDasharray="3 3"/><XAxis type="number" dataKey="time" domain={['dataMin','dataMax']} tickFormatter={t=>clock(new Date(t).toISOString())} tick={{fill:'#c3d1e0',fontSize:11}} minTickGap={45}/><YAxis domain={[0,100]} tickFormatter={v=>`${v}%`} tick={{fill:'#c3d1e0',fontSize:11}} width={42}/><Tooltip content={({active,payload})=>active&&payload?.length?<div className="chart-tooltip"><b>{clock(payload[0].payload.at)} · Brasília</b><p>{percentage(payload[0].payload.percentage)} · {number(payload[0].payload.sections)} seções</p></div>:null}/><Line dataKey="percentage" type="stepAfter" stroke="#80b9ee" strokeWidth={3} isAnimationActive={false} dot={points.length<20}/></LineChart></ResponsiveContainer></div>}
+    {!!points.length&&<details className="history-values"><summary>Ver registros ({points.length})</summary><div className="table-scroll" tabIndex={0}><table><thead><tr><th>Horário · Brasília</th><th>Apuradas</th><th>%</th></tr></thead><tbody>{[...points].reverse().map(p=><tr key={p.at}><td>{clock(p.at)}</td><td>{number(p.sections)}</td><td>{percentage(p.percentage)}</td></tr>)}</tbody></table></div></details>}
+    <p className="small muted">Coleta iniciada ao abrir o mapa neste navegador. Até 240 registros por UF; atualizações anteriores não são recuperadas.</p>
+  </section>;
+}

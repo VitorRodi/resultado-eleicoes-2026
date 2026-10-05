@@ -8,6 +8,7 @@ import BrazilProgressMap from '@/components/charts/brazil-progress-map';
 import { clock, number, percentage } from '@/lib/formatting';
 import type { NationalPresidentSnapshot } from '@/types/election';
 import ProjectFooter from './project-footer';
+import NationalSections from '@/components/cards/national-sections';
 
 export default function PresidentDashboard({onSelectState}:{onSelectState:(uf:string)=>void}){
   const [data,setData]=useState<NationalPresidentSnapshot|null>(null);
@@ -50,6 +51,7 @@ export default function PresidentDashboard({onSelectState}:{onSelectState:(uf:st
       </section>
       {warning&&<aside className="warning" role="status"><TriangleAlert size={18}/><div><strong>Atualização nacional com aviso</strong><p>{meta?.status==='unavailable'&&!data?.stale?'Divulgação nacional temporariamente indisponível no TSE.':'Não foi possível atualizar. O último resultado nacional válido permanece na tela, quando disponível.'}</p></div></aside>}
       <NationalPresident data={leaders}/>
+      <NationalSections data={data}/>
       <div className="section-heading"><div><span className="section-tag">RESULTADO NACIONAL</span><h2>Todos os candidatos à Presidência</h2><p className="section-description muted">Votos em todo o Brasil e no exterior, ordenados por posição atual.</p></div></div>
       <section className="president-national-ranking" aria-label="Ranking nacional de presidente"><Ranking uf="br" stateName="Brasil e exterior" office="president" candidates={data?.candidates} meta={meta}/></section>
       <PresidentsByState/>

@@ -38,5 +38,5 @@ export const configurationSchema = z.object({
 });
 export type TseConfiguration = z.infer<typeof configurationSchema>;
 export const municipalitySchema = z.object({
-  f: z.literal('o'), abr: z.array(z.object({ cd: z.string(), mu: z.array(z.object({ cd: scalar, nm: z.string() })) })),
+  f: z.literal('o'), abr: z.array(z.object({ cd: z.string(), mu: z.array(z.object({ cd: scalar, nm: z.string(),cdi:scalar.optional(),cdmi:scalar.optional() })) })),
 });

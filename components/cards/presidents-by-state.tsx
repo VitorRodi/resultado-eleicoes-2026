@@ -3,13 +3,19 @@ import { BRAZIL_STATES } from '@/lib/brazil-states';
 import { clock, number, percentage } from '@/lib/formatting';
 import { usePresidentsByState } from '@/hooks/use-presidents-by-state';
 import Avatar from './avatar';
+import {useState} from 'react';
+import {orderStates,type StateSort} from '@/lib/live-features';
+import StateResultFilters from '@/components/layout/state-result-filters';
 
 export default function PresidentsByState(){
   const {data,error}=usePresidentsByState();
-  const states=[...BRAZIL_STATES].sort((a,b)=>a.name.localeCompare(b.name,'pt-BR'));
+  const [sort,setSort]=useState<StateSort>('alphabetical'),[pending,setPending]=useState(false);
+  const states=orderStates(BRAZIL_STATES.map(s=>{const meta=data?.states.find(p=>p.uf===s.uf)?.meta;return {...s,status:meta?.status||'unavailable',percentage:meta?.percentage??null,sections:meta?.sections??null,totalSections:meta?.totalSections??null};}),sort,pending);
   return <section className="presidents-by-state" aria-labelledby="presidents-by-state-title">
     <div className="section-heading"><div><span className="section-tag">PRESIDENTE · RESULTADO POR UF</span><h2 id="presidents-by-state-title">Os dois mais votados e os votos nulos em cada estado</h2><p className="section-description muted">26 estados e Distrito Federal · votação presidencial e votos nulos na própria UF.</p></div><span className="small muted">Atualização a cada 30s</span></div>
     {(error||data?.stale)&&<p className="warning" role="status">Parte das consultas não atualizou. Os últimos resultados válidos permanecem na tela, quando disponíveis.</p>}
+    <StateResultFilters sort={sort} pending={pending} onSort={setSort} onPending={setPending} label="Ordenar cartões dos estados"/>
+    {!states.length&&<p className="watch-empty panel" role="status">Todos os estados têm totalização final. Desmarque o filtro para ver os resultados.</p>}
     <div className="state-president-grid">{states.map(state=>{
       const result=data?.states.find(s=>s.uf===state.uf),meta=result?.meta,candidates=result?.candidates||[];
       const tie=candidates.length===2&&candidates[0].votes===candidates[1].votes;
