@@ -1,4 +1,328 @@
 /* Reports use a document layout: forms above a readable, exportable sheet. */
+.report-builder {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: 40px;
+  align-items: start;
+  margin-top: 32px;
+}
+.report-builder-form {
+  min-width: 0;
+}
+.report-step {
+  border: 0;
+  border-bottom: 1px solid var(--border);
+  padding: 0 0 26px;
+  margin: 0 0 28px;
+  min-width: 0;
+}
+.report-step:last-child {
+  margin-bottom: 0;
+}
+.report-step legend {
+  font-size: 16px;
+  font-weight: 650;
+  margin-bottom: 18px;
+  padding: 0;
+  line-height: 1.5;
+}
+.report-step legend > span {
+  color: var(--accent);
+  margin-right: 12px;
+  font-variant-numeric: tabular-nums;
+}
+.report-step .report-picker {
+  margin: 0;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.report-step .report-picker > label:last-child {
+  grid-column: 1 / -1;
+}
+.report-step .report-two-fields > label:last-child {
+  grid-column: auto;
+}
+.report-type-options {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+.report-type-option {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  border: 1px solid var(--border-strong);
+  border-radius: 5px;
+  padding: 14px 12px;
+  cursor: pointer;
+  min-width: 0;
+}
+.report-type-option.selected {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+.report-type-option strong {
+  display: block;
+  font-size: 13px;
+  line-height: 1.45;
+}
+.report-type-option small {
+  display: block;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.6;
+  margin-top: 8px;
+}
+.report-type-option input,
+.report-checkbox input,
+.report-city-option input {
+  accent-color: var(--accent);
+  width: 17px;
+  height: 17px;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.report-type-option:focus-within,
+.report-city-option:focus-within {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+.report-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+}
+.report-field input {
+  width: 100%;
+  min-height: 46px;
+  border: 1px solid var(--border-strong);
+  border-radius: 5px;
+  background: var(--panel);
+  color: var(--text);
+  padding: 10px 12px;
+  font-weight: 400;
+}
+.report-checkbox {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 13px 0;
+  margin-top: 8px;
+  font-size: 13px;
+  line-height: 1.6;
+  cursor: pointer;
+}
+.report-step .report-two-fields {
+  margin: 18px 0;
+}
+.report-history {
+  margin-top: 22px;
+  border-left: 3px solid var(--accent);
+  padding-left: 18px;
+}
+.report-history h3 {
+  font-size: 15px;
+}
+.report-state-scope {
+  display: flex;
+  gap: 12px;
+  color: var(--accent);
+}
+.report-state-scope p {
+  margin: 0;
+  color: var(--text);
+  font-size: 14px;
+}
+.report-state-scope span {
+  display: block;
+  margin-top: 6px;
+}
+.report-city-tools {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 15px 0;
+}
+.report-city-tools > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+}
+.report-text-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 7px 0;
+  color: var(--accent);
+  background: transparent;
+  border: 0;
+  font-size: 12px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+  text-align: left;
+}
+.report-text-button:disabled {
+  color: var(--muted);
+  cursor: default;
+  text-decoration: none;
+}
+.report-city-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  max-height: 296px;
+  overflow: auto;
+  border-block: 1px solid var(--border);
+  padding: 8px 4px;
+  scrollbar-gutter: stable;
+}
+.report-city-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 10px 6px;
+  font-size: 13px;
+  cursor: pointer;
+}
+.report-city-option:hover {
+  background: var(--surface-soft);
+}
+.report-city-option input {
+  margin-top: 0;
+}
+.report-summary {
+  position: sticky;
+  top: 24px;
+  max-height: calc(100dvh - 48px);
+  overflow-y: auto;
+  background: var(--surface-soft);
+  padding: 24px;
+  border-top: 3px solid var(--accent);
+  border-radius: 0 0 5px 5px;
+  min-width: 0;
+}
+.report-summary h3 {
+  font-family: var(--font-editorial), Georgia, serif;
+  font-size: 27px;
+  margin: 8px 0 22px;
+}
+.report-summary dl {
+  margin: 0;
+}
+.report-summary dl > div {
+  margin-bottom: 18px;
+}
+.report-summary dt {
+  color: var(--muted);
+  font-size: 12px;
+  margin-bottom: 4px;
+}
+.report-summary dd {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+.report-summary small {
+  display: block;
+  color: var(--muted);
+  font-size: 12px;
+  margin-top: 5px;
+}
+.report-summary .add-button,
+.report-summary .secondary-button {
+  width: 100%;
+  justify-content: center;
+  white-space: normal;
+  text-align: center;
+}
+.report-summary details {
+  font-size: 12px;
+  margin-top: 8px;
+}
+.report-summary summary {
+  cursor: pointer;
+  color: var(--accent);
+  min-height: 36px;
+}
+.report-summary ul {
+  max-height: 160px;
+  overflow: auto;
+  padding-left: 20px;
+}
+.report-status {
+  color: var(--muted);
+  margin: 24px 0 0;
+  line-height: 1.7;
+}
+.report-downloads {
+  margin-bottom: 18px;
+}
+.report-step:disabled {
+  opacity: 0.75;
+}
+.display-root[data-large-text]
+  :is(
+    .report-type-option strong,
+    .report-summary dt,
+    .report-summary dd,
+    .report-step legend
+  ) {
+  font-size: 16px;
+}
+@media (max-width: 1100px) {
+  .report-builder {
+    grid-template-columns: minmax(0, 1fr) 270px;
+    gap: 24px;
+  }
+  .report-summary {
+    padding: 20px;
+  }
+  .report-type-options {
+    grid-template-columns: 1fr;
+  }
+  .report-type-option small {
+    margin-top: 4px;
+  }
+}
+@media (max-width: 800px) {
+  .report-builder {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+  .report-summary {
+    position: static;
+    max-height: none;
+    overflow-y: visible;
+  }
+  .report-step .report-picker {
+    grid-template-columns: 1fr;
+  }
+  .report-step .report-two-fields > label:last-child {
+    grid-column: 1 / -1;
+  }
+  .report-type-options {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 540px) {
+  .report-city-list {
+    grid-template-columns: 1fr;
+  }
+  .report-field input {
+    font-size: 16px;
+  }
+  .report-downloads button {
+    width: 100%;
+    justify-content: center;
+  }
+  .report-step legend {
+    font-size: 15px;
+  }
+}
 .regional-pdf-actions {
   display: flex;
   flex-wrap: wrap;

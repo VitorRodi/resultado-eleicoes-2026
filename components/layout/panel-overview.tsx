@@ -30,8 +30,8 @@ const actions = [
   },
   {
     view: "report",
-    label: "Relatório de candidato",
-    description: "Votação, situação oficial e gráficos de cidades e regiões.",
+    label: "Central de relatórios",
+    description: "PDF personalizado, votos nas cidades e comparação com 2022.",
     icon: FileText,
   },
   {

@@ -4,6 +4,13 @@ import { BRAZIL_STATES } from "./brazil-states";
 import { officeLabel } from "./config";
 import { sumRegional } from "./tracking";
 import { number, percentage } from "./formatting";
+import { reportDistribution, type CandidateReport } from "./candidate-report";
+import {
+  reportPersonalizationSchema,
+  reportComparisonTotals,
+  type ReportPersonalization,
+} from "./report-options";
+import { initialExportRows } from "./municipal-export";
 
 import {
   historicalCandidateSchema,
@@ -17,6 +24,8 @@ export type MunicipalPdfInput = {
   rows: MunicipalVote[];
   generatedAt: string;
   historical?: HistoricalCandidate;
+  personalization?: ReportPersonalization;
+  profile?: CandidateReport;
 };
 export type PdfFonts = { regular: string; bold: string };
 const INK = [27, 44, 50] as const,
@@ -34,9 +43,9 @@ export function municipalPdfSummary(input: MunicipalPdfInput) {
   if (
     !BRAZIL_STATES.some((state) => state.uf.toLowerCase() === input.uf) ||
     !input.rows.length ||
-    input.rows.length > 30
+    input.rows.length > 1000
   )
-    throw new Error("Selecione de 1 a 30 municípios nesta UF.");
+    throw new Error("Selecione de 1 a 1000 municípios nesta UF.");
   if (
     input.rows.some(
       (row) =>
@@ -76,6 +85,17 @@ export function municipalPdf(input: MunicipalPdfInput, fonts: PdfFonts) {
   const history = input.historical
     ? historicalCandidateSchema.parse(input.historical)
     : undefined;
+  const personalization = input.personalization
+    ? reportPersonalizationSchema.parse(input.personalization)
+    : undefined;
+  const profile = input.profile;
+  if (
+    profile &&
+    (profile.uf !== input.uf ||
+      profile.candidate.id !== input.candidate.id ||
+      profile.candidate.office !== input.candidate.office)
+  )
+    throw new Error("Perfil de outra candidatura rejeitado.");
   if (!summary.available)
     throw new Error("Aguarde a divulgação dos votos para gerar este PDF.");
   const doc = new jsPDF({
@@ -90,7 +110,7 @@ export function municipalPdf(input: MunicipalPdfInput, fonts: PdfFonts) {
   doc.addFileToVFS("NotoSans-Bold.ttf", fonts.bold);
   doc.addFont("NotoSans-Bold.ttf", "NotoSans", "bold");
   doc.setProperties({
-    title: `${clean(input.candidate.name)} - Votos nos municípios selecionados`,
+    title: `${clean(input.candidate.name)} - ${profile ? "Perfil no estado" : history ? "Comparação 2022 e 2026" : "Votos nos municípios selecionados"}`,
     author: "Vitor Rodi",
     subject: `Eleições 2026 - ${input.uf.toUpperCase()} - primeiro turno`,
     creator: "Resultado Eleições 2026",
@@ -128,28 +148,51 @@ export function municipalPdf(input: MunicipalPdfInput, fonts: PdfFonts) {
       "right",
     );
     if (continuation) {
-      write(clean(input.candidate.name), left, 36, 14, true);
+      doc.setFont("NotoSans", "bold");
+      doc.setFontSize(14);
+      const lines = doc.splitTextToSize(
+        clean(input.candidate.name),
+        width,
+      ) as string[];
+      lines.forEach((line, i) => write(line, left, 36 + i * 6, 14, true));
       write(
         "Votação nos municípios selecionados - continuação",
         left,
-        44,
+        38 + lines.length * 6,
         9,
         false,
         MUTED,
       );
-      y = 53;
+      y = 47 + lines.length * 6;
       return;
     }
     write(
-      history
-        ? "Votos por município - comparação 2022 e 2026"
-        : "Votação nos municípios selecionados",
+      profile
+        ? "Perfil da candidatura no estado"
+        : history
+          ? "Votos por município - comparação 2022 e 2026"
+          : "Votação nos municípios selecionados",
       left,
       37,
       10,
       false,
       MUTED,
     );
+    y = 49;
+    if (personalization?.title) {
+      doc.setFont("NotoSans", "normal");
+      doc.setFontSize(11);
+      const lines = doc.splitTextToSize(
+        clean(personalization.title),
+        width,
+      ) as string[];
+      for (const line of lines) {
+        write(line, left, y, 11, false, GREEN);
+        y += 5.5;
+      }
+      y += 5;
+    }
+    const titleY = y;
     doc.setFont("NotoSans", "bold");
     doc.setFontSize(21);
     const title = doc.splitTextToSize(
@@ -157,8 +200,8 @@ export function municipalPdf(input: MunicipalPdfInput, fonts: PdfFonts) {
       width,
     ) as string[];
     for (const [i, line] of title.entries())
-      write(line, left, 49 + i * 8, 21, true);
-    y = 49 + title.length * 8;
+      write(line, left, titleY + i * 8, 21, true);
+    y = titleY + title.length * 8;
     doc.setFontSize(9);
     const identity = doc.splitTextToSize(
       `${officeLabel(input.candidate.office, input.uf)} - ${input.candidate.number} - ${input.candidate.party} - ${BRAZIL_STATES.find((state) => state.uf.toLowerCase() === input.uf)!.name}`,
@@ -177,6 +220,70 @@ export function municipalPdf(input: MunicipalPdfInput, fonts: PdfFonts) {
       for (const line of previousIdentity) {
         write(line, left, y, 8, false, MUTED);
         y += 4.8;
+      }
+    }
+    if (personalization?.name) {
+      y += 3;
+      doc.setFont("NotoSans", "bold");
+      doc.setFontSize(10);
+      const lines = doc.splitTextToSize(
+        `${personalization.label}: ${clean(personalization.name)}`,
+        width,
+      ) as string[];
+      for (const line of lines) {
+        write(line, left, y, 10, true, GREEN);
+        y += 5;
+      }
+    }
+    if (profile) {
+      const active =
+        ["counting", "finished"].includes(profile.meta.status) &&
+        input.candidate.rank !== null;
+      doc.setFontSize(9);
+      const text = active
+        ? `Estado: ${number(input.candidate.votes)} votos · ${percentage(input.candidate.percentage)} · ${input.candidate.rank}º por votos · ${number(profile.meta.seats)} vagas. Situação oficial: ${input.candidate.officialElected ? "Eleito - confirmação oficial" : input.candidate.officialStatus || "ainda não informada"}.`
+        : "Resultado estadual: aguardando divulgação da votação e da situação oficial.";
+      y += 4;
+      for (const line of doc.splitTextToSize(text, width) as string[]) {
+        write(line, left, y, 9);
+        y += 5;
+      }
+      if (profile.stateStale) {
+        write(
+          "Resultado estadual preservado após falha de atualização.",
+          left,
+          y,
+          8,
+          false,
+          MUTED,
+        );
+        y += 5;
+      }
+      if (["federalDeputy", "stateDeputy"].includes(input.candidate.office)) {
+        write(
+          "A posição por votos não garante eleição no sistema proporcional.",
+          left,
+          y,
+          8,
+          false,
+          MUTED,
+        );
+        y += 5;
+      }
+      const distribution = reportDistribution(profile);
+      const qualifier = distribution.complete
+        ? ""
+        : " entre os dados disponíveis";
+      doc.setFontSize(9);
+      const highlights = `Maior votação municipal${qualifier}: ${distribution.bestCities.map((city) => city.name).join(", ") || "ainda indisponível"}. Região com mais votos${qualifier}: ${distribution.bestRegions.map((region) => region.name).join(", ") || "ainda indisponível"}.`;
+      // A large tie belongs in the full tables, rather than an unbounded cover heading.
+      const excerpt =
+        highlights.length > 500
+          ? "Consulte as tabelas e os gráficos para conferir cidades e regiões com mais votos e eventuais empates."
+          : highlights;
+      for (const line of doc.splitTextToSize(excerpt, width) as string[]) {
+        write(line, left, y, 9, false, GREEN);
+        y += 5;
       }
     }
     y += 9;
@@ -203,6 +310,29 @@ export function municipalPdf(input: MunicipalPdfInput, fonts: PdfFonts) {
       true,
     );
     y += 21;
+    if (history) {
+      const rows = initialExportRows(
+        summary.rows.map((row) => ({ code: row.code!, name: row.name })),
+      ).map((row, i) => ({ ...row, votes: summary.rows[i].votes }));
+      const totals = reportComparisonTotals(rows, history);
+      const change =
+        totals.difference === null
+          ? "—"
+          : `${totals.difference > 0 ? "+" : ""}${number(totals.difference)}`;
+      const pct =
+        totals.relative === null
+          ? "sem percentual"
+          : `${totals.relative > 0 ? "+" : ""}${percentage(totals.relative * 100)}`;
+      doc.setFontSize(9);
+      for (const line of doc.splitTextToSize(
+        `Comparação em ${totals.paired} de ${summary.rows.length} cidades: ${number(totals.previous)} votos em 2022; ${number(totals.current)} em 2026; diferença ${change}; variação ${pct}.`,
+        width,
+      ) as string[]) {
+        write(line, left, y, 9, true, GREEN);
+        y += 5;
+      }
+      y += 4;
+    }
     write(
       summary.partial ||
         (history &&
@@ -228,6 +358,39 @@ export function municipalPdf(input: MunicipalPdfInput, fonts: PdfFonts) {
     );
     y += 12;
   }
+  function chart(title: string, rows: { name: string; votes: number }[]) {
+    if (!rows.length) return;
+    if (y + 25 > 250) {
+      doc.addPage();
+      startPage(true);
+    }
+    write(title, left, y, 12, true);
+    y += 10;
+    const max = Math.max(1, ...rows.map((row) => row.votes));
+    for (const row of rows) {
+      doc.setFont("NotoSans", "normal");
+      doc.setFontSize(9);
+      const lines = doc.splitTextToSize(clean(row.name), 135) as string[];
+      const height = lines.length * 4.5 + 6;
+      if (y + height > 260) {
+        doc.addPage();
+        startPage(true);
+        write(`${title} - continuação`, left, y, 12, true);
+        y += 10;
+      }
+      lines.forEach((line, i) => write(line, left, y + i * 4.5, 9));
+      write(number(row.votes), right, y, 9, true, GREEN, "right");
+      const barY = y + lines.length * 4.5;
+      doc.setFillColor(222, 233, 225);
+      doc.rect(left, barY, width, 3, "F");
+      if (row.votes > 0) {
+        doc.setFillColor(...GREEN);
+        doc.rect(left, barY, (width * row.votes) / max, 3, "F");
+      }
+      y += height;
+    }
+    y += 10;
+  }
   function tableHeader() {
     doc.setFillColor(...GREEN);
     doc.rect(left, y - 5, width, 10, "F");
@@ -241,12 +404,55 @@ export function municipalPdf(input: MunicipalPdfInput, fonts: PdfFonts) {
       ] as const)
         write(label, x, y + 1, 7, true, [255, 255, 255], "right");
     } else {
-      write("Comparação visual", 113, y + 1, 8, true, [255, 255, 255]);
+      if (personalization?.includeCharts !== false)
+        write("Comparação visual", 113, y + 1, 8, true, [255, 255, 255]);
       write("Votos", right - 3, y + 1, 9, true, [255, 255, 255], "right");
     }
     y += 9;
   }
   startPage();
+  if (personalization?.includeCharts) {
+    chart(
+      "As 10 cidades com mais votos de 2026 neste conjunto",
+      summary.rows
+        .filter((row) => row.votes !== null)
+        .slice(0, 10)
+        .map((row) => ({ name: row.name, votes: row.votes! })),
+    );
+    if (profile) {
+      const distribution = reportDistribution(profile);
+      chart(
+        "As 10 regiões com mais votos disponíveis",
+        distribution.regions.slice(0, 10),
+      );
+      if (y + 14 > 260) {
+        doc.addPage();
+        startPage(true);
+      }
+      write(
+        `Regiões imediatas do IBGE; ${distribution.known} de ${profile.municipalities.length} cidades com votos.`,
+        left,
+        y,
+        8,
+        false,
+        MUTED,
+      );
+      y += 5;
+      write(
+        `${distribution.unmapped} cidades com votos sem região identificada; somas podem diferir do total estadual.`,
+        left,
+        y,
+        8,
+        false,
+        MUTED,
+      );
+      y += 10;
+    }
+  }
+  if (y + 25 > 259) {
+    doc.addPage();
+    startPage(true);
+  }
   tableHeader();
   const max = Math.max(1, ...summary.rows.map((row) => row.votes ?? 0));
   for (const [i, row] of summary.rows.entries()) {
@@ -315,17 +521,113 @@ export function municipalPdf(input: MunicipalPdfInput, fonts: PdfFonts) {
       write(delta, 166, y + 2, 8, true, color, "right");
       write(pct, 189, y + 2, 7, true, color, "right");
     } else if (row.votes !== null) {
-      doc.setFillColor(222, 233, 225);
-      doc.roundedRect(113, y - 1, 50, 3.5, 1, 1, "F");
-      if (row.votes > 0) {
-        doc.setFillColor(...GREEN);
-        doc.roundedRect(113, y - 1, (50 * row.votes) / max, 3.5, 1, 1, "F");
+      if (personalization?.includeCharts !== false) {
+        doc.setFillColor(222, 233, 225);
+        doc.roundedRect(113, y - 1, 50, 3.5, 1, 1, "F");
+        if (row.votes > 0) {
+          doc.setFillColor(...GREEN);
+          doc.roundedRect(113, y - 1, (50 * row.votes) / max, 3.5, 1, 1, "F");
+        }
       }
       write(number(row.votes), right - 3, y + 2, 10, true, INK, "right");
     } else write("Sem dados", right - 3, y + 2, 8, false, MUTED, "right");
     y += height;
   }
-  if (y + 22 > 267) {
+  if (profile) {
+    const distribution = reportDistribution(profile);
+    if (distribution.regions.length) {
+      doc.addPage();
+      startPage(true);
+      const regionHeader = () => {
+        write("Votos por região imediata", left, y, 13, true);
+        y += 11;
+        doc.setFillColor(...GREEN);
+        doc.rect(left, y - 5, width, 10, "F");
+        write("Região", left + 3, y + 1, 9, true, [255, 255, 255]);
+        write(
+          "Votos disponíveis",
+          150,
+          y + 1,
+          8,
+          true,
+          [255, 255, 255],
+          "right",
+        );
+        write(
+          "Cidades com votos",
+          189,
+          y + 1,
+          8,
+          true,
+          [255, 255, 255],
+          "right",
+        );
+        y += 9;
+      };
+      regionHeader();
+      for (const [i, region] of distribution.regions.entries()) {
+        doc.setFont("NotoSans", "normal");
+        doc.setFontSize(9);
+        const lines = doc.splitTextToSize(clean(region.name), 88) as string[];
+        const height =
+          Math.max(12, lines.length * 4.5 + 6) + (region.stale ? 4 : 0);
+        if (y + height > 259) {
+          doc.addPage();
+          startPage(true);
+          regionHeader();
+        }
+        if (i % 2) {
+          doc.setFillColor(240, 245, 242);
+          doc.rect(left, y - 4, width, height, "F");
+        }
+        lines.forEach((line, n) => write(line, left + 3, y + 2 + n * 4.5, 9));
+        if (region.stale)
+          write(
+            "Últimos valores disponíveis",
+            left + 3,
+            y + 3 + lines.length * 4.5,
+            7,
+            false,
+            MUTED,
+          );
+        write(number(region.votes), 150, y + 2, 9, true, INK, "right");
+        write(
+          `${region.known} de ${region.total}`,
+          189,
+          y + 2,
+          9,
+          false,
+          INK,
+          "right",
+        );
+        y += height;
+      }
+      if (y + 17 > 267) {
+        doc.addPage();
+        startPage(true);
+      }
+      y += 5;
+      write(
+        `Regiões imediatas do IBGE; ${distribution.unmapped} cidades com votos sem região identificada.`,
+        left,
+        y,
+        8,
+        false,
+        MUTED,
+      );
+      y += 5;
+      write(
+        "Somente municípios com votos disponíveis entram nas somas regionais.",
+        left,
+        y,
+        8,
+        false,
+        MUTED,
+      );
+      y += 7;
+    }
+  }
+  if (y + (profile ? 32 : 22) > 267) {
     doc.addPage();
     startPage(true);
   }
@@ -333,7 +635,9 @@ export function municipalPdf(input: MunicipalPdfInput, fonts: PdfFonts) {
   write(
     history
       ? "Diferença = 2026 − 2022. Variação (%) = diferença ÷ votos de 2022 × 100; base zero não tem percentual."
-      : "Barras proporcionais à cidade com maior votação neste conjunto.",
+      : personalization?.includeCharts === false
+        ? "Votação nas cidades selecionadas nesta consulta."
+        : "Barras proporcionais à cidade com maior votação neste conjunto.",
     left,
     y,
     7,
@@ -370,6 +674,17 @@ export function municipalPdf(input: MunicipalPdfInput, fonts: PdfFonts) {
       false,
       MUTED,
     );
+  if (profile?.meta.updatedAt) {
+    y += 5;
+    write(
+      `Resultado estadual: ${timestamp(profile.meta.updatedAt)} (Brasília).`,
+      left,
+      y,
+      7,
+      false,
+      MUTED,
+    );
+  }
   const pages = doc.getNumberOfPages();
   for (let page = 1; page <= pages; page++) {
     doc.setPage(page);

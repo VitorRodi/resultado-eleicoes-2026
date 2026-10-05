@@ -70,7 +70,7 @@ const groups = [
   {
     label: "Relatórios",
     icon: FileText,
-    items: [{ id: "report", label: "Relatório de candidato" }],
+    items: [{ id: "report", label: "Central de relatórios" }],
   },
   {
     label: "Fontes",

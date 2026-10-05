@@ -84,7 +84,7 @@ const CityVoteExport = dynamic(
   () => import("@/components/tracking/city-vote-export"),
 );
 const CandidateReportPanel = dynamic(
-  () => import("@/components/tracking/candidate-report"),
+  () => import("@/components/tracking/report-builder"),
 );
 import {
   OFFICES,
@@ -920,6 +920,7 @@ function StateDashboard({
             uf={uf}
             snapshot={snapshot}
             initialCandidate={reportCandidate}
+            preferences={preferences}
           />
         )}
         {(view === "map" ||
