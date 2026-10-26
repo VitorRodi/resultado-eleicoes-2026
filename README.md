@@ -1,3 +1,61 @@
+# Brazil Election Results
+
+[![Validate dashboard](https://github.com/VitorRodi/resultado-eleicoes-2026/actions/workflows/ci.yml/badge.svg)](https://github.com/VitorRodi/resultado-eleicoes-2026/actions/workflows/ci.yml)
+
+An independent dashboard for exploring official Brazilian election results at national, state, and municipal levels.
+
+[Open live application](https://resultado-eleicoes-2026.vercel.app/) · [Source code](https://github.com/VitorRodi/resultado-eleicoes-2026)
+
+## Highlights
+
+- Explore results across Brazil's 26 states and Federal District.
+- Follow candidates, compare municipal results, and inspect interactive charts and maps.
+- Generate PDF and Excel reports.
+- Query official TSE sources with server-side verification of signed data.
+
+## Stack
+
+Next.js · React · TypeScript · Tailwind CSS · Recharts · Zod
+
+## Run locally
+
+Requires Node.js 22 or newer.
+
+```sh
+npm ci
+npm run dev
+```
+
+Open http://localhost:3000. No credentials are required to query the public TSE sources.
+
+## Engineering decisions
+
+- **Verify source authenticity.** Official JWS payloads are checked with Ed25519 and a pinned public key before results are accepted.
+- **Keep geography isolated.** Data and caches are separated by state and office; mismatched source coverage is rejected.
+- **Represent uncertainty explicitly.** Missing data remains unavailable, partial vote rankings are distinct from confirmed election status, and failures preserve the last valid result with a warning.
+- **Fetch municipal details on demand.** Request sharing, concurrency limits, caching, and timeouts control source traffic.
+- **Test data boundaries.** Automated checks cover signatures, parsing, state isolation, missing data, ties, result status, exports, and preferences.
+
+## Verify
+
+```sh
+npm test
+npm run lint
+npm run typecheck
+npm run build
+```
+
+## Independence
+
+This is an independent project using official public election data. It is not affiliated with Brazil's Tribunal Superior Eleitoral (TSE).
+
+## Detailed documentation
+
+The original Portuguese documentation below preserves the full API reference, data methodology, operational limits, and validation notes.
+
+<details>
+<summary>Technical reference and methodology (Português)</summary>
+
 # Resultado Eleições 2026 · Brasil e estados
 
 Painel independente com dados oficiais do TSE. Reúne os cinco cargos do primeiro turno de 2026 nas 27 UFs e a presidência nacional. Santa Catarina é a seleção inicial; o menu lateral permite trocar de estado e o celular usa um seletor no topo.
@@ -189,3 +247,6 @@ TypeScript, lint, build e fluxos de personalização são verificados em desktop
 ## Aviso de independência
 
 Os dados eleitorais exibidos neste projeto são obtidos a partir das fontes oficiais de divulgação de resultados da Justiça Eleitoral. Este projeto é independente e não possui vínculo oficial com o Tribunal Superior Eleitoral (TSE).
+
+
+</details>
