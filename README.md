@@ -28,6 +28,10 @@ npm run dev
 
 Open http://localhost:3000. No credentials are required to query the public TSE sources.
 
+## My role
+
+Personal project developed and maintained by Vitor Rodi. My work covers the dashboard, official data integration and validation, candidate tracking, reporting workflows, tests, and documentation.
+
 ## Engineering decisions
 
 - **Verify source authenticity.** Official JWS payloads are checked with Ed25519 and a pinned public key before results are accepted.
