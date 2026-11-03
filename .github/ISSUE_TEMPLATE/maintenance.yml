@@ -1,0 +1,38 @@
+name: Maintenance
+description: Propose evidence-backed documentation, test or tooling maintenance.
+body:
+  - type: markdown
+    attributes:
+      value: Include election/year/round, office, UF, municipality, source URL and source timestamp when
+        applicable. Distinguish missing, partial, stale and official final data. Use synthetic
+        fixtures for reproducible cases.
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Problem and evidence
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Proposed scope and boundaries
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Verifiable acceptance criteria
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Environment and source context
+    validations:
+      required: true
+  - type: textarea
+    id: validation
+    attributes:
+      label: Validation performed or planned
+    validations:
+      required: true

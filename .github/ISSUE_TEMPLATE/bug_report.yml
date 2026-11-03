@@ -1,0 +1,38 @@
+name: Bug report
+description: Report a reproducible problem with the required project context.
+body:
+  - type: markdown
+    attributes:
+      value: Include election/year/round, office, UF, municipality, source URL and source timestamp when
+        applicable. Distinguish missing, partial, stale and official final data. Use synthetic
+        fixtures for reproducible cases.
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to reproduce
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual result
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected result
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Environment and source context
+    validations:
+      required: true
+  - type: textarea
+    id: validation
+    attributes:
+      label: Validation performed or planned
+    validations:
+      required: true
