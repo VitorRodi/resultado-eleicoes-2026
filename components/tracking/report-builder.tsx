@@ -41,6 +41,7 @@ import { downloadBlob } from "@/lib/download";
 import { useDisplaySettings } from "@/components/layout/display-settings";
 import AssociationPicker from "./association-picker";
 import { associationCities, SC_ASSOCIATIONS } from "@/lib/sc-associations";
+import { PROJECTION_METHOD } from "@/lib/vote-projection";
 
 const searchable = (text: string) =>
   text
@@ -67,6 +68,7 @@ export default function CandidateReportPanel({
   const [candidateId, setCandidateId] = useState("");
   const [query, setQuery] = useState("");
   const [type, setType] = useState<ReportType | "">("");
+  const [includeProjection, setIncludeProjection] = useState(false);
   const [codes, setCodes] = useState<string[]>([]);
   const [association, setAssociation] = useState("");
   const [separateAssociations, setSeparateAssociations] = useState(false);
@@ -195,6 +197,7 @@ export default function CandidateReportPanel({
     );
     let data: PreparedReport = {
       type,
+      includeProjection: type === "comparison" && includeProjection,
       separateAssociations: uf === "sc" && type !== "state" && separateAssociations,
       personalization: reportPersonalizationSchema.parse({
         ...personalization,
@@ -292,6 +295,7 @@ export default function CandidateReportPanel({
           uf: report.uf,
           candidate: report.candidate,
           historyCandidateId: report.historical?.id,
+          includeProjection: report.includeProjection,
         },
         format,
       );
@@ -306,6 +310,7 @@ export default function CandidateReportPanel({
             generatedAt: report.generatedAt,
             separateAssociations: report.separateAssociations,
             historical: report.historical,
+            includeProjection: report.includeProjection,
             personalization: report.personalization,
             profile: report.type === "state" ? report : undefined,
             rows: report.rows.map((row) => ({
@@ -334,6 +339,7 @@ export default function CandidateReportPanel({
           historyCandidateId: report.historical?.id,
           includeAssociations: report.uf === "sc",
           separateAssociations: report.separateAssociations,
+          includeProjection: report.includeProjection,
         });
         const response = await fetch("/api/elections/municipal/export", {
           method: "POST",
@@ -490,6 +496,27 @@ export default function CandidateReportPanel({
                 </label>
               ))}
             </div>
+            {type === "comparison" && (
+              <>
+                <label className="report-checkbox">
+                  <input
+                    type="checkbox"
+                    checked={includeProjection}
+                    aria-describedby={includeProjection ? `report-projection-method-${uf}` : undefined}
+                    onChange={(e) => {
+                      reset();
+                      setIncludeProjection(e.target.checked);
+                    }}
+                  />
+                  <span>Incluir projeção de votos para 2030</span>
+                </label>
+                {includeProjection && (
+                  <p className="small muted" id={`report-projection-method-${uf}`}>
+                    {PROJECTION_METHOD} A estimativa exige dados dos dois anos.
+                  </p>
+                )}
+              </>
+            )}
             {type === "comparison" && (
               <div className="report-history">
                 <h3>Candidatura de 2022</h3>
@@ -841,6 +868,7 @@ export default function CandidateReportPanel({
                 <dt>Comparação</dt>
                 <dd>
                   1º turno · 2022 e 2026
+                  {includeProjection && <small>Com projeção para 2030</small>}
                   {historyChoice && (
                     <small>
                       2022: {historyChoice.name} · {historyChoice.number} ·{" "}

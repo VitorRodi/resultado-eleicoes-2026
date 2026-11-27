@@ -12,6 +12,14 @@ import {
   voteChange,
   type HistoricalCandidate,
 } from "./historical-election";
+import {
+  PROJECTION_GROWTH_PERCENT,
+  PROJECTION_LABEL,
+  PROJECTION_METHOD,
+  PROJECTION_RECOVERY_PERCENT,
+  projectMunicipalVotes,
+  totalProjectedVotes,
+} from "./vote-projection";
 
 const INK = "FF1B2C32",
   GREEN = "FF17655C",
@@ -118,7 +126,8 @@ function addMunicipalSheet(
 ) {
   const identity = `${data.candidate.name} (${data.candidate.number} · ${data.candidate.party}) · ${officeLabel(data.candidate.office, data.uf)} · ${data.uf.toUpperCase()}`;
   const withRegions = data.uf === "sc" && (data.includeAssociations === true || data.separateAssociations === true);
-  const columns = (history ? 5 : 2) + (withRegions ? 1 : 0);
+  const projection = !!history && data.includeProjection === true;
+  const columns = (history ? 5 : 2) + (withRegions ? 1 : 0) + (projection ? 1 : 0);
   const note = [
     "Primeiro turno. Células vazias indicam votos indisponíveis; zero é um resultado divulgado.",
     rows.some((row) => row.stale)
@@ -128,7 +137,7 @@ function addMunicipalSheet(
   const sheet = setup(
     workbook,
     sheetName,
-    [...(history ? [38, 28, 28, 28, 24] : [44, 28]), ...(withRegions ? [24] : [])],
+    [...(history ? [38, 28, 28, 28, 24] : [44, 28]), ...(withRegions ? [24] : []), ...(projection ? [22] : [])],
     history
       ? "Votos por município · 2022 x 2026"
       : "Votos por município · 2026",
@@ -144,6 +153,7 @@ function addMunicipalSheet(
       ? ["Votos do candidato em 2022", "Diferença de votos", "Variação (%)"]
       : []),
     ...(withRegions ? ["Região"] : []),
+    ...(projection ? [PROJECTION_LABEL] : []),
   ];
   tableHeader(sheet, headers, rows.length);
   for (const [i, row] of rows.entries()) {
@@ -171,8 +181,16 @@ function addMunicipalSheet(
         : []),
       ...(withRegions ? [municipalityAssociation(row) || "Não identificada"] : []),
     ];
+    if (projection) {
+      const cell = sheet.getCell(at, columns);
+      cell.value = {
+        formula: `IF(COUNT(B${at}:C${at})=2,ROUND(B${at}*(100+IF(B${at}<C${at},${PROJECTION_RECOVERY_PERCENT},${PROJECTION_GROWTH_PERCENT}))/100,0),"")`,
+        result: projectMunicipalVotes(previous, row.votes) ?? "",
+      };
+      cell.numFmt = "#,##0";
+    }
     rowStyle(sheet, at, columns);
-    if (withRegions) sheet.getCell(at, columns).alignment = { vertical: "middle", horizontal: "left" };
+    if (withRegions) sheet.getCell(at, history ? 6 : 3).alignment = { vertical: "middle", horizontal: "left" };
     sheet.getCell(at, 2).numFmt = "#,##0";
     if (history) {
       sheet.getCell(at, 3).numFmt = "#,##0";
@@ -181,6 +199,13 @@ function addMunicipalSheet(
     }
   }
   if (history) {
+    if (projection) {
+      sheet.mergeCells(6, 1, 6, columns);
+      const methodology = sheet.getCell("A6");
+      methodology.value = `${PROJECTION_LABEL}. ${PROJECTION_METHOD} Totais exigem dados em todas as cidades.`;
+      methodology.alignment = { wrapText: true, vertical: "middle" };
+      sheet.getRow(6).height = 30;
+    }
     sheet.mergeCells(5, 1, 5, columns);
     sheet.getCell("A5").value =
       "Diferença = 2026 − 2022. Variação = diferença ÷ 2022; base zero fica sem percentual.";
@@ -227,6 +252,15 @@ function addMunicipalSheet(
       sheet.getCell(at, 3).numFmt = "#,##0";
       sheet.getCell(at, 4).numFmt = "+#,##0;-#,##0;0";
       sheet.getCell(at, 5).numFmt = "+0.00%;-0.00%;0.00%";
+      if (projection) {
+        const range = `G8:G${at - 1}`;
+        const cell = sheet.getCell(at, columns);
+        cell.value = {
+          formula: `IF(COUNT(${range})=${rows.length},SUM(${range}),"")`,
+          result: totalProjectedVotes(rows, history.votes) ?? "",
+        };
+        cell.numFmt = "#,##0";
+      }
     }
     sheet.getRow(at).eachCell(cell => { cell.font = { name: "Arial", size: 11, bold: true, color: { argb: GREEN } }; });
   }
@@ -266,9 +300,12 @@ export async function municipalWorkbook(
   const identity = `${data.candidate.name} (${data.candidate.number} · ${data.candidate.party}) · ${officeLabel(data.candidate.office, data.uf)} · ${data.uf.toUpperCase()}`;
   const withRegions = data.uf === "sc" && (data.includeAssociations === true || data.separateAssociations === true);
   if (withRegions) {
+    const projection = !!history && data.includeProjection === true;
     const groups = SC_ASSOCIATIONS.map(region => ({ region, cities: rows.filter(row => municipalityAssociation(row) === region.id) })).filter(group => group.cities.length);
-    const regionSheet = setup(workbook, "Regiões", history ? [24, 22, 26, 26, 26, 22] : [24, 22, 26], history ? "Votos por região · 2022 x 2026" : "Votos por região · 2026", identity, "Associações de municípios de Santa Catarina. Totais consideram as cidades selecionadas; se faltar votação em alguma cidade, o total daquele ano fica vazio.");
-    const regionHeaders = ["Região", "Municípios selecionados", "Votos em 2026", ...(history ? ["Votos em 2022", "Diferença de votos", "Variação (%)"] : [])];
+    const regionWidths = history ? [24, 22, 26, 26, 26, 22] : [24, 22, 26];
+    const regionNote = "Associações de municípios de Santa Catarina. Totais consideram as cidades selecionadas; se faltar votação em alguma cidade, o total daquele ano fica vazio.";
+    const regionSheet = setup(workbook, "Regiões", projection ? [...regionWidths, 22] : regionWidths, history ? "Votos por região · 2022 x 2026" : "Votos por região · 2026", identity, projection ? `${regionNote} ${PROJECTION_METHOD} A projeção soma as estimativas municipais e exige dados de todas as cidades.` : regionNote);
+    const regionHeaders = ["Região", "Municípios selecionados", "Votos em 2026", ...(history ? ["Votos em 2022", "Diferença de votos", "Variação (%)"] : []), ...(projection ? [PROJECTION_LABEL] : [])];
     tableHeader(regionSheet, regionHeaders, groups.length);
     for (const [index, group] of groups.entries()) {
       const at = index + 8;
@@ -283,6 +320,11 @@ export async function municipalWorkbook(
       if (history) {
         regionSheet.getCell(at, 5).numFmt = "+#,##0;-#,##0;0";
         regionSheet.getCell(at, 6).numFmt = "+0.00%;-0.00%;0.00%";
+        if (projection) {
+          const cell = regionSheet.getCell(at, 7);
+          cell.value = totalProjectedVotes(group.cities, history.votes);
+          cell.numFmt = "#,##0";
+        }
       }
     }
     const at = groups.length + 10;

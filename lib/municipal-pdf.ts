@@ -18,6 +18,12 @@ import {
   voteChange,
   type HistoricalCandidate,
 } from "./historical-election";
+import {
+  PROJECTION_LABEL,
+  PROJECTION_METHOD,
+  projectMunicipalVotes,
+  totalProjectedVotes,
+} from "./vote-projection";
 
 export type MunicipalPdfInput = {
   uf: string;
@@ -28,6 +34,7 @@ export type MunicipalPdfInput = {
   personalization?: ReportPersonalization;
   profile?: CandidateReport;
   separateAssociations?: boolean;
+  includeProjection?: boolean;
 };
 export type PdfFonts = { regular: string; bold: string };
 const INK = [27, 44, 50] as const,
@@ -91,6 +98,8 @@ export function municipalPdf(input: MunicipalPdfInput, fonts: PdfFonts) {
     ? reportPersonalizationSchema.parse(input.personalization)
     : undefined;
   const profile = input.profile;
+  const projection = !!history && input.includeProjection === true && !profile;
+  const comparisonColumns = projection ? [102, 124, 145, 165] : [120, 144, 166, 189];
   if (
     profile &&
     (profile.uf !== input.uf ||
@@ -112,7 +121,7 @@ export function municipalPdf(input: MunicipalPdfInput, fonts: PdfFonts) {
   doc.addFileToVFS("NotoSans-Bold.ttf", fonts.bold);
   doc.addFont("NotoSans-Bold.ttf", "NotoSans", "bold");
   doc.setProperties({
-    title: `${clean(input.candidate.name)} - ${profile ? "Perfil no estado" : history ? "Comparação 2022 e 2026" : "Votos nos municípios selecionados"}`,
+    title: `${clean(input.candidate.name)} - ${profile ? "Perfil no estado" : history ? "Comparação 2022 e 2026" : "Votos nos municípios selecionados"}${projection ? ` · ${PROJECTION_LABEL}` : ""}`,
     author: "Vitor Rodi",
     subject: `Eleições 2026 - ${input.uf.toUpperCase()} - primeiro turno`,
     creator: "Resultado Eleições 2026",
@@ -348,6 +357,18 @@ export function municipalPdf(input: MunicipalPdfInput, fonts: PdfFonts) {
         write(line, left, y, 9, true, GREEN);
         y += 5;
       }
+      if (projection) {
+        const total = totalProjectedVotes(rows, history.votes);
+        const totalText = total === null ? "total indisponível por falta de dados" : `${number(total)} votos no total`;
+        write(`${PROJECTION_LABEL} · ${totalText}`, left, y, 9, true, GREEN);
+        y += 5;
+        doc.setFont("NotoSans", "normal");
+        doc.setFontSize(8);
+        for (const line of doc.splitTextToSize(PROJECTION_METHOD, width) as string[]) {
+          write(line, left, y, 8, false, MUTED);
+          y += 5;
+        }
+      }
       y += 4;
     }
     write(
@@ -413,13 +434,10 @@ export function municipalPdf(input: MunicipalPdfInput, fonts: PdfFonts) {
     doc.rect(left, y - 5, width, 10, "F");
     write("Município", left + 3, y + 1, 9, true, [255, 255, 255]);
     if (history) {
-      for (const [label, x] of [
-        ["2022", 120],
-        ["2026", 144],
-        ["Diferença", 166],
-        ["Variação (%)", 189],
-      ] as const)
-        write(label, x, y + 1, 7, true, [255, 255, 255], "right");
+      for (const [index, label] of ["2022", "2026", "Diferença", "Variação (%)"].entries())
+        write(label, comparisonColumns[index], y + 1, 7, true, [255, 255, 255], "right");
+      if (projection)
+        write(PROJECTION_LABEL, 189, y + 1, 7, true, [255, 255, 255], "right");
     } else {
       if (personalization?.includeCharts !== false)
         write("Comparação visual", 113, y + 1, 8, true, [255, 255, 255]);
@@ -537,7 +555,7 @@ export function municipalPdf(input: MunicipalPdfInput, fonts: PdfFonts) {
       doc.setFontSize(9);
       const lines = doc.splitTextToSize(
         clean(row.name),
-        history ? 72 : 86,
+        projection ? 60 : history ? 72 : 86,
       ) as string[];
       const height = Math.max(11, lines.length * 4.5 + 6) + (row.stale ? 4 : 0);
       if (y + height > 259) {
@@ -565,7 +583,7 @@ export function municipalPdf(input: MunicipalPdfInput, fonts: PdfFonts) {
         const change = voteChange(previous, row.votes);
         write(
           previous === null ? "Sem dados" : number(previous),
-          120,
+          comparisonColumns[0],
           y + 2,
           8,
           false,
@@ -574,7 +592,7 @@ export function municipalPdf(input: MunicipalPdfInput, fonts: PdfFonts) {
         );
         write(
           row.votes === null ? "Sem dados" : number(row.votes),
-          144,
+          comparisonColumns[1],
           y + 2,
           8,
           true,
@@ -595,8 +613,10 @@ export function municipalPdf(input: MunicipalPdfInput, fonts: PdfFonts) {
           change.difference !== null && change.difference < 0
             ? ([177, 60, 70] as const)
             : GREEN;
-        write(delta, 166, y + 2, 8, true, color, "right");
-        write(pct, 189, y + 2, 7, true, color, "right");
+        write(delta, comparisonColumns[2], y + 2, 8, true, color, "right");
+        write(pct, comparisonColumns[3], y + 2, 7, true, color, "right");
+        if (projection)
+          write(number(projectMunicipalVotes(previous, row.votes)), 189, y + 2, 8, true, GREEN, "right");
       } else if (row.votes !== null) {
         if (personalization?.includeCharts !== false) {
           doc.setFillColor(222, 233, 225);
