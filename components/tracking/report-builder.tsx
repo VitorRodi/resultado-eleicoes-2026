@@ -41,7 +41,10 @@ import { downloadBlob } from "@/lib/download";
 import { useDisplaySettings } from "@/components/layout/display-settings";
 import AssociationPicker from "./association-picker";
 import { associationCities, SC_ASSOCIATIONS } from "@/lib/sc-associations";
-import { PROJECTION_METHOD } from "@/lib/vote-projection";
+import {
+  DEFAULT_PROJECTION_RATES,
+  projectionRatesSchema,
+} from "@/lib/vote-projection";
 
 const searchable = (text: string) =>
   text
@@ -53,6 +56,18 @@ type HistoryState = {
   data?: ReportHistoryChoices;
   error?: string;
 };
+
+const projectionFields = [
+  { key: "growth", label: "Acréscimo se cresceu ou empatou (%)" },
+  { key: "decline", label: "Acréscimo se caiu (%)" },
+] as const;
+
+function readPercent(value: string) {
+  const input = value.trim();
+  return /^\d+(?:[,.]\d+)?$/.test(input)
+    ? Number(input.replace(",", "."))
+    : undefined;
+}
 
 export default function CandidateReportPanel({
   uf,
@@ -69,6 +84,10 @@ export default function CandidateReportPanel({
   const [query, setQuery] = useState("");
   const [type, setType] = useState<ReportType | "">("");
   const [includeProjection, setIncludeProjection] = useState(false);
+  const [projectionInputs, setProjectionInputs] = useState({
+    growth: String(DEFAULT_PROJECTION_RATES.growth),
+    decline: String(DEFAULT_PROJECTION_RATES.decline),
+  });
   const [codes, setCodes] = useState<string[]>([]);
   const [association, setAssociation] = useState("");
   const [separateAssociations, setSeparateAssociations] = useState(false);
@@ -127,11 +146,20 @@ export default function CandidateReportPanel({
     ),
   );
   const cityCount = type === "state" ? municipalities.length : selected.length;
+  const withProjection = type === "comparison" && includeProjection;
+  const rateValues = {
+    growth: readPercent(projectionInputs.growth),
+    decline: readPercent(projectionInputs.decline),
+  };
+  const projectionRates = withProjection
+    ? projectionRatesSchema.safeParse(rateValues).data
+    : undefined;
   const ready =
     !!office &&
     !!type &&
     !!candidate &&
     cityCount > 0 &&
+    (!withProjection || !!projectionRates) &&
     (type !== "comparison" ||
       (!!historyChoice && (autoMatch || historyConfirmed)));
   const locked = busy || !!exporting;
@@ -197,7 +225,8 @@ export default function CandidateReportPanel({
     );
     let data: PreparedReport = {
       type,
-      includeProjection: type === "comparison" && includeProjection,
+      includeProjection: withProjection,
+      projectionRates,
       separateAssociations: uf === "sc" && type !== "state" && separateAssociations,
       personalization: reportPersonalizationSchema.parse({
         ...personalization,
@@ -311,6 +340,7 @@ export default function CandidateReportPanel({
             separateAssociations: report.separateAssociations,
             historical: report.historical,
             includeProjection: report.includeProjection,
+            projectionRates: report.projectionRates,
             personalization: report.personalization,
             profile: report.type === "state" ? report : undefined,
             rows: report.rows.map((row) => ({
@@ -340,6 +370,7 @@ export default function CandidateReportPanel({
           includeAssociations: report.uf === "sc",
           separateAssociations: report.separateAssociations,
           includeProjection: report.includeProjection,
+          projectionRates: report.projectionRates,
         });
         const response = await fetch("/api/elections/municipal/export", {
           method: "POST",
@@ -511,9 +542,31 @@ export default function CandidateReportPanel({
                   <span>Incluir projeção de votos para 2030</span>
                 </label>
                 {includeProjection && (
-                  <p className="small muted" id={`report-projection-method-${uf}`}>
-                    {PROJECTION_METHOD} A estimativa exige dados dos dois anos.
-                  </p>
+                  <>
+                    <div className="report-picker report-two-fields">
+                      {projectionFields.map(({ key, label }) => (
+                        <label className="report-field" key={key}>
+                          {label}
+                          <input
+                            type="text"
+                            inputMode="decimal"
+                            value={projectionInputs[key]}
+                            aria-describedby={`report-projection-method-${uf}`}
+                            aria-invalid={!projectionRatesSchema.shape[key].safeParse(rateValues[key]).success}
+                            onChange={(e) => {
+                              reset();
+                              setProjectionInputs({ ...projectionInputs, [key]: e.target.value });
+                            }}
+                          />
+                        </label>
+                      ))}
+                    </div>
+                    <p className="small muted" id={`report-projection-method-${uf}`}>
+                      {projectionRates
+                        ? "Os acréscimos são aplicados aos votos de 2026 e exigem dados dos dois anos."
+                        : "Preencha os dois percentuais com valores de 0 ou mais."}
+                    </p>
+                  </>
                 )}
               </>
             )}
@@ -913,9 +966,11 @@ export default function CandidateReportPanel({
                 ? "Escolha o cargo e o candidato para continuar."
                 : !type
                   ? "Escolha o tipo de relatório no passo 2."
-                : !cityCount
-                  ? "Marque pelo menos uma cidade no passo 3."
-                  : "Confira a candidatura de 2022 no passo 2 para continuar."}
+                  : withProjection && !projectionRates
+                    ? "Preencha os percentuais da projeção no passo 2."
+                    : !cityCount
+                      ? "Marque pelo menos uma cidade no passo 3."
+                      : "Confira a candidatura de 2022 no passo 2 para continuar."}
             </p>
           )}
           {busy && (

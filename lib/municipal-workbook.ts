@@ -13,11 +13,10 @@ import {
   type HistoricalCandidate,
 } from "./historical-election";
 import {
-  PROJECTION_GROWTH_PERCENT,
+  DEFAULT_PROJECTION_RATES,
   PROJECTION_LABEL,
-  PROJECTION_METHOD,
-  PROJECTION_RECOVERY_PERCENT,
   projectMunicipalVotes,
+  projectionMethod,
   totalProjectedVotes,
 } from "./vote-projection";
 
@@ -127,6 +126,7 @@ function addMunicipalSheet(
   const identity = `${data.candidate.name} (${data.candidate.number} · ${data.candidate.party}) · ${officeLabel(data.candidate.office, data.uf)} · ${data.uf.toUpperCase()}`;
   const withRegions = data.uf === "sc" && (data.includeAssociations === true || data.separateAssociations === true);
   const projection = !!history && data.includeProjection === true;
+  const rates = data.projectionRates ?? DEFAULT_PROJECTION_RATES;
   const columns = (history ? 5 : 2) + (withRegions ? 1 : 0) + (projection ? 1 : 0);
   const note = [
     "Primeiro turno. Células vazias indicam votos indisponíveis; zero é um resultado divulgado.",
@@ -184,8 +184,8 @@ function addMunicipalSheet(
     if (projection) {
       const cell = sheet.getCell(at, columns);
       cell.value = {
-        formula: `IF(COUNT(B${at}:C${at})=2,ROUND(B${at}*(100+IF(B${at}<C${at},${PROJECTION_RECOVERY_PERCENT},${PROJECTION_GROWTH_PERCENT}))/100,0),"")`,
-        result: projectMunicipalVotes(previous, row.votes) ?? "",
+        formula: `IF(COUNT(B${at}:C${at})=2,ROUND(B${at}*(100+IF(B${at}<C${at},${rates.decline},${rates.growth}))/100,0),"")`,
+        result: projectMunicipalVotes(previous, row.votes, rates) ?? "",
       };
       cell.numFmt = "#,##0";
     }
@@ -202,7 +202,7 @@ function addMunicipalSheet(
     if (projection) {
       sheet.mergeCells(6, 1, 6, columns);
       const methodology = sheet.getCell("A6");
-      methodology.value = `${PROJECTION_LABEL}. ${PROJECTION_METHOD} Totais exigem dados em todas as cidades.`;
+      methodology.value = `${PROJECTION_LABEL}. ${projectionMethod(rates)} Totais exigem dados em todas as cidades.`;
       methodology.alignment = { wrapText: true, vertical: "middle" };
       sheet.getRow(6).height = 30;
     }
@@ -257,7 +257,7 @@ function addMunicipalSheet(
         const cell = sheet.getCell(at, columns);
         cell.value = {
           formula: `IF(COUNT(${range})=${rows.length},SUM(${range}),"")`,
-          result: totalProjectedVotes(rows, history.votes) ?? "",
+          result: totalProjectedVotes(rows, history.votes, rates) ?? "",
         };
         cell.numFmt = "#,##0";
       }
@@ -301,10 +301,11 @@ export async function municipalWorkbook(
   const withRegions = data.uf === "sc" && (data.includeAssociations === true || data.separateAssociations === true);
   if (withRegions) {
     const projection = !!history && data.includeProjection === true;
+    const rates = data.projectionRates ?? DEFAULT_PROJECTION_RATES;
     const groups = SC_ASSOCIATIONS.map(region => ({ region, cities: rows.filter(row => municipalityAssociation(row) === region.id) })).filter(group => group.cities.length);
     const regionWidths = history ? [24, 22, 26, 26, 26, 22] : [24, 22, 26];
     const regionNote = "Associações de municípios de Santa Catarina. Totais consideram as cidades selecionadas; se faltar votação em alguma cidade, o total daquele ano fica vazio.";
-    const regionSheet = setup(workbook, "Regiões", projection ? [...regionWidths, 22] : regionWidths, history ? "Votos por região · 2022 x 2026" : "Votos por região · 2026", identity, projection ? `${regionNote} ${PROJECTION_METHOD} A projeção soma as estimativas municipais e exige dados de todas as cidades.` : regionNote);
+    const regionSheet = setup(workbook, "Regiões", projection ? [...regionWidths, 22] : regionWidths, history ? "Votos por região · 2022 x 2026" : "Votos por região · 2026", identity, projection ? `${regionNote} ${projectionMethod(rates)} A projeção soma as estimativas municipais e exige dados de todas as cidades.` : regionNote);
     const regionHeaders = ["Região", "Municípios selecionados", "Votos em 2026", ...(history ? ["Votos em 2022", "Diferença de votos", "Variação (%)"] : []), ...(projection ? [PROJECTION_LABEL] : [])];
     tableHeader(regionSheet, regionHeaders, groups.length);
     for (const [index, group] of groups.entries()) {
@@ -322,7 +323,7 @@ export async function municipalWorkbook(
         regionSheet.getCell(at, 6).numFmt = "+0.00%;-0.00%;0.00%";
         if (projection) {
           const cell = regionSheet.getCell(at, 7);
-          cell.value = totalProjectedVotes(group.cities, history.votes);
+          cell.value = totalProjectedVotes(group.cities, history.votes, rates);
           cell.numFmt = "#,##0";
         }
       }
