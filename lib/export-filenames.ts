@@ -2,6 +2,7 @@ type MunicipalFileSelection = {
   uf: string;
   candidate: { name: string };
   historyCandidateId?: string;
+  includeProjection?: boolean;
 };
 
 export function municipalDownloadName(
@@ -21,6 +22,8 @@ export function municipalDownloadName(
     .toLowerCase()
     .replace(/[^a-z]/g, "")
     .slice(0, 2);
-  const years = selection.historyCandidateId ? "2022-2026" : "2026";
+  const years = selection.historyCandidateId
+    ? selection.includeProjection ? "2022-2026-projecao-2030" : "2022-2026"
+    : "2026";
   return `votos-por-municipio-de-${name}-${uf}-${years}.${format}`;
 }

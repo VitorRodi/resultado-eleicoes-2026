@@ -53,8 +53,15 @@ export const municipalExportSchema = z
       .optional(),
     includeAssociations: z.boolean().optional(),
     separateAssociations: z.boolean().optional(),
+    includeProjection: z.boolean().optional(),
   })
   .superRefine((data, ctx) => {
+    if (data.includeProjection && !data.historyCandidateId)
+      ctx.addIssue({
+        code: "custom",
+        path: ["includeProjection"],
+        message: "A projeção exige uma candidatura de 2022.",
+      });
     if (new Set(data.rows.map((r) => r.code)).size !== data.rows.length)
       ctx.addIssue({ code: "custom", message: "Município duplicado." });
     const cargo = String(officeCode(data.candidate.office, data.uf)).padStart(
