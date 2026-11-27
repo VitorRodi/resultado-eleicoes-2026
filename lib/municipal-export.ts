@@ -2,6 +2,7 @@ import { z } from "zod";
 import { OFFICES, type Municipality } from "../types/election";
 import { BRAZIL_STATES } from "./brazil-states";
 import { officeCode } from "./config";
+import { projectionRatesSchema } from "./vote-projection";
 
 export const municipalExportRowSchema = z
   .object({
@@ -54,6 +55,7 @@ export const municipalExportSchema = z
     includeAssociations: z.boolean().optional(),
     separateAssociations: z.boolean().optional(),
     includeProjection: z.boolean().optional(),
+    projectionRates: projectionRatesSchema.optional(),
   })
   .superRefine((data, ctx) => {
     if (data.includeProjection && !data.historyCandidateId)

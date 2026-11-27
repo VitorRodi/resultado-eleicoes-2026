@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import ExcelJS from "exceljs";
-import { initialExportRows } from "../lib/municipal-export";
+import { initialExportRows, municipalExportSchema } from "../lib/municipal-export";
 import { municipalWorkbook } from "../lib/municipal-workbook";
 import { preparedReportHtml, type PreparedReport } from "../lib/report-document";
 import { defaultReportPersonalization } from "../lib/report-options";
@@ -106,4 +106,52 @@ test("Excel leva a projeção às abas regionais e soma as estimativas municipai
     if (row.getCell(1).value === "AMERIOS") assert.equal(row.getCell(7).value, 246);
     if (row.getCell(1).value === "AMEOSC") assert.equal(row.getCell(7).value, null);
   });
+});
+
+test("percentuais escolhidos alteram a prévia, as fórmulas e o total regional do Excel", async () => {
+  const options = {
+    includeProjection: true,
+    projectionRates: { growth: 12.5, decline: 55 },
+  };
+  const html = preparedReportHtml({ ...report, ...options });
+  assert.match(html, /<tr><td>Caibi<\/td>[^]*?<td>116<\/td><\/tr>/);
+  assert.match(html, /<tr><td>Cunhataí<\/td>[^]*?<td>115<\/td><\/tr>/);
+  assert.match(html, /<tr><td>Mondaí<\/td>[^]*?<td>160<\/td><\/tr>/);
+  assert.match(html, /12,5% onde houve alta ou empate e 55% onde houve queda/);
+
+  const selection = {
+    ...options,
+    uf: "sc",
+    candidate,
+    rows,
+    historyCandidateId: historical.id,
+    separateAssociations: true,
+  };
+  const book = new ExcelJS.Workbook();
+  const bytes = await municipalWorkbook(selection, new Date(report.generatedAt), historical);
+  await book.xlsx.load(bytes.buffer as ArrayBuffer);
+  const main = book.getWorksheet("Votos por cidade")!;
+  assert.equal(main.getCell("G10").result, 116);
+  assert.equal(main.getCell("G11").result, 115);
+  assert.equal(main.getCell("G13").result, 160);
+  assert.match(main.getCell("G10").formula, /IF\(B10<C10,55,12\.5\)/);
+  assert.equal(book.getWorksheet("AMERIOS")!.getCell("G10").result, 231);
+});
+
+test("exportação aceita percentuais zero ou decimal e rejeita acréscimos negativos", () => {
+  const selection = {
+    uf: "sc",
+    candidate,
+    rows,
+    historyCandidateId: historical.id,
+    includeProjection: true,
+  };
+  assert.deepEqual(municipalExportSchema.parse({
+    ...selection,
+    projectionRates: { growth: 0, decline: 1.5 },
+  }).projectionRates, { growth: 0, decline: 1.5 });
+  assert.equal(municipalExportSchema.safeParse({
+    ...selection,
+    projectionRates: { growth: 0, decline: -1 },
+  }).success, false);
 });

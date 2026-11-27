@@ -19,10 +19,12 @@ import {
   type HistoricalCandidate,
 } from "./historical-election";
 import {
+  DEFAULT_PROJECTION_RATES,
   PROJECTION_LABEL,
-  PROJECTION_METHOD,
   projectMunicipalVotes,
+  projectionMethod,
   totalProjectedVotes,
+  type ProjectionRates,
 } from "./vote-projection";
 
 export type MunicipalPdfInput = {
@@ -35,6 +37,7 @@ export type MunicipalPdfInput = {
   profile?: CandidateReport;
   separateAssociations?: boolean;
   includeProjection?: boolean;
+  projectionRates?: ProjectionRates;
 };
 export type PdfFonts = { regular: string; bold: string };
 const INK = [27, 44, 50] as const,
@@ -99,6 +102,7 @@ export function municipalPdf(input: MunicipalPdfInput, fonts: PdfFonts) {
     : undefined;
   const profile = input.profile;
   const projection = !!history && input.includeProjection === true && !profile;
+  const rates = input.projectionRates ?? DEFAULT_PROJECTION_RATES;
   const comparisonColumns = projection ? [102, 124, 145, 165] : [120, 144, 166, 189];
   if (
     profile &&
@@ -358,13 +362,13 @@ export function municipalPdf(input: MunicipalPdfInput, fonts: PdfFonts) {
         y += 5;
       }
       if (projection) {
-        const total = totalProjectedVotes(rows, history.votes);
+        const total = totalProjectedVotes(rows, history.votes, rates);
         const totalText = total === null ? "total indisponível por falta de dados" : `${number(total)} votos no total`;
         write(`${PROJECTION_LABEL} · ${totalText}`, left, y, 9, true, GREEN);
         y += 5;
         doc.setFont("NotoSans", "normal");
         doc.setFontSize(8);
-        for (const line of doc.splitTextToSize(PROJECTION_METHOD, width) as string[]) {
+        for (const line of doc.splitTextToSize(projectionMethod(rates), width) as string[]) {
           write(line, left, y, 8, false, MUTED);
           y += 5;
         }
@@ -616,7 +620,7 @@ export function municipalPdf(input: MunicipalPdfInput, fonts: PdfFonts) {
         write(delta, comparisonColumns[2], y + 2, 8, true, color, "right");
         write(pct, comparisonColumns[3], y + 2, 7, true, color, "right");
         if (projection)
-          write(number(projectMunicipalVotes(previous, row.votes)), 189, y + 2, 8, true, GREEN, "right");
+          write(number(projectMunicipalVotes(previous, row.votes, rates)), 189, y + 2, 8, true, GREEN, "right");
       } else if (row.votes !== null) {
         if (personalization?.includeCharts !== false) {
           doc.setFillColor(222, 233, 225);

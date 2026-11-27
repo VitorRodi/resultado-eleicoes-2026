@@ -10,10 +10,12 @@ import {
   type ReportPersonalization,
 } from "./report-options";
 import {
+  DEFAULT_PROJECTION_RATES,
   PROJECTION_LABEL,
-  PROJECTION_METHOD,
   projectMunicipalVotes,
+  projectionMethod,
   totalProjectedVotes,
+  type ProjectionRates,
 } from "./vote-projection";
 
 export type PreparedReport = CandidateReport & {
@@ -22,6 +24,7 @@ export type PreparedReport = CandidateReport & {
   historical?: HistoricalCandidate;
   separateAssociations?: boolean;
   includeProjection?: boolean;
+  projectionRates?: ProjectionRates;
 };
 const escape = (value: unknown) =>
   String(value ?? "").replace(
@@ -59,8 +62,9 @@ export function preparedReportHtml(
     return documents[0].replace(/<main>[\s\S]*<\/main>/, sections).replace("</style>", ".region-report + .region-report{break-before:page}</style>");
   }
   const history = report.historical;
+  const rates = report.projectionRates ?? DEFAULT_PROJECTION_RATES;
   const projection = history && report.type === "comparison" && report.includeProjection
-    ? { total: totalProjectedVotes(report.rows, history.votes) }
+    ? { total: totalProjectedVotes(report.rows, history.votes, rates) }
     : null;
   const known = report.rows.filter((row) => row.votes !== null);
   const totals = history ? reportComparisonTotals(report.rows, history) : null;
@@ -87,9 +91,9 @@ export function preparedReportHtml(
   </style></head><body class="${display?.largeText ? "report-large" : ""} ${display?.highContrast ? "report-contrast" : ""}">${toolbar ? '<div class="toolbar"><button onclick="window.print()">Imprimir / salvar PDF</button></div>' : ""}<main><header><div class="edition"><strong>RESULTADO ELEIÇÕES 2026</strong><span>${escape(report.stateName)} · 1º turno</span></div><p class="muted">${history ? "Comparação 2022 e 2026" : "Votos por município · 2026"}</p>${person.title ? `<h2>${escape(person.title)}</h2>` : ""}<h1>${escape(report.candidate.name)}</h1><p class="identity">${escape(officeLabel(report.candidate.office, report.uf))} · ${escape(report.candidate.number)} · ${escape(report.candidate.party)}</p>${person.name ? `<p class="personal">${escape(person.label)}<br><strong>${escape(person.name)}</strong></p>` : ""}${history ? `<p class="identity">Candidatura de 2022: ${escape(history.name)} · ${escape(history.number)} · ${escape(history.party)} · ${escape(officeLabel(history.office, report.uf))}</p>` : ""}</header><dl class="metrics">${history ? `<div><dt>Votos de 2022</dt><dd>${number(totals!.previous)}</dd></div><div><dt>Votos de 2026</dt><dd>${number(totals!.current)}</dd></div><div><dt>Diferença de votos</dt><dd>${signed(totals!.difference)}</dd></div><div><dt>Variação</dt><dd>${relative(totals!.previous, totals!.current)}</dd></div>` : `<div><dt>Votos nas cidades escolhidas</dt><dd>${number(sum)}</dd></div><div><dt>Cidades com votos</dt><dd>${known.length} de ${report.rows.length}</dd></div>`}</dl>${history ? `<p class="muted">Totais comparados em ${totals!.paired} de ${report.rows.length} cidades com dados nos dois anos.</p>` : ""}<p class="${partial ? "notice" : "muted"}">${partial ? "Consulta parcial. Confira as cidades sem dados ou com valores anteriores." : "Votos disponíveis em todas as cidades selecionadas."} Resultados de 2026 registram esta consulta e podem mudar.</p>${person.includeCharts && top.length ? `<section class="chart"><h2>Maiores votações de 2026 neste conjunto</h2><svg viewBox="0 0 740 ${top.length * 55}" role="img" aria-label="Votos de 2026 nas cidades com maior votação"><title>${escape(top.map((row) => `${row.name}: ${number(row.votes)} votos`).join("; "))}</title>${top.map((row, i) => `<text x="0" y="${i * 55 + 18}" fill="#34464c" font-size="15">${escape(row.name)}</text><rect x="0" y="${i * 55 + 28}" width="${(600 * row.votes!) / max}" height="12" rx="3" fill="#17655c"/><text x="735" y="${i * 55 + 38}" text-anchor="end" fill="#1b2c32" font-size="17">${number(row.votes)}</text>`).join("")}</svg></section>` : ""}<div class="table-scroll"><table><caption>${history ? "Comparação nas cidades escolhidas" : "Votos nas cidades escolhidas"}</caption><thead><tr><th>Município</th>${history ? "<th>2022</th>" : ""}<th>2026</th>${history ? "<th>Diferença</th><th>Variação</th>" : ""}${projection ? `<th>${PROJECTION_LABEL}</th>` : ""}</tr></thead><tbody>${cities
     .map((row) => {
       const before = history ? (history.votes[row.code] ?? null) : null;
-      return `<tr><td>${escape(row.name)}${row.stale ? "<small>Último valor disponível</small>" : ""}</td>${history ? `<td>${number(before)}</td>` : ""}<td>${number(row.votes)}</td>${history ? `<td>${signed(voteChange(before, row.votes).difference)}</td><td>${relative(before, row.votes)}</td>` : ""}${projection ? `<td>${number(projectMunicipalVotes(before, row.votes))}</td>` : ""}</tr>`;
+      return `<tr><td>${escape(row.name)}${row.stale ? "<small>Último valor disponível</small>" : ""}</td>${history ? `<td>${number(before)}</td>` : ""}<td>${number(row.votes)}</td>${history ? `<td>${signed(voteChange(before, row.votes).difference)}</td><td>${relative(before, row.votes)}</td>` : ""}${projection ? `<td>${number(projectMunicipalVotes(before, row.votes, rates))}</td>` : ""}</tr>`;
     })
     .join(
       "",
-    )}</tbody></table></div><p class="muted">${history ? "Diferença = 2026 − 2022. Variação = diferença ÷ votos de 2022 × 100. Quando a base de 2022 é zero, não há percentual de crescimento. " : ""}Zero é votação divulgada; “—” indica ausência de dados.</p>${projection ? `<p class="muted"><strong>${PROJECTION_LABEL}</strong> · ${projection.total === null ? "Total indisponível por falta de dados." : `${number(projection.total)} votos no total.`} ${PROJECTION_METHOD}</p>` : ""}<footer><p>Gerado em ${escape(date)} (Brasília) · Dados oficiais do TSE · Projeto independente.</p><p>Feito por <strong>Vitor Rodi</strong> · <a href="https://br.linkedin.com/in/vitor-rodi">linkedin.com/in/vitor-rodi</a><br><a href="https://resultado-eleicoes-2026.vercel.app/">resultado-eleicoes-2026.vercel.app</a></p></footer></main></body></html>`;
+    )}</tbody></table></div><p class="muted">${history ? "Diferença = 2026 − 2022. Variação = diferença ÷ votos de 2022 × 100. Quando a base de 2022 é zero, não há percentual de crescimento. " : ""}Zero é votação divulgada; “—” indica ausência de dados.</p>${projection ? `<p class="muted"><strong>${PROJECTION_LABEL}</strong> · ${projection.total === null ? "Total indisponível por falta de dados." : `${number(projection.total)} votos no total.`} ${projectionMethod(rates)}</p>` : ""}<footer><p>Gerado em ${escape(date)} (Brasília) · Dados oficiais do TSE · Projeto independente.</p><p>Feito por <strong>Vitor Rodi</strong> · <a href="https://br.linkedin.com/in/vitor-rodi">linkedin.com/in/vitor-rodi</a><br><a href="https://resultado-eleicoes-2026.vercel.app/">resultado-eleicoes-2026.vercel.app</a></p></footer></main></body></html>`;
 }
